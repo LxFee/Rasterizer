@@ -1,0 +1,8 @@
+{
+    "files.exclude": {
+        ".vscode": true,
+        "**/*.d": true,
+        "**/*.exe": true,
+        "**/*.o": true
+    }
+}
