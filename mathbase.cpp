@@ -1,6 +1,7 @@
 #include "mathbase.h"
 #include <cmath>
 
+/********************** vec4 **********************/
 vec4::vec4() {
     e[0] = e[1] = e[2] = e[3] = 0.0f;
 }
@@ -55,6 +56,180 @@ float vec4::r() const  {return e[0];}
 float vec4::g() const  {return e[1];} 
 float vec4::b() const  {return e[2];}
 float vec4::a() const  {return e[3];}
+
+
+/********************** vec3 **********************/
+vec3::vec3() {
+    e[0] = e[1] = e[2] = 0.0f;
+}
+vec3::vec3(float k) {
+    e[0] = e[1] = e[2] = k;
+}
+vec3::vec3(float x, float y, float z) {
+    e[0] = x;
+    e[1] = y;
+    e[2] = z;
+}
+
+float vec3::length_squared() const {
+    return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
+}
+
+float vec3::length() const {
+    return sqrt(length_squared());
+}
+
+vec3 vec3::normalized() const {
+    return *this / length();
+}
+
+vec3 vec3::operator + (const vec3& rhs) const {
+    return vec3(e[0] + rhs.e[0], e[1] + rhs.e[1], e[2] + rhs.e[2]);
+}
+
+vec3 vec3::operator - () const {
+    return vec3(-e[0], -e[1], -e[2]);
+}
+
+vec3 vec3::operator - (const vec3& rhs) const {
+    return *this + (-rhs);
+}
+
+vec3 vec3::operator * (const vec3& rhs) const {
+    return vec3(e[0] * rhs.e[0], e[1] * rhs.e[1], e[2] * rhs.e[2]);
+}
+
+vec3 vec3::operator / (float k) const {
+    return vec3(e[0] / k, e[1] / k, e[2] / k);
+}
+
+float vec3::x() const {return e[0];}
+float vec3::y() const {return e[1];} 
+float vec3::z() const {return e[2];}
+
+float vec3::r() const  {return e[0];} 
+float vec3::g() const  {return e[1];} 
+float vec3::b() const  {return e[2];}
+
+/********************** vec2 **********************/
+vec2::vec2() {
+    e[0] = e[1] = 0.0f;
+}
+vec2::vec2(float k) {
+    e[0] = e[1] = k;
+}
+
+vec2::vec2(float x, float y) {
+    e[0] = x;
+    e[1] = y;
+}
+
+float vec2::length_squared() const {
+    return e[0] * e[0] + e[1] * e[1];
+}
+
+float vec2::length() const {
+    return sqrt(length_squared());
+}
+
+vec2 vec2::normalized() const {
+    return *this / length();
+}
+
+vec2 vec2::operator + (const vec2& rhs) const {
+    return vec2(e[0] + rhs.e[0], e[1] + rhs.e[1]);
+}
+
+vec2 vec2::operator - () const {
+    return vec2(-e[0], -e[1]);
+}
+
+vec2 vec2::operator - (const vec2& rhs) const {
+    return *this + (-rhs);
+}
+
+vec2 vec2::operator * (const vec2& rhs) const {
+    return vec2(e[0] * rhs.e[0], e[1] * rhs.e[1]);
+}
+
+vec2 vec2::operator / (float k) const {
+    return vec2(e[0] / k, e[1] / k);
+}
+
+float vec2::x() const {return e[0];}
+float vec2::y() const {return e[1];}
+
+
+/********************** vec2 **********************/
+mat4::mat4(float k) {
+    for(int i = 0; i < 16; i++) e[i] = 0.0f;
+    for(int i = 0; i < 4; i++) e[i * 4 + i] = k;
+}
+
+mat4::mat4( float m00, float m01, float m02, float m03,
+            float m10, float m11, float m12, float m13,
+            float m20, float m21, float m22, float m23,
+            float m30, float m31, float m32, float m33) {
+    e[0] = m00;
+    e[1] = m01;
+    e[2] = m02;
+    e[3] = m03;
+    e[4] = m10;
+    e[5] = m11;
+    e[6] = m12;
+    e[7] = m13;
+    e[8] = m20;
+    e[9] = m21;
+    e[10] = m22;
+    e[11] = m23;
+    e[12] = m30;
+    e[13] = m31;
+    e[14] = m32;
+    e[15] = m33;
+}
+
+mat4::mat4(vec4 v0, vec4 v1, vec4 v2, vec4 v3) {
+    for(int i = 0; i < 4; i++) e[i * 4 + 0] = v0.e[i];
+    for(int i = 0; i < 4; i++) e[i * 4 + 1] = v1.e[i];
+    for(int i = 0; i < 4; i++) e[i * 4 + 2] = v2.e[i];
+    for(int i = 0; i < 4; i++) e[i * 4 + 3] = v3.e[i];
+}
+
+vec4 mat4::operator * (const vec4& rhs) const {
+    vec4 res(0.0f);
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            res.e[i] += rhs.e[i] * e[i * 4 + j];
+        }
+    }
+    return res;
+}
+
+mat4 mat4::operator * (const mat4& rhs) const {
+    mat4 res(0.0f);
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            for(int k = 0; k < 4; k++) {
+                res.e[i * 4 + j] += e[i * 4 + k] * rhs.e[k * 4 + j];
+            }
+        }
+    }
+    return res;
+}
+
+mat4 mat4::T() const {
+    mat4 res;
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            res.e[i * 4 + j] = e[j * 4 + i];
+        }
+    }
+    return res;
+}
+
+
+
+/********************** Tool Functions **********************/
 
 float clamp(float x, float mi, float mx) {
     if(x < mi) return mi;
