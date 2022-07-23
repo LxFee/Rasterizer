@@ -15,7 +15,7 @@ EXEC = razer
 
 
 SDL2demo: $(OBJECTS)
-	$(CC) $< -L$(LIB_DIR) $(LIB:%=-l%) -o $(EXEC)
+	$(CC) $^ -L$(LIB_DIR) $(LIB:%=-l%) -o $(EXEC)
 
 $(OBJECTS) : %.o: %.cpp
 	$(CC) -I$(INCLUDE_DIR) $(CFLAG) -c $< -o $@
