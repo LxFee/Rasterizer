@@ -9,3 +9,7 @@ void Texture::get_size(int* w, int *h) {
     if(w) *w = this->w;
     if(h) *h = this->h;
 }
+
+void Texture::swap(std::vector<vec4> &rdata) {
+    rdata.swap(data);
+}

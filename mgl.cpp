@@ -20,12 +20,8 @@ void mgl_init(const char *title, int w, int h) {
     SDL_RenderClear(renderer);
 }
 
-void mgl_draw(Framebuffer* fb) {
-    if(fb == NULL) {
-        
-    } else {
-
-    }
+void mgl_draw(Framebuffer* fb, int vbo) {
+    
 }
 
 void mgl_clear(vec4 col) {
@@ -37,11 +33,15 @@ void mgl_clear(vec4 col) {
     }
 }
 
-void mgl_swapbuffer() {
-    SDL_UnlockTexture(buffer);
-    SDL_RenderCopy(renderer, buffer, NULL, NULL);
-    SDL_RenderPresent(renderer);
-    SDL_LockTexture(buffer, NULL, (void**)&pixels, &pitch);
+void mgl_update(Framebuffer* fb) {
+    if(fb == NULL) {
+        SDL_UnlockTexture(buffer);
+        SDL_RenderCopy(renderer, buffer, NULL, NULL);
+        SDL_RenderPresent(renderer);
+        SDL_LockTexture(buffer, NULL, (void**)&pixels, &pitch);
+    } else {
+        fb->update();
+    }
 }
 
 void mgl_quit() {

@@ -30,4 +30,9 @@ void Framebuffer::set_pixel(int x, int y, vec4 col) {
     data[index] = col;
 }
 
+void Framebuffer::update() {
+    if(texture) {
+        texture->swap(data);
+    }
+}
 

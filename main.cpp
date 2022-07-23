@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
         if(k == 255) d = -1;
         if(k == 0) d = 1;
         mgl_clear(vec4(0.0f, 0.0f, k / 255.0f));
-        mgl_swapbuffer();
+        mgl_update(NULL);
         SDL_Event e;
         if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
             break;
