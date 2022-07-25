@@ -4,6 +4,7 @@
 struct vec4 {
     vec4();
     vec4(float k);
+    vec4(const float* ep);
     vec4(float x, float y, float z, float w = 1.0f);
     float length_squared() const ;
     float length() const ;
@@ -31,6 +32,7 @@ struct vec4 {
 struct vec3 {
     vec3();
     vec3(float k);
+    vec3(const float* ep);
     vec3(float x, float y, float z);
     float length_squared() const ;
     float length() const ;
@@ -56,6 +58,7 @@ struct vec3 {
 struct vec2 {
     vec2();
     vec2(float k);
+    vec2(const float* ep);
     vec2(float x, float y);
     float length_squared() const ;
     float length() const ;
@@ -75,6 +78,7 @@ struct vec2 {
 
 struct mat4 {
     mat4(float k = 0.0f);
+    mat4(const float* ep);
     mat4(   float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
             float m20, float m21, float m22, float m23,

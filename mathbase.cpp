@@ -8,6 +8,12 @@ vec4::vec4() {
 vec4::vec4(float k) {
     e[0] = e[1] = e[2] = e[3] = k;
 }
+vec4::vec4(const float *ep) {
+    e[0] = ep[0];
+    e[1] = ep[1];
+    e[2] = ep[2];
+    e[3] = ep[3];
+}
 vec4::vec4(float x, float y, float z, float w) {
     e[0] = x;
     e[1] = y;
@@ -65,6 +71,12 @@ vec3::vec3() {
 vec3::vec3(float k) {
     e[0] = e[1] = e[2] = k;
 }
+
+vec3::vec3(const float *ep) {
+    e[0] = ep[0];
+    e[1] = ep[1];
+    e[2] = ep[2];
+}
 vec3::vec3(float x, float y, float z) {
     e[0] = x;
     e[1] = y;
@@ -119,6 +131,10 @@ vec2::vec2(float k) {
     e[0] = e[1] = k;
 }
 
+vec2::vec2(const float *ep) {
+    e[0] = ep[0];
+    e[1] = ep[1];
+}
 vec2::vec2(float x, float y) {
     e[0] = x;
     e[1] = y;
@@ -164,6 +180,10 @@ float vec2::y() const {return e[1];}
 mat4::mat4(float k) {
     for(int i = 0; i < 16; i++) e[i] = 0.0f;
     for(int i = 0; i < 4; i++) e[i * 4 + i] = k;
+}
+
+mat4::mat4(const float *ep) {
+    for(int i = 0; i < 16; i++) e[i] = ep[i];
 }
 
 mat4::mat4( float m00, float m01, float m02, float m03,
