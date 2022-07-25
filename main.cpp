@@ -11,8 +11,9 @@ int main(int argc, char* argv[]) {
         k += d;
         if(k == 255) d = -1;
         if(k == 0) d = 1;
-        mgl_clear(vec4(0.0f, 0.0f, k / 255.0f));
-        mgl_update(NULL);
+        mgl_setinitcol(vec4(1.0f, 1.0f, k / 255.0f));
+        mgl_clear(MGL_COLOR);
+        mgl_update();
         SDL_Event e;
         if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
             break;

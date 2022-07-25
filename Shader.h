@@ -7,11 +7,11 @@ class Shader {
 public:
     virtual vec4 vertex_shader(float *attrbegin, float *attrend, std::vector<float>& varying) const = 0;
     virtual vec4 fragment_shader(std::vector<float>& varying) const = 0;
-    int uniform_vec2(int location, vec2 v);
-    int uniform_vec3(int location, vec3 v);
-    int uniform_vec4(int location, vec4 v);
-    int uniform_1f(int location, float v);
-    int uniform_mat4(int location, mat4 m);
+    int uniform_vec2(vec2 v, int location = -1);
+    int uniform_vec3(vec3 v, int location = -1);
+    int uniform_vec4(vec4 v, int location = -1);
+    int uniform_1f(float v, int location = -1);
+    int uniform_mat4(mat4 m, int location = -1);
 
 private:
     float getu1f(int location);
@@ -21,7 +21,7 @@ private:
     mat4 getumat4(int location);
 
     std::vector<float> uniforms;
-    std::vector<int> uniforms_check;
+    std::vector<int> uniforms_offset;
 };
 
 vec4 getavec4(float *attrbegin, int& offset);
