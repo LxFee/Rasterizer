@@ -12,9 +12,9 @@ void mgl_quit();
 
 void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader);
 
-void mgl_setinitz(float z);
+void mgl_set_init_zbuffer(float z);
 
-void mgl_setinitcol(vec4 col);
+void mgl_set_init_color(vec4 col);
 
 void mgl_clear(int flag);
 

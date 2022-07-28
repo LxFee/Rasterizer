@@ -1,34 +1,5 @@
 #pragma once
 
-
-struct vec4 {
-    vec4();
-    vec4(float k);
-    vec4(const float* ep);
-    vec4(float x, float y, float z, float w = 1.0f);
-    float length_squared() const ;
-    float length() const ;
-    vec4 normalized() const ;
-    
-    vec4 operator + (const vec4& rhs) const;
-    vec4 operator - () const ;
-    vec4 operator - (const vec4& rhs) const;
-    vec4 operator * (const vec4& rhs) const;
-    vec4 operator / (float k) const ; 
-    
-    float x() const; 
-    float y() const; 
-    float z() const;
-    float w() const;
-    
-    float r() const; 
-    float g() const; 
-    float b() const;
-    float a() const;
-
-    float e[4];
-};
-
 struct vec3 {
     vec3();
     vec3(float k);
@@ -55,6 +26,45 @@ struct vec3 {
     float e[3];
 };
 
+vec3 cross(const vec3 &lhs, const vec3 &rhs);
+
+float dot(const vec3 &lhs, const vec3 &rhs);
+
+vec3 operator*(float k, const vec3& rhs);
+
+vec3 operator*(const vec3& lhs, float k);
+
+
+struct vec4 {
+    vec4();
+    vec4(float k);
+    vec4(const float* ep);
+    vec4(float x, float y, float z, float w = 1.0f);
+    vec4(const vec3& v, float w = 1.0f);
+    float length_squared() const ;
+    float length() const ;
+    vec4 normalized() const ;
+    
+    vec4 operator + (const vec4& rhs) const;
+    vec4 operator - () const ;
+    vec4 operator - (const vec4& rhs) const;
+    vec4 operator * (const vec4& rhs) const;
+    vec4 operator / (float k) const ; 
+    
+    float x() const; 
+    float y() const; 
+    float z() const;
+    float w() const;
+    
+    float r() const; 
+    float g() const; 
+    float b() const;
+    float a() const;
+
+    float e[4];
+};
+
+
 struct vec2 {
     vec2();
     vec2(float k);
@@ -75,6 +85,11 @@ struct vec2 {
 
     float e[2];
 };
+
+
+vec2 operator*(float k, const vec2& rhs);
+
+vec2 operator*(const vec2& lhs, float k);
 
 struct mat4 {
     mat4(float k = 0.0f);

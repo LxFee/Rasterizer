@@ -1,7 +1,7 @@
 #include "Shader.h"
 #include "mgl.h"
 
-int Shader::uniform(float* el, int size, int location) {
+int Shader::uniform(const float* el, int size, int location) {
     if(location >= uniforms_offset.size()) {
         return -1;
     }
@@ -19,17 +19,17 @@ int Shader::uniform(float* el, int size, int location) {
     return location;
 }
 
-void putvarying(floatstream& varying, float *el, int size) {
+void Shader::putvarying(floatstream& varying, const float *el, int size) {
     for(int i = 0; i < size; i++) varying.emplace_back(el[i]);
 }
 
-float* getvaring(floatstream& varying, int size, int& offset) {
+const float* Shader::getvaring(floatstream& varying, int size, int& offset) {
     int p = offset;
     offset += size;
     return varying.data() + p;    
 }
 
-float* Shader::getunif(int location, int check) {
+const float* Shader::getunif(int location, int check) const {
     if(location < 0 || location >= uniforms.size()) return NULL;
     int offset = 0;
     if(location) offset = uniforms_offset[location - 1];
@@ -37,7 +37,7 @@ float* Shader::getunif(int location, int check) {
     return uniforms.data() + offset;
 }
 
-float* Shader::getattr(int vbo, int index, int location, int check) {
+const float* Shader::getattr(int vbo, int index, int location, int check) const {
     int size;
     float *vbop;
     if((vbop = mgl_query_vbo(vbo, index, location, &size)) == NULL) return NULL;

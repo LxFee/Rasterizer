@@ -21,6 +21,13 @@ vec4::vec4(float x, float y, float z, float w) {
     e[3] = w;
 }
 
+vec4::vec4(const vec3& v, float w) {
+    e[0] = v.e[0];
+    e[1] = v.e[1];
+    e[2] = v.e[2];
+    e[3] = w;
+}
+
 float vec4::length_squared() const {
     return e[0] * e[0] + e[1] * e[1] + e[2] * e[2] + e[3] * e[3];
 }
@@ -123,6 +130,24 @@ float vec3::r() const  {return e[0];}
 float vec3::g() const  {return e[1];} 
 float vec3::b() const  {return e[2];}
 
+vec3 cross(const vec3 &lhs, const vec3 &rhs) {
+    return vec3(lhs.y() * rhs.z() - rhs.y() * lhs.z(),
+                lhs.z() * rhs.x() - rhs.z() * lhs.x(),
+                lhs.x() * rhs.y() - rhs.x() * lhs.y());
+}
+
+float dot(const vec3 &lhs, const vec3 &rhs) {
+    return lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z();
+}
+
+vec3 operator*(float k, const vec3& rhs) {
+    return vec3(k * rhs.e[0], k * rhs.e[1], k * rhs.e[2]);
+}
+
+vec3 operator*(const vec3& lhs, float k) {
+    return vec3(k * lhs.e[0], k * lhs.e[1], k * lhs.e[2]);
+}
+
 /********************** vec2 **********************/
 vec2::vec2() {
     e[0] = e[1] = 0.0f;
@@ -176,7 +201,15 @@ float vec2::x() const {return e[0];}
 float vec2::y() const {return e[1];}
 
 
-/********************** vec2 **********************/
+vec2 operator*(float k, const vec2& rhs) {
+    return vec2(k * rhs.e[0], k * rhs.e[1]);
+}
+
+vec2 operator*(const vec2& lhs, float k) {
+    return vec2(k * lhs.e[0], k * lhs.e[1]);
+}
+
+/********************** mat4 **********************/
 mat4::mat4(float k) {
     for(int i = 0; i < 16; i++) e[i] = 0.0f;
     for(int i = 0; i < 4; i++) e[i * 4 + i] = k;
@@ -219,7 +252,7 @@ vec4 mat4::operator * (const vec4& rhs) const {
     vec4 res(0.0f);
     for(int i = 0; i < 4; i++) {
         for(int j = 0; j < 4; j++) {
-            res.e[i] += rhs.e[i] * e[i * 4 + j];
+            res.e[i] += rhs.e[j] * e[i * 4 + j];
         }
     }
     return res;
