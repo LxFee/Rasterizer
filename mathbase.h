@@ -1,5 +1,8 @@
 #pragma once
 
+#define PI 3.141592653589793238
+#define INV_PI 0.318309886183790691
+
 struct vec3 {
     vec3();
     vec3(float k);
@@ -120,3 +123,11 @@ mat4 scale(vec3 sc);
 mat4 ortho(float left, float right, float bottom, float top, float near, float far);
 
 mat4 perspective(float near, float far, float fov, float aspect);
+
+inline float radian(float d) {
+    return d * PI / 180.0f;
+}
+
+inline float degree(float r) {
+    return r * 180.0f * INV_PI;
+}

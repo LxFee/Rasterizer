@@ -155,7 +155,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
                             gamma * tr.varyings[2][k] / w_c;
                 varying.push_back(v * rone);
             }
-            float z = (alpha * z_a + beta * z_b + gamma * z_c) * rone;
+            float z = alpha * z_a + beta * z_b + gamma * z_c;
             z = (z + 1.0f) * 0.5f;
             vec4 color = shader->fragment_shader(varying);
             test_and_set_pixel(j, i, color, z);

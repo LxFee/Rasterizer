@@ -10,11 +10,11 @@ int alocation_c;
 
 int ulocation_ort;
 
-vector<vec3> points {vec3(0.0f, 0.5f, 0.5f), vec3(-0.5f, -0.5f, 0.4f), vec3(0.5f, -0.5f, 0.4f)};
+vector<vec3> points {vec3(5.0f, 5.0f, -10.0f), vec3(5.0f, -5.0f, -10.0f), vec3(-5.0f, -5.0f, -10.0f), vec3(-5.0f, 5.0f, -30.0f)};
 
-vector<int> ind {0, 1, 2};
+vector<int> ind {0, 2, 1, 0, 3, 2};
 
-vector<vec3> color {vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f)};
+vector<vec3> color {vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 1.0f, 1.0f)};
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
@@ -22,7 +22,6 @@ class MyShader : public Shader {
         vec3 color = getattr(vbo, index, alocation_c);
         mat4 ort = getunif(ulocation_ort);
         putvarying(varying, color.e, 3);
-
         vec4 fpos = ort * vec4(pos, 1.0f);
         return fpos;
     }
@@ -47,7 +46,7 @@ int main(int argc, char* argv[]) {
     mgl_vertex_index_pointer(ebo, ind.size(), ind.data());
 
     MyShader mshader;
-    mat4 ort = ortho(-10, 10, -10, 10, 1, 50);
+    mat4 ort = perspective(0.5f, 100.0f, 90.0f, 1.0f);
     ulocation_ort = mshader.uniform(ort.e, 16);
 
     int uptime = 0;
