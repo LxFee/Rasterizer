@@ -257,6 +257,11 @@ vec4 mat4::operator * (const vec4& rhs) const {
     }
     return res;
 }
+mat4 mat4::operator + (const mat4& rhs) const {
+    mat4 res(0.0f);
+    for(int i = 0; i < 16; i++) res.e[i] = e[i] + rhs.e[i];
+    return res;
+}
 
 mat4 mat4::operator * (const mat4& rhs) const {
     mat4 res(0.0f);
@@ -279,6 +284,13 @@ mat4 mat4::T() const {
     }
     return res;
 }
+
+mat4 mat4::operator * (float k) const {
+    mat4 res(*this);
+    for(int i = 0; i < 16; i++) res.e[i] *= k;
+    return res;
+}
+
 
 
 
@@ -327,3 +339,21 @@ mat4 perspective(float near, float far, float fov, float aspect) {
                     0.0f, 0.0f, near + far, near * far,
                     0.0f, 0.0f, -1.0f, 0.0f);
 }
+
+mat4 rotate(vec3 axis, float angle) {
+    angle = radian(angle);
+    mat4 res(1.0f);
+    mat4 N( 0.0f, -axis.z(), axis.y(), 0.0f,
+            axis.z(), 0.0f, -axis.x(), 0.0f,
+            -axis.y(), axis.x(), 0.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f);
+    mat4 maxis( axis.x() * axis.x(), axis.x() * axis.y(), axis.x() * axis.z(), 0.0f,
+                axis.y() * axis.x(), axis.y() * axis.y(), axis.y() * axis.z(), 0.0f,
+                axis.z() * axis.x(), axis.z() * axis.y(), axis.z() * axis.z(), 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f);
+
+    res = res * cos(angle) + maxis * (1 - cos(angle)) + N * sin(angle);
+    res.e[15] = 1.0f;
+    return res;    
+}
+

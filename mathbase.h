@@ -105,9 +105,13 @@ struct mat4 {
 
     mat4 T() const;
 
+    mat4 operator * (float k) const;
+
     vec4 operator * (const vec4& rhs) const ;
 
     mat4 operator * (const mat4& rhs) const ;
+
+    mat4 operator + (const mat4& rhs) const;
 
     float e[16];
 };
@@ -119,6 +123,8 @@ int packRGBA8888(vec4 col);
 mat4 translate(vec3 tr);
 
 mat4 scale(vec3 sc);
+
+mat4 rotate(vec3 axis, float angle);
 
 mat4 ortho(float left, float right, float bottom, float top, float near, float far);
 

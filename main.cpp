@@ -10,11 +10,11 @@ int alocation_c;
 
 int ulocation_ort;
 
-vector<vec3> points {vec3(5.0f, 5.0f, -30.0f), vec3(5.0f, -5.0f, -30.0f), vec3(-5.0f, -5.0f, -30.0f), vec3(-5.0f, 5.0f, -30.0f)};
+vector<vec3> points {vec3(0.0f, 5.0f, -10.0f), vec3(5.0f, -5.0f, -10.0f), vec3(-5.0f, -5.0f, -10.0f)};
 
-vector<int> ind {0, 2, 1, 0, 3, 2};
+vector<int> ind {0, 2, 1};
 
-vector<vec3> color {vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 1.0f, 1.0f)};
+vector<vec3> color {vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f)};
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
