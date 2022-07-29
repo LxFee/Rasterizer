@@ -8,9 +8,9 @@ using namespace std;
 int alocation_p;
 int alocation_c;
 
-int ulocation_ort;
+int ulocation_mvp = -1;
 
-vector<vec3> points {vec3(0.0f, 5.0f, -10.0f), vec3(5.0f, -5.0f, -10.0f), vec3(-5.0f, -5.0f, -10.0f)};
+vector<vec3> points {vec3(0.0f, 5.0f, 0.0f), vec3(5.0f, -5.0f, 0.0f), vec3(-5.0f, -5.0f, 0.0f)};
 
 vector<int> ind {0, 2, 1};
 
@@ -20,9 +20,10 @@ class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
         vec3 pos = getattr(vbo, index, alocation_p);
         vec3 color = getattr(vbo, index, alocation_c);
-        mat4 ort = getunif(ulocation_ort);
+        mat4 mvp = getunif(ulocation_mvp);
+
         putvarying(varying, color.e, 3);
-        vec4 fpos = ort * vec4(pos, 1.0f);
+        vec4 fpos = mvp * vec4(pos, 1.0f);
         return fpos;
     }
 
@@ -46,12 +47,19 @@ int main(int argc, char* argv[]) {
     mgl_vertex_index_pointer(ebo, ind.size(), ind.data());
 
     MyShader mshader;
-    mat4 ort = perspective(0.5f, 100.0f, 90.0f, 1.0f);
-    ulocation_ort = mshader.uniform(ort.e, 16);
+    
+    float angle = 0;
+    mat4 P = perspective(0.5f, 100.0f, 90.0f, 800.0f / 600.0f);
+    mat4 M(1.0f);
+    
+
 
     int uptime = 0;
     while(1) {
         mgl_clear(MGL_COLOR | MGL_DEPTH);
+        angle += 1;
+        M = translate(vec3(0.0f, 0.0f, -3.0f)) * rotate(vec3(0.0f, 1.0f, 0.0f), angle);
+        ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
         
         mgl_draw(vbo, ebo, &mshader);
 
