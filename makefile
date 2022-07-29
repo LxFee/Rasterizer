@@ -6,7 +6,7 @@ SOURCE = $(wildcard *.cpp)
 OBJECTS = ${SOURCE:%.cpp=%.o}
 INCLUDE_DIR = ext/SDL2/include
 LIB_DIR = ext/SDL2/lib
-CFLAG = -MMD -std=c++17 -O3
+CFLAG = -MMD -std=c++17
 LIB = mingw32 SDL2main SDL2
 VPATH = $(INCLUDE_DIR)
 EXEC = razer

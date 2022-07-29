@@ -297,3 +297,26 @@ int packRGBA8888(vec4 col) {
     int a = static_cast<int>(256 * clamp(col.a(), 0.0, 0.9999));
     return a + (r << 8) + (g << 16) + (b << 24);
 }
+
+mat4 translate(vec3 tr) {
+    return mat4(1.0f, 0.0f, 0.0f, tr.x(),
+                0.0f, 1.0f, 0.0f, tr.y(),
+                0.0f, 0.0f, 1.0f, tr.z(),
+                0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+mat4 scale(vec3 sc) {
+    return mat4(sc.x(), 0.0f, 0.0f, 0.0f,
+                0.0f, sc.y(), 0.0f, 0.0f,
+                0.0f, 0.0f, sc.z(), 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+mat4 ortho(float left, float right, float bottom, float top, float near, float far) {
+    return  scale(vec3(2.0f / (right - left), 2.0f / (top - bottom), 2.0f / (far - near))) *
+            translate(vec3(-(left + right) / 2.0f, -(bottom + top) / 2.0f, -(near + far) / 2.0f));
+}
+
+mat4 perspective(float near, float far, float fov, float aspect) {
+    
+}

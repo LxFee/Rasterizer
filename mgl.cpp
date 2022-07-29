@@ -51,9 +51,9 @@ int mgl_create_ebo() {
 }
 
 float* mgl_query_vbo(int vbo_ind, int index, int location, int* size) {
-    if(vbo_ind < 0 || vbo_ind >= vbos.size()) return NULL;
+    if(vbo_ind < 0 || vbo_ind >= (int)vbos.size()) return NULL;
     VBO& vbo = vbos[vbo_ind];
-    if(location < 0 || location >= vbo.format.size()) return NULL;
+    if(location < 0 || location >= (int)vbo.format.size()) return NULL;
     Component& comp = vbo.format[location];
     if(size) *size = comp.size;
     return comp.data + (*size) * index;
@@ -61,7 +61,7 @@ float* mgl_query_vbo(int vbo_ind, int index, int location, int* size) {
 
 // size: num of float
 int mgl_vertex_attrib_pointer(int vbo_ind, int size, float* data) {
-    if(vbo_ind < 0 || vbo_ind >= vbos.size()) return -1;
+    if(vbo_ind < 0 || vbo_ind >= (int)vbos.size()) return -1;
     VBO &vbo = vbos[vbo_ind];
     vbo.format.emplace_back(size, data);
     vbo.total_size += size;
@@ -69,7 +69,7 @@ int mgl_vertex_attrib_pointer(int vbo_ind, int size, float* data) {
 }
 
 int mgl_vertex_index_pointer(int ebo_ind, int count, int* ind) {
-    if(ebo_ind < 0 || ebo_ind >= vbos.size()) return -1;
+    if(ebo_ind < 0 || ebo_ind >= (int)vbos.size()) return -1;
     EBO &ebo = ebos[ebo_ind];
     ebo.ind = ind;
     ebo.count = count;
@@ -164,8 +164,8 @@ void rasterize(Tr_element& tr, Shader* shader) {
 }
 
 void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
-    if(vbo_ind < 0 || vbo_ind >= vbos.size()) return ;
-    if(ebo_ind < 0 || ebo_ind >= ebos.size()) return ;
+    if(vbo_ind < 0 || vbo_ind >= (int)vbos.size()) return ;
+    if(ebo_ind < 0 || ebo_ind >= (int)ebos.size()) return ;
     
     EBO& ebo = ebos[ebo_ind];
     std::vector<Tr_element> triangles;

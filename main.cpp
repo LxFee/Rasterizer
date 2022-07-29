@@ -5,10 +5,12 @@
 #include "model.h"
 using namespace std;
 
-int location_p;
-int location_c;
+int alocation_p;
+int alocation_c;
 
-vector<vec3> points {vec3(0.0f, 0.5f, 0.5f), vec3(-0.5f, -0.5f, 0.5f), vec3(0.5f, -0.5f, 0.5f)};
+int ulocation_ort;
+
+vector<vec3> points {vec3(0.0f, 0.5f, 0.5f), vec3(-0.5f, -0.5f, 0.4f), vec3(0.5f, -0.5f, 0.4f)};
 
 vector<int> ind {0, 1, 2};
 
@@ -16,10 +18,13 @@ vector<vec3> color {vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
-        vec3 pos = getattr(vbo, index, location_p);
-        vec3 color = getattr(vbo, index, location_c);
+        vec3 pos = getattr(vbo, index, alocation_p);
+        vec3 color = getattr(vbo, index, alocation_c);
+        mat4 ort = getunif(ulocation_ort);
         putvarying(varying, color.e, 3);
-        return vec4(pos, 1.0f);
+
+        vec4 fpos = ort * vec4(pos, 1.0f);
+        return fpos;
     }
 
     vec4 fragment_shader(floatstream& varying) const {
@@ -37,11 +42,13 @@ int main(int argc, char* argv[]) {
     int vbo = mgl_create_vbo();
     int ebo = mgl_create_ebo();
 
-    location_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)points.data());
-    location_c = mgl_vertex_attrib_pointer(vbo, 3, (float*)color.data());
+    alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)points.data());
+    alocation_c = mgl_vertex_attrib_pointer(vbo, 3, (float*)color.data());
     mgl_vertex_index_pointer(ebo, ind.size(), ind.data());
 
     MyShader mshader;
+    mat4 ort = ortho(-10, 10, -10, 10, 1, 50);
+    ulocation_ort = mshader.uniform(ort.e, 16);
 
     int uptime = 0;
     while(1) {

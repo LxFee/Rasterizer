@@ -112,3 +112,11 @@ struct mat4 {
 float clamp(float x, float mi, float mx);
 
 int packRGBA8888(vec4 col);
+
+mat4 translate(vec3 tr);
+
+mat4 scale(vec3 sc);
+
+mat4 ortho(float left, float right, float bottom, float top, float near, float far);
+
+mat4 perspective(float near, float far, float fov, float aspect);
