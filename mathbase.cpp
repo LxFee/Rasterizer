@@ -310,14 +310,6 @@ float clamp(float x, float mi, float mx) {
     return x;
 }
 
-int packRGBA8888(vec4 col) {
-    int r = static_cast<int>(256 * clamp(col.r(), 0.0, 0.9999));
-    int g = static_cast<int>(256 * clamp(col.g(), 0.0, 0.9999));
-    int b = static_cast<int>(256 * clamp(col.b(), 0.0, 0.9999));
-    int a = static_cast<int>(256 * clamp(col.a(), 0.0, 0.9999));
-    return a + (r << 8) + (g << 16) + (b << 24);
-}
-
 mat4 translate(vec3 tr) {
     return mat4(1.0f, 0.0f, 0.0f, tr.x(),
                 0.0f, 1.0f, 0.0f, tr.y(),

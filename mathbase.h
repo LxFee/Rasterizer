@@ -122,7 +122,21 @@ struct mat4 {
 
 float clamp(float x, float mi, float mx);
 
-int packRGBA8888(vec4 col);
+inline int packRGBA8888(vec4 col) {
+    int r = static_cast<int>(256 * clamp(col.r(), 0.0, 0.9999));
+    int g = static_cast<int>(256 * clamp(col.g(), 0.0, 0.9999));
+    int b = static_cast<int>(256 * clamp(col.b(), 0.0, 0.9999));
+    int a = static_cast<int>(256 * clamp(col.a(), 0.0, 0.9999));
+    return a + (r << 8) + (g << 16) + (b << 24);
+}
+
+inline vec4 unpackRGBA8888(unsigned char *col) {
+    return vec4(col[0] / 255.0f, col[1] / 255.0f, col[2] / 255.0f, col[3] / 255.0f);
+}
+
+inline vec4 unpackRGBA888(unsigned char *col) {
+    return vec4(col[0] / 255.0f, col[1] / 255.0f, col[2] / 255.0f, 1.0f);
+}
 
 mat4 translate(vec3 tr);
 

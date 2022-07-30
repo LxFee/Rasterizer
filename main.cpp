@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "mgl.h"
 #include "model.h"
+#include "Texture.h"
 using namespace std;
 
 int alocation_p;
@@ -34,44 +35,47 @@ class MyShader : public Shader {
     }
 };
 
+
 int main(int argc, char* argv[]) {
     mgl_init("hello rasterizer", 800, 800);
-    mgl_set_init_color(vec4(0.0f, 0.0f, 0.0f));
-    mgl_set_init_zbuffer(1.0f);
-
-    int vbo = mgl_create_vbo();
-    int ebo = mgl_create_ebo();
-
-    alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)points.data());
-    alocation_c = mgl_vertex_attrib_pointer(vbo, 3, (float*)color.data());
-    mgl_vertex_index_pointer(ebo, ind.size(), ind.data());
-
-    MyShader mshader;
+    Texture* t = Texture::readfromfile("assert/test.png");
     
-    float angle = 20;
-    mat4 P = ortho(-50, 50, -50, 50, 9, 30);
-    mat4 M = translate(vec3(0.0f, 0.0f, -10.0f)) * rotate(vec3(0.0f, 1.0f, 0.0f), angle);
-    float nr = 9.5f, dnr = 0.01f;
-    int uptime = 0;
-    while(1) {
-        mgl_clear(MGL_COLOR | MGL_DEPTH);
-        nr += dnr;
-        if(nr > 12.0f) dnr = -dnr;
-        if(nr < 9.0f) dnr = -dnr;
-        P = ortho(-50, 50, -50, 50, nr, 30);
-        ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
-        
-        mgl_draw(vbo, ebo, &mshader);
-        SDL_Event e;
-        if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
-            break;
-        }
-        int cur = SDL_GetTicks();
-        cout << cur - uptime << endl;
-        uptime = cur;
+    // mgl_set_init_color(vec4(0.0f, 0.0f, 0.0f));
+    // mgl_set_init_zbuffer(1.0f);
 
-        mgl_update();
-    }
+    // int vbo = mgl_create_vbo();
+    // int ebo = mgl_create_ebo();
+
+    // alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)points.data());
+    // alocation_c = mgl_vertex_attrib_pointer(vbo, 3, (float*)color.data());
+    // mgl_vertex_index_pointer(ebo, ind.size(), ind.data());
+
+    // MyShader mshader;
+    
+    // float angle = 20;
+    // mat4 P = ortho(-50, 50, -50, 50, 9, 30);
+    // mat4 M = translate(vec3(0.0f, 0.0f, -10.0f)) * rotate(vec3(0.0f, 1.0f, 0.0f), angle);
+    // float nr = 9.5f, dnr = 0.01f;
+    // int uptime = 0;
+    // while(1) {
+    //     mgl_clear(MGL_COLOR | MGL_DEPTH);
+    //     nr += dnr;
+    //     if(nr > 12.0f) dnr = -dnr;
+    //     if(nr < 9.0f) dnr = -dnr;
+    //     P = ortho(-50, 50, -50, 50, nr, 30);
+    //     ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
+        
+    //     mgl_draw(vbo, ebo, &mshader);
+    //     SDL_Event e;
+    //     if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
+    //         break;
+    //     }
+    //     int cur = SDL_GetTicks();
+    //     cout << cur - uptime << endl;
+    //     uptime = cur;
+
+    //     mgl_update();
+    // }
     mgl_quit();
     return 0;
 }
