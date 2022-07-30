@@ -182,6 +182,55 @@ void rasterize(Tr_element& tr, Shader* shader) {
     } 
 }
 
+void clip(Tr_element &tr, std::vector<Tr_element>& triangles) {
+    vec4 &a = tr.points[0];
+    vec4 &b = tr.points[1];
+    vec4 &c = tr.points[2];
+    floatstream &va = tr.varyings[0];
+    floatstream &vb = tr.varyings[1];
+    floatstream &vc = tr.varyings[2];
+
+    bool c_a = a.w() < -a.z();
+    bool c_b = b.w() < -b.z();
+    bool c_c = c.w() < -c.z();
+
+    if(c_a && c_b && c_c) {
+        return ;
+    }
+    if(!c_a && !c_b && !c_c) {
+        triangles.emplace_back(tr);
+        return ;
+    }
+    bool dif = c_a ^ c_b ^ c_c;
+    if(c_b == dif) {
+        std::swap(a, c);
+        std::swap(a, b);
+        std::swap(va, vc);
+        std::swap(va, vb);
+    } else if(c_c == dif) {
+        std::swap(a, b);
+        std::swap(a, c);
+        std::swap(va, vb);
+        std::swap(va, vc);
+    }
+    float t1 = (a.w() + a.z()) / ((a.z() + a.w()) - (b.z() + b.w()));
+    float t2 = (a.w() + c.z()) / ((a.z() + a.w()) - (c.z() + c.w()));
+    vec4 pab = a + t1 * (b - a);
+    vec4 pac = a + t2 * (c - a);
+    printf("t1: %f t2: %f\n", t1, t2);
+    floatstream vab, vac;
+    for(int i = 0; i < va.size(); i++) {
+        vab.push_back(va[i] + t1 * (vb[i] - va[i]));
+        vac.push_back(va[i] + t2 * (vc[i] - va[i]));
+    }
+    if(dif) {
+        triangles.emplace_back(Tr_element{{pab, b, c}, {vab, vb, vc}});
+        triangles.emplace_back(Tr_element{{pab, c, pac}, {vab, vc, vac}});
+    } else {
+        // triangles.emplace_back(Tr_element{{a, pab, pac}, {va, vab, vac}});
+    }
+}
+
 void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
     if(vbo_ind < 0 || vbo_ind >= (int)vbos.size()) return ;
     if(ebo_ind < 0 || ebo_ind >= (int)ebos.size()) return ;
@@ -190,11 +239,12 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
     std::vector<Tr_element> triangles;
 
     for(int i = 0; i < ebo.count; i += 3) {
-        triangles.emplace_back();
-        Tr_element &tr = triangles.back();
+        Tr_element tr;
         tr.points[0] = shader->vertex_shader(vbo_ind, ebo.ind[i], tr.varyings[0]);
         tr.points[1] = shader->vertex_shader(vbo_ind, ebo.ind[i + 1], tr.varyings[1]);
         tr.points[2] = shader->vertex_shader(vbo_ind, ebo.ind[i + 2], tr.varyings[2]);
+        clip(tr, triangles); 
+        // triangles.push_back(tr);         
     }
     
     int tr_count = triangles.size();

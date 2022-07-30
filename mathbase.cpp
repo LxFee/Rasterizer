@@ -70,6 +70,14 @@ float vec4::g() const  {return e[1];}
 float vec4::b() const  {return e[2];}
 float vec4::a() const  {return e[3];}
 
+vec4 operator*(float k, const vec4& rhs) {
+    return vec4(k * rhs.e[0], k * rhs.e[1], k * rhs.e[2], k * rhs.e[3]);
+}
+
+vec4 operator*(const vec4& lhs, float k) {
+    return vec4(k * lhs.e[0], k * lhs.e[1], k * lhs.e[2], k * lhs.e[3]);
+}
+
 
 /********************** vec3 **********************/
 vec3::vec3() {

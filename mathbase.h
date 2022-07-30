@@ -67,6 +67,10 @@ struct vec4 {
     float e[4];
 };
 
+vec4 operator*(float k, const vec4& rhs);
+
+vec4 operator*(const vec4& lhs, float k);
+
 
 struct vec2 {
     vec2();
