@@ -20,11 +20,10 @@ class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
         vec3 pos = getattr(vbo, index, alocation_p);
         vec3 color = getattr(vbo, index, alocation_c);
-        mat4 mvp = getunif(ulocation_mvp);
 
         putvarying(varying, color.e, 3);
+        mat4 mvp = getunif(ulocation_mvp);
         vec4 fpos = mvp * vec4(pos, 1.0f);
-        printf("%f %f\n", fpos.z(), fpos.w());
         return fpos;
     }
 
@@ -63,14 +62,12 @@ int main(int argc, char* argv[]) {
         ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
         
         mgl_draw(vbo, ebo, &mshader);
-        printf("n: %f\n", nr);
-        getchar();
         SDL_Event e;
         if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
             break;
         }
         int cur = SDL_GetTicks();
-        // cout << cur - uptime << endl;
+        cout << cur - uptime << endl;
         uptime = cur;
 
         mgl_update();
