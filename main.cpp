@@ -35,7 +35,7 @@ class MyShader : public Shader {
 };
 
 int main(int argc, char* argv[]) {
-    mgl_init("hello rasterizer", 800, 600);
+    mgl_init("hello rasterizer", 800, 800);
     mgl_set_init_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_set_init_zbuffer(1.0f);
 
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     MyShader mshader;
     
     float angle = 20;
-    mat4 P = perspective(9.0f, 50.0f, 90.0f, 800.0f / 600.0f);
+    mat4 P = ortho(-50, 50, -50, 50, 9, 30);
     mat4 M = translate(vec3(0.0f, 0.0f, -10.0f)) * rotate(vec3(0.0f, 1.0f, 0.0f), angle);
     float nr = 9.5f, dnr = 0.01f;
     int uptime = 0;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
         nr += dnr;
         if(nr > 12.0f) dnr = -dnr;
         if(nr < 9.0f) dnr = -dnr;
-        P = perspective(nr, 50.0f, 90.0f, 800.0f / 600.0f);
+        P = ortho(-50, 50, -50, 50, nr, 30);
         ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
         
         mgl_draw(vbo, ebo, &mshader);
