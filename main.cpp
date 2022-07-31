@@ -18,10 +18,10 @@ vector<vec3> points = {
     vec3(5.0f, 5.0f, 0.0f)};
 
 vector<vec2> uv {
-    vec2(0.0f, 1.0f), 
+    vec2(0.0f, 3.0f), 
     vec2(0.0f, 0.0f), 
-    vec2(1.0f, 0.0f),
-    vec2(1.0f, 1.0f)};
+    vec2(3.0f, 0.0f),
+    vec2(3.0f, 3.0f)};
 
 vector<int> ind {
     0, 1, 2, 
@@ -51,7 +51,8 @@ class MyShader : public Shader {
 
 int main(int argc, char* argv[]) {
     mgl_init("hello rasterizer", 800, 600);
-    Texture* t = Texture::readfromfile("assert/test.png");
+    Texture* t = Texture::readfromfile("assert/test.jpg");
+    t->set_srround(Texture::REPEAT);
     if(!t) {
         cout << "can not load texture!" << endl;
         mgl_quit();
@@ -75,7 +76,7 @@ int main(int argc, char* argv[]) {
     MyShader mshader;
     
     mat4 P = perspective(1.0f, 50.0f, 90, 800.0f / 600.0f);
-    mat4 M = translate(vec3(0.0f, 0.0f, -10.0f));
+    mat4 M = translate(vec3(0.0f, 0.0f, -10.0f)) * scale(vec3(1.0f, 1.39f, 1.0f));
     ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
     

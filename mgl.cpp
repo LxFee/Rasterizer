@@ -131,6 +131,7 @@ void test_and_set_pixel(int x, int y, vec4 color, float depth) {
 }
 
 void rasterize(Tr_element& tr, Shader* shader) {
+    const float eps = 1e-4;
     Triangle screen_tr;
     float w_a = tr.points[0].w();
     float w_b = tr.points[1].w();
@@ -163,8 +164,8 @@ void rasterize(Tr_element& tr, Shader* shader) {
         }
     };
 
-    float xl = floor(min3f(a.x(), b.x(), c.x())), yl = floor(min3f(a.y(), b.y(), c.y()));
-    float xr = ceil(max3f(a.x(), b.x(), c.x())), yr = ceil(max3f(a.y(), b.y(), c.y()));
+    float xl = round(min3f(a.x(), b.x(), c.x())), yl = round(min3f(a.y(), b.y(), c.y()));
+    float xr = round(max3f(a.x(), b.x(), c.x())), yr = round(max3f(a.y(), b.y(), c.y()));
     xl = std::max(0.0f, xl);
     yl = std::max(0.0f, yl);
     xr = std::min(xr, (float)width);
@@ -184,7 +185,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
         for(int j = xl; j < xr; j++) {
             vec2 p(j + 0.5f, i + 0.5f);
             calc_tr_coords(triangle, p, alpha, beta, gamma);
-            if(alpha < 0.0f || beta < 0.0f || gamma < 0.0f) {
+            if(alpha < -eps || beta < -eps || gamma < -eps) {
                 if(in) break;
                 continue;
             }
@@ -212,7 +213,7 @@ void clip(Tr_element &tr, std::vector<Tr_element>& triangles) {
     floatstream &va = tr.varyings[0];
     floatstream &vb = tr.varyings[1];
     floatstream &vc = tr.varyings[2];
-    const float eps = 1e-5;
+    const float eps = 1e-4;
 
     bool c_a = a.w() < -a.z() + eps;
     bool c_b = b.w() < -b.z() + eps;

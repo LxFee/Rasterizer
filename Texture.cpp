@@ -29,6 +29,13 @@ void Texture::swap(std::vector<vec4> &rdata) {
 }
 
 vec4 Texture::sample(float u, float v) {
+    const float eps = 1e-4;
+    if(u < 0.0f && u > -eps) u = std::max(0.0f, u);
+    else if(u > 1.0f && u < 1.0f + eps) u = std::min(1.0f, u);
+
+    if(v < 0.0f && v > -eps) v = std::max(0.0f, v);
+    else if(v > 1.0f && v < 1.0f + eps) v = std::min(1.0f, v);
+    
     if(u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
         if(surround == FILLED) {
             return filled_color;
