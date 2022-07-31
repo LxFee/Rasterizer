@@ -90,6 +90,9 @@ struct vec2 {
     float x() const; 
     float y() const; 
 
+    float u() const; 
+    float v() const; 
+
     float e[2];
 };
 

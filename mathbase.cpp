@@ -207,7 +207,8 @@ vec2 vec2::operator / (float k) const {
 
 float vec2::x() const {return e[0];}
 float vec2::y() const {return e[1];}
-
+float vec2::u() const {return e[0];} 
+float vec2::v() const {return e[1];}
 
 vec2 operator*(float k, const vec2& rhs) {
     return vec2(k * rhs.e[0], k * rhs.e[1]);
