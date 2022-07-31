@@ -2,6 +2,7 @@
 #include "model.h"
 #include <cmath>
 #include <cstdio>
+#include <omp.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -147,6 +148,9 @@ void rasterize(Tr_element& tr, Shader* shader) {
     vec2 a = (screen_mat * (tr.points[0] / w_a)).e;
     vec2 b = (screen_mat * (tr.points[1] / w_b)).e;
     vec2 c = (screen_mat * (tr.points[2] / w_c)).e;
+    
+    // 背面剔除
+    if(cross(b - a, c - a) < 0.0f) return ;
 
     Triangle triangle(a, b, c);
 
@@ -154,12 +158,12 @@ void rasterize(Tr_element& tr, Shader* shader) {
     auto min3f = [](float a, float b, float c) {return std::min(a, std::min(b, c));};
     auto max3f = [](float a, float b, float c) {return std::max(a, std::max(b, c));};
 
-    float xl = round(min3f(a.x(), b.x(), c.x())), yl = round(min3f(a.y(), b.y(), c.y()));
-    float xr = round(max3f(a.x(), b.x(), c.x())), yr = round(max3f(a.y(), b.y(), c.y()));
-    xl = std::max(0.0f, xl);
-    yl = std::max(0.0f, yl);
-    xr = std::min(xr, (float)width);
-    yr = std::min(yr, (float)height);
+    int xl = round(min3f(a.x(), b.x(), c.x())), yl = round(min3f(a.y(), b.y(), c.y()));
+    int xr = round(max3f(a.x(), b.x(), c.x())), yr = round(max3f(a.y(), b.y(), c.y()));
+    xl = std::max(0, xl);
+    yl = std::max(0, yl);
+    xr = std::min(xr, width);
+    yr = std::min(yr, height);
 
     if(a.x() > b.x()) std::swap(a, b);
     if(a.x() > c.x()) std::swap(a, c);    
@@ -184,7 +188,6 @@ void rasterize(Tr_element& tr, Shader* shader) {
         color = shader->fragment_shader(varying);
         return true;
     };
-
     for(int i = yl; i < yr; i++) {
         bool in = false;
         for(int j = xl; j < xr; j++) {
@@ -197,7 +200,8 @@ void rasterize(Tr_element& tr, Shader* shader) {
                 break;
             }
         }
-    } 
+    }
+    
 }
 
 void clip(Tr_element &tr, std::vector<Tr_element>& triangles) {

@@ -218,6 +218,10 @@ vec2 operator*(const vec2& lhs, float k) {
     return vec2(k * lhs.e[0], k * lhs.e[1]);
 }
 
+float cross(const vec2 &lhs, const vec2 &rhs) {
+    return lhs.x() * rhs.y() - rhs.x() * lhs.y();
+}
+
 /********************** mat4 **********************/
 mat4::mat4(float k) {
     for(int i = 0; i < 16; i++) e[i] = 0.0f;

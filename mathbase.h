@@ -31,6 +31,7 @@ struct vec3 {
 
 vec3 cross(const vec3 &lhs, const vec3 &rhs);
 
+
 float dot(const vec3 &lhs, const vec3 &rhs);
 
 vec3 operator*(float k, const vec3& rhs);
@@ -100,6 +101,8 @@ struct vec2 {
 vec2 operator*(float k, const vec2& rhs);
 
 vec2 operator*(const vec2& lhs, float k);
+
+float cross(const vec2 &lhs, const vec2 &rhs);
 
 struct mat4 {
     mat4(float k = 0.0f);
