@@ -46,40 +46,17 @@ vec4 Texture::sample(float u, float v) {
         }
     }
     if(interpolation == NEAREST) {
-        int x = u * (w - 1);
-        int y = v * (h - 1);
+        int x = round(u * (w - 1));
+        int y = round(v * (h - 1));
         return data[y * w + x];
     }
     if(interpolation == BILINEAR) {
         int x = u * (w - 1);
         int y = v * (h - 1);
+        if(x == w - 1 || y == h - 1) return DATA(x, y);
         float local_u = u * (w - 1) - x; 
         float local_v = v * (h - 1) - y;
-        bool fu = local_u < 0.5f, fv = local_v < 0.5f;
-        if(fu && fv) { // 左下
-            if(x == 0 || y == 0) return DATA(x, y);
-            local_u += 0.5;
-            local_v += 0.5;
-            return bilinear(DATA(x - 1, y - 1), DATA(x, y - 1), DATA(x - 1, y), DATA(x, y), local_u, local_v);
-        }
-        else if(fu && !fv) { // 左上
-            if(x == 0 || y == h - 1) return DATA(x, y); 
-            local_u += 0.5;
-            local_v -= 0.5;
-            return bilinear(DATA(x - 1, y), DATA(x, y), DATA(x - 1, y + 1), DATA(x, y + 1), local_u, local_v);
-        }
-        else if(!fu && fv) { // 右下
-            if(x == w - 1 || y == 0) return DATA(x, y);
-            local_u -= 0.5;
-            local_v += 0.5;
-            return bilinear(DATA(x, y - 1), DATA(x + 1, y), DATA(x, y), DATA(x + 1, y), local_u, local_v);
-        }
-        else if(!fu && !fv) {// 右上
-            if(x == w - 1 || y == h - 1) return DATA(x, y);
-            local_u -= 0.5;
-            local_v -= 0.5;
-            return bilinear(DATA(x, y), DATA(x + 1, y), DATA(x, y + 1), DATA(x + 1, y + 1), local_u, local_v);
-        }
+        return bilinear(DATA(x, y), DATA(x + 1, y), DATA(x, y + 1), DATA(x + 1, y + 1), local_u, local_v);
     }
     return vec4(0.0f);    
 }
