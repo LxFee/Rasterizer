@@ -131,7 +131,6 @@ void test_and_set_pixel(int x, int y, vec4 color, float depth) {
 }
 
 void rasterize(Tr_element& tr, Shader* shader) {
-    const float eps = 1e-4;
     Triangle screen_tr;
     float w_a = tr.points[0].w();
     float w_b = tr.points[1].w();
@@ -154,15 +153,6 @@ void rasterize(Tr_element& tr, Shader* shader) {
     vec2 left_bottom, right_top;
     auto min3f = [](float a, float b, float c) {return std::min(a, std::min(b, c));};
     auto max3f = [](float a, float b, float c) {return std::max(a, std::max(b, c));};
-    auto seg_y= [](const vec2 a, const vec2 b, float y, float& x) -> void {
-        if(fabs(a.y() - b.y()) < 1e-4) {
-            if(fabs(floor(a.y()) + 0.5 - y) > 0.5) return ;
-            x = std::min(a.x(), b.x());
-        } else {
-            float t = (y - a.y()) / (b.y() - a.y());
-            if(!(t < 0.0f || t > 1.0f)) x = a.x() + t * (b.x() - a.x());
-        }
-    };
 
     float xl = round(min3f(a.x(), b.x(), c.x())), yl = round(min3f(a.y(), b.y(), c.y()));
     float xr = round(max3f(a.x(), b.x(), c.x())), yr = round(max3f(a.y(), b.y(), c.y()));
@@ -173,35 +163,39 @@ void rasterize(Tr_element& tr, Shader* shader) {
 
     if(a.x() > b.x()) std::swap(a, b);
     if(a.x() > c.x()) std::swap(a, c);    
+    
+    auto shade = [&](vec2 pos, vec4& color, float& z) -> bool {
+        const float eps = 1e-4;
+        float alpha, beta, gamma;
+        calc_tr_coords(triangle, pos, alpha, beta, gamma);
+        if(alpha < -eps || beta < -eps || gamma < -eps) {
+            return false;
+        }
+        floatstream varying;
+        float rone = 1.0f / (alpha / w_a + beta / w_b + gamma / w_c);
+        for(int k = 0; k < tr.varyings[0].size(); k++) {
+            float v =   alpha * tr.varyings[0][k] / w_a + 
+                        beta * tr.varyings[1][k] / w_b + 
+                        gamma * tr.varyings[2][k] / w_c;
+            varying.push_back(v * rone);
+        }
+        z = alpha * z_a + beta * z_b + gamma * z_c;
+        z = (z + 1.0f) * 0.5f;
+        color = shader->fragment_shader(varying);
+        return true;
+    };
 
-    float alpha, beta, gamma;
     for(int i = yl; i < yr; i++) {
         bool in = false;
-        float xa = width, xb = width, xc = width;
-        seg_y(a, b, i + 0.5f, xa);
-        seg_y(a, c, i + 0.5f, xb);
-        seg_y(b, c, i + 0.5f, xc);
-        xl = std::max(0.0f, min3f(xa, xb, xc));
         for(int j = xl; j < xr; j++) {
-            vec2 p(j + 0.5f, i + 0.5f);
-            calc_tr_coords(triangle, p, alpha, beta, gamma);
-            if(alpha < -eps || beta < -eps || gamma < -eps) {
-                if(in) break;
-                continue;
+            float z;
+            vec4 color;
+            if(shade(vec2(j + 0.5f, i + 0.5f), color, z)) {
+                test_and_set_pixel(j, i, color, z);
+                in = true;
+            } else if(in) {
+                break;
             }
-            in = true;
-            floatstream varying;
-            float rone = 1.0f / (alpha / w_a + beta / w_b + gamma / w_c);
-            for(int k = 0; k < tr.varyings[0].size(); k++) {
-                float v =   alpha * tr.varyings[0][k] / w_a + 
-                            beta * tr.varyings[1][k] / w_b + 
-                            gamma * tr.varyings[2][k] / w_c;
-                varying.push_back(v * rone);
-            }
-            float z = alpha * z_a + beta * z_b + gamma * z_c;
-            z = (z + 1.0f) * 0.5f;
-            vec4 color = shader->fragment_shader(varying);
-            test_and_set_pixel(j, i, color, z);
         }
     } 
 }

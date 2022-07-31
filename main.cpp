@@ -52,7 +52,6 @@ class MyShader : public Shader {
 int main(int argc, char* argv[]) {
     mgl_init("hello rasterizer", 800, 600);
     Texture* t = Texture::readfromfile("assert/test.jpg");
-    t->set_interpolation(Texture::BILINEAR);
     if(!t) {
         cout << "can not load texture!" << endl;
         mgl_quit();
@@ -71,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     MyShader mshader;
     
-    mat4 P = perspective(1.0f, 50.0f, 90, 800.0f / 600.0f);
+    mat4 P = perspective(1.0f, 50.0f, 30, 800.0f / 600.0f);
     mat4 M = translate(vec3(0.0f, 0.0f, -10.0f)) * scale(vec3(1.0f, 1.39f, 1.0f));
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
     ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
@@ -85,9 +84,9 @@ int main(int argc, char* argv[]) {
         if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
             break;
         }
-        // int cur = SDL_GetTicks();
-        // cout << cur - uptime << endl;
-        // uptime = cur;
+        int cur = SDL_GetTicks();
+        cout << cur - uptime << endl;
+        uptime = cur;
 
         mgl_update();
     }
