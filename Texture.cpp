@@ -4,7 +4,7 @@
 
 #include "ext/stb_image.h"
 
-#define DATA(X, Y) data[Y * w + X]
+#define DATA(X, Y) data[(Y) * w + (X)]
 
 vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
     vec4 i0 = i00 + u * (i10 - i00);
@@ -84,12 +84,16 @@ Texture* Texture::readfromfile(std::string image) {
         if(nrChannels != 3 && nrChannels != 4) return NULL;
         Texture* texture = new Texture(width, height);
         if(nrChannels == 3) {
-            for(int i = 0; i < width * height; i++) {
-                texture->data[i] = unpackRGBA888(data + 3 * i);
+            for(int i = 0; i < height; i++) {
+                for(int j = 0; j < width; j++) {
+                    texture->data[(height - i - 1) * width + j] = unpackRGBA888(data + 3 * (i * width + j));
+                }
             }
         } else { // nrChannels == 4
-            for(int i = 0; i < width * height; i++) {
-                texture->data[i] = unpackRGBA8888(data + 4 * i);
+            for(int i = 0; i < height; i++) {
+                for(int j = 0; j < width; j++) {
+                    texture->data[(height - i - 1) * width + j] = unpackRGBA8888(data + 4 * (i * width + j));
+                }
             }
         }
         stbi_image_free(data);

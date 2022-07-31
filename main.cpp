@@ -52,7 +52,16 @@ class MyShader : public Shader {
 int main(int argc, char* argv[]) {
     mgl_init("hello rasterizer", 800, 600);
     Texture* t = Texture::readfromfile("assert/test.png");
-    
+    if(!t) {
+        cout << "can not load texture!" << endl;
+        mgl_quit();
+        return 0;
+    }
+
+    // int w, h;
+    // t->query(&w, &h, NULL, NULL);
+    // cout << w << " " << h << endl;
+
     mgl_set_init_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_set_init_zbuffer(1.0f);
 
@@ -79,9 +88,9 @@ int main(int argc, char* argv[]) {
         if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
             break;
         }
-        int cur = SDL_GetTicks();
-        cout << cur - uptime << endl;
-        uptime = cur;
+        // int cur = SDL_GetTicks();
+        // cout << cur - uptime << endl;
+        // uptime = cur;
 
         mgl_update();
     }
