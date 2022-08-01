@@ -131,7 +131,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
     vec2 c = (screen_mat * (tr.points[2] * r_w_c)).e;
     
     // 背面剔除
-    // if(cross(b - a, c - a) < 0.0f) return ;
+    if(cross(b - a, c - a) < 0.0f) return ;
 
     float fa = calc_edge_dis(b, c, a);
     float fb = calc_edge_dis(c, a, b);
@@ -142,7 +142,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
     float nfc = calc_edge_dis(a, b, vec2(-1.0f, -1.0f));
 
     const float eps = 1e-5;
-    if(fa < eps || fb < eps || fc < eps) return ;
+    if(fabs(fa) < eps || fabs(fb) < eps || fabs(fc) < eps) return ;
         
     auto shade = [&](vec2 p, vec4& color, float& z) -> bool {
         float alpha = calc_edge_dis(b, c, p) / fa;
