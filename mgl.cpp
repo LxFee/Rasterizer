@@ -31,17 +31,43 @@ struct Triangle {
     vec2 points[3];
 };
 
-void calc_tr_coords(const Triangle& tr, const vec2& point, float& alpha, float &beta, float &gamma) {
-    vec2 ca = tr.points[0] - tr.points[2];
-    float cross_ac = tr.points[0].x() * tr.points[2].y() - tr.points[0].y() * tr.points[2].x();
-
-    vec2 ba = tr.points[0] - tr.points[1];
-    float cross_ab = tr.points[0].x() * tr.points[1].y() - tr.points[0].y() * tr.points[1].x();
-
-    beta = (ca.y() * point.x() - ca.x() * point.y() + cross_ac) / (ca.y() * tr.points[1].x() - ca.x() * tr.points[1].y() + cross_ac);
-    gamma = (ba.y() * point.x() - ba.x() * point.y() + cross_ab) / (ba.y() * tr.points[2].x() - ba.x() * tr.points[2].y() + cross_ab);
-    alpha = 1.0f - beta - gamma;
+bool inside_triangle(const Triangle& triangle, const vec2& point){
+    vec3 v[3];
+    for(int i = 0; i < 3; i++) {
+        v[i] = {triangle.points[i].x(), triangle.points[i].y(), 1.0f};
+    }
+    vec3 f0, f1, f2;
+    f0 = cross(v[1], v[0]);
+    f1 = cross(v[2], v[1]);
+    f2 = cross(v[0], v[2]);
+    vec3 p(point.x(), point.y(), 1.0f);
+    if( (dot(p, f0) * dot(f0, v[2]) > 0.0f) && 
+        (dot(p, f1) * dot(f1, v[0]) > 0.0f) && 
+        (dot(p, f2) * dot(f2, v[1]) > 0.0f))
+        return true;
+    return false;
 }
+
+void calc_tr_coords(const Triangle& tr, const vec2& point, float& alpha, float &beta, float &gamma){
+    const vec2* v = tr.points;
+    float x = point.x();
+    float y = point.y();
+    alpha = (x*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*y + (v[1].x()*v[2].y() - v[2].x()*v[1].y())) / (v[0].x()*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*v[0].y() + (v[1].x()*v[2].y() - v[2].x()*v[1].y()));
+    beta = (x*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*y + (v[2].x()*v[0].y() - v[0].x()*v[2].y())) / (v[1].x()*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*v[1].y() + (v[2].x()*v[0].y() - v[0].x()*v[2].y()));
+    gamma = (x*(v[0].y() - v[1].y()) + (v[1].x() - v[0].x())*y + (v[0].x()*v[1].y() - v[1].x()*v[0].y())) / (v[2].x()*(v[0].y() - v[1].y()) + (v[1].x() - v[0].x())*v[2].y() + (v[0].x()*v[1].y() - v[1].x()*v[0].y()));
+}
+
+// void calc_tr_coords(const Triangle& tr, const vec2& point, float& alpha, float &beta, float &gamma) {
+//     vec2 ca = tr.points[0] - tr.points[2];
+//     float cross_ac = tr.points[0].x() * tr.points[2].y() - tr.points[0].y() * tr.points[2].x();
+
+//     vec2 ba = tr.points[0] - tr.points[1];
+//     float cross_ab = tr.points[0].x() * tr.points[1].y() - tr.points[0].y() * tr.points[1].x();
+
+//     beta = (ca.y() * point.x() - ca.x() * point.y() + cross_ac) / (ca.y() * tr.points[1].x() - ca.x() * tr.points[1].y() + cross_ac);
+//     gamma = (ba.y() * point.x() - ba.x() * point.y() + cross_ab) / (ba.y() * tr.points[2].x() - ba.x() * tr.points[2].y() + cross_ab);
+//     alpha = 1.0f - beta - gamma;
+// }
 
 
 struct Component {
@@ -133,71 +159,80 @@ void test_and_set_pixel(int x, int y, vec4 color, float depth) {
 
 void rasterize(Tr_element& tr, Shader* shader) {
     Triangle screen_tr;
-    float w_a = tr.points[0].w();
-    float w_b = tr.points[1].w();
-    float w_c = tr.points[2].w();
+    float r_w_a = 1.0f / tr.points[0].w();
+    float r_w_b = 1.0f / tr.points[1].w();
+    float r_w_c = 1.0f / tr.points[2].w();
 
-    float z_a = tr.points[0].z() / w_a;
-    float z_b = tr.points[1].z() / w_b;
-    float z_c = tr.points[2].z() / w_c;
+    float z_a = tr.points[0].z() * r_w_a;
+    float z_b = tr.points[1].z() * r_w_b;
+    float z_c = tr.points[2].z() * r_w_c;
 
     mat4 screen_mat(width / 2.0f, 0.0f, 0.0f, width / 2.0f,
                     0.0f, height / 2.0f, 0.0f, height / 2.0f,
                     0.0f, 0.0f, 1.0f, 0.0f,
                     0.0f, 0.0f, 0.0f, 1.0f);
-    vec2 a = (screen_mat * (tr.points[0] / w_a)).e;
-    vec2 b = (screen_mat * (tr.points[1] / w_b)).e;
-    vec2 c = (screen_mat * (tr.points[2] / w_c)).e;
+    vec2 a = (screen_mat * (tr.points[0] * r_w_a)).e;
+    vec2 b = (screen_mat * (tr.points[1] * r_w_b)).e;
+    vec2 c = (screen_mat * (tr.points[2] * r_w_c)).e;
     
     // 背面剔除
     if(cross(b - a, c - a) < 0.0f) return ;
 
     Triangle triangle(a, b, c);
 
-    vec2 left_bottom, right_top;
     auto min3f = [](float a, float b, float c) {return std::min(a, std::min(b, c));};
     auto max3f = [](float a, float b, float c) {return std::max(a, std::max(b, c));};
-
-    int xl = round(min3f(a.x(), b.x(), c.x())), yl = round(min3f(a.y(), b.y(), c.y()));
-    int xr = round(max3f(a.x(), b.x(), c.x())), yr = round(max3f(a.y(), b.y(), c.y()));
-    xl = std::max(0, xl);
-    yl = std::max(0, yl);
-    xr = std::min(xr, width);
-    yr = std::min(yr, height);
-
-    if(a.x() > b.x()) std::swap(a, b);
-    if(a.x() > c.x()) std::swap(a, c);    
     
     auto shade = [&](vec2 pos, vec4& color, float& z) -> bool {
-        const float eps = 1e-4;
+        if(!inside_triangle(triangle, pos)) return false;
+        
         float alpha, beta, gamma;
         calc_tr_coords(triangle, pos, alpha, beta, gamma);
-        if(alpha < -eps || beta < -eps || gamma < -eps) {
-            return false;
-        }
-        floatstream varying;
-        float rone = 1.0f / (alpha / w_a + beta / w_b + gamma / w_c);
+
+
+        floatstream int_varying;
+        float rone = 1.0f / (alpha * r_w_a + beta * r_w_b + gamma * r_w_c);
         for(int k = 0; k < tr.varyings[0].size(); k++) {
-            float v =   alpha * tr.varyings[0][k] / w_a + 
-                        beta * tr.varyings[1][k] / w_b + 
-                        gamma * tr.varyings[2][k] / w_c;
-            varying.push_back(v * rone);
+            float v =   alpha * tr.varyings[0][k] * r_w_a + 
+                        beta  * tr.varyings[1][k] * r_w_b + 
+                        gamma * tr.varyings[2][k] * r_w_c;
+            // TODO: fix check inside
+            if(std::isnan(v)) {
+                const vec2* v = triangle.points;
+                float x = pos.x();
+                float y = pos.y();
+                printf("a: %f %f\n", triangle.points[0].x(), triangle.points[0].y());
+                printf("b: %f %f\n", triangle.points[1].x(), triangle.points[1].y());
+                printf("c: %f %f\n", triangle.points[2].x(), triangle.points[2].y());
+                printf("p: %f %f\n", pos.x(), pos.y());
+                printf("t: %f %f %f\n", alpha, beta, gamma);
+                printf("w: %f %f %f\n", r_w_a, r_w_b, r_w_c);
+                printf("rone: %f\n", rone);
+                printf("debug: %f\n", ((v[0].x()*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*v[0].y()) + (v[1].x()*v[2].y() - v[2].x()*v[1].y())));
+                printf("debug: %f\n", cross(triangle.points[1] - triangle.points[0], triangle.points[2] - triangle.points[0]));
+                printf("\n");
+            }
+            int_varying.push_back(v * rone);
         }
         z = alpha * z_a + beta * z_b + gamma * z_c;
         z = (z + 1.0f) * 0.5f;
-        color = shader->fragment_shader(varying);
+        color = shader->fragment_shader(int_varying);
         return true;
     };
-    for(int i = yl; i < yr; i++) {
-        bool in = false;
-        for(int j = xl; j < xr; j++) {
+
+    int xl = floor(min3f(a.x(), b.x(), c.x())), yl = floor(min3f(a.y(), b.y(), c.y()));
+    int xr = ceil(max3f(a.x(), b.x(), c.x())), yr = ceil(max3f(a.y(), b.y(), c.y()));
+    xl = std::max(0, xl);
+    yl = std::max(0, yl);
+    xr = std::min(xr, width - 1);
+    yr = std::min(yr, height - 1);   
+
+    for(int i = yl; i <= yr; i++) {
+        for(int j = xl; j <= xr; j++) {
             float z;
             vec4 color;
             if(shade(vec2(j + 0.5f, i + 0.5f), color, z)) {
                 test_and_set_pixel(j, i, color, z);
-                in = true;
-            } else if(in) {
-                break;
             }
         }
     }
@@ -211,11 +246,10 @@ void clip(Tr_element &tr, std::vector<Tr_element>& triangles) {
     floatstream &va = tr.varyings[0];
     floatstream &vb = tr.varyings[1];
     floatstream &vc = tr.varyings[2];
-    const float eps = 1e-4;
 
-    bool c_a = a.w() < -a.z() + eps;
-    bool c_b = b.w() < -b.z() + eps;
-    bool c_c = c.w() < -c.z() + eps;
+    bool c_a = a.w() < -a.z();
+    bool c_b = b.w() < -b.z();
+    bool c_c = c.w() < -c.z();
 
     if(c_a && c_b && c_c) {
         return ;
@@ -265,8 +299,7 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
         tr.points[0] = shader->vertex_shader(vbo_ind, ebo.ind[i], tr.varyings[0]);
         tr.points[1] = shader->vertex_shader(vbo_ind, ebo.ind[i + 1], tr.varyings[1]);
         tr.points[2] = shader->vertex_shader(vbo_ind, ebo.ind[i + 2], tr.varyings[2]);
-        clip(tr, triangles); 
-        // triangles.push_back(tr);         
+        clip(tr, triangles);       
     }
     
     int tr_count = triangles.size();

@@ -29,13 +29,6 @@ void Texture::swap(std::vector<vec4> &rdata) {
 }
 
 vec4 Texture::sample(float u, float v) {
-    const float eps = 1e-4;
-    if(u < 0.0f && u > -eps) u = std::max(0.0f, u);
-    else if(u > 1.0f && u < 1.0f + eps) u = std::min(1.0f, u);
-
-    if(v < 0.0f && v > -eps) v = std::max(0.0f, v);
-    else if(v > 1.0f && v < 1.0f + eps) v = std::min(1.0f, v);
-    
     if(u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
         if(surround == FILLED) {
             return filled_color;
@@ -46,9 +39,9 @@ vec4 Texture::sample(float u, float v) {
         }
     }
     if(interpolation == NEAREST) {
-        int x = round(u * (w - 1));
-        int y = round(v * (h - 1));
-        return data[y * w + x];
+        int x = std::min(int(u * w), w - 1);
+        int y = std::min(int(v * h), h - 1);
+        return DATA(x, y);
     }
     if(interpolation == BILINEAR) {
         int x = u * (w - 1);

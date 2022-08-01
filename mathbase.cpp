@@ -329,19 +329,20 @@ mat4 scale(vec3 sc) {
                 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-mat4 ortho(float left, float right, float bottom, float top, float near, float far) {
-    return  scale(vec3(2.0f / (right - left), 2.0f / (top - bottom), -2.0f / (far - near))) *
-            translate(vec3(-(left + right) / 2.0f, -(bottom + top) / 2.0f, (near + far) / 2.0f));
+mat4 ortho(float l, float r, float b, float t, float n, float f) {
+    return  mat4(2.0f / (r - l), 0.0f, 0.0f, (l + r) / (l - r),
+                 0.0f, 2.0f / (t - b), 0.0f, (b + t) / (b - t),
+                 0.0f, 0.0f, 2.0f / (n - f), (n + f) / (n - f),
+                 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 // fov: degree
-mat4 perspective(float near, float far, float fov, float aspect) {
-    float top = tan(radian(fov) / 2.0f) * near;
-    float right = aspect * top;
-    return ortho(-right, right, -top, top, near, far) * 
-            mat4(   near, 0.0f, 0.0f, 0.0f,
-                    0.0f, near, 0.0f, 0.0f,
-                    0.0f, 0.0f, near + far, near * far,
+mat4 perspective(float n, float f, float fov, float aspect) {
+    float t = tan(radian(fov) / 2.0f) * n;
+    float r = aspect * t;
+    return  mat4(   n / r, 0.0f, 0.0f, 0.0f,
+                    0.0f, n / t, 0.0f, 0.0f,
+                    0.0f, 0.0f, (n + f) / (n - f), 2.0f * n * f / (n - f),
                     0.0f, 0.0f, -1.0f, 0.0f);
 }
 

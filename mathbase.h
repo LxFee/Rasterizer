@@ -129,10 +129,10 @@ struct mat4 {
 float clamp(float x, float mi, float mx);
 
 inline int packRGBA8888(vec4 col) {
-    int r = static_cast<int>(256 * clamp(col.r(), 0.0, 0.9999));
-    int g = static_cast<int>(256 * clamp(col.g(), 0.0, 0.9999));
-    int b = static_cast<int>(256 * clamp(col.b(), 0.0, 0.9999));
-    int a = static_cast<int>(256 * clamp(col.a(), 0.0, 0.9999));
+    int r = static_cast<int>(255 * clamp(col.r(), 0.0, 1.0));
+    int g = static_cast<int>(255 * clamp(col.g(), 0.0, 1.0));
+    int b = static_cast<int>(255 * clamp(col.b(), 0.0, 1.0));
+    int a = static_cast<int>(255 * clamp(col.a(), 0.0, 1.0));
     return a + (r << 8) + (g << 16) + (b << 24);
 }
 
@@ -150,9 +150,9 @@ mat4 scale(vec3 sc);
 
 mat4 rotate(vec3 axis, float angle);
 
-mat4 ortho(float left, float right, float bottom, float top, float near, float far);
+mat4 ortho(float l, float r, float b, float t, float n, float f);
 
-mat4 perspective(float near, float far, float fov, float aspect);
+mat4 perspective(float n, float f, float fov, float aspect);
 
 inline float radian(float d) {
     return d * PI / 180.0f;

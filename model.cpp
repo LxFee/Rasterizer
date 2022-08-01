@@ -3,10 +3,6 @@
 #include <sstream>
 #include <fstream>
 
-vec3 getnormal(vec3 a, vec3 b, vec3 c) {
-    return cross(b - a, c - a).normalized();
-}
-
 Model::Model(const std::string filename) {
     std::ifstream in;
     in.open(filename, std::ifstream::in);
@@ -23,18 +19,18 @@ Model::Model(const std::string filename) {
         if (!line.compare(0, 2, "v ")) {
             iss >> trash;
             vec3 v;
-            for (int i=0;i<3;i++) iss >> v.e[i];
+            for (int i = 0; i < 3; i++) iss >> v.e[i];
             verts.push_back(v);
         } else if (!line.compare(0, 3, "vn ")) {
             iss >> trash >> trash;
             vec3 n;
-            for (int i=0;i<3;i++) iss >> n.e[i];
+            for (int i = 0; i < 3; i++) iss >> n.e[i];
             normals.push_back(n.normalized());
         } else if (!line.compare(0, 3, "vt ")) {
             iss >> trash >> trash;
             vec2 uv;
-            for (int i=0;i<2;i++) iss >> uv.e[i];
-            uvs.push_back({uv.x(), 1-uv.y()});
+            for (int i = 0;i < 2; i++) iss >> uv.e[i];
+            uvs.push_back(uv);
         }
     }
     bool has_normal = !normals.empty();
@@ -71,7 +67,7 @@ Model::Model(const std::string filename) {
                     cnt++;
                 }
                 int ind = facet_vrt.size() - 3;
-                vec3 fnormal = getnormal(verts[facet_vrt[ind]], verts[facet_vrt[ind + 1]], verts[facet_vrt[ind + 2]]);
+                vec3 fnormal = cross(verts[facet_vrt[ind + 1]] - verts[facet_vrt[ind]], verts[facet_vrt[ind + 2]] - verts[facet_vrt[ind]]).normalized();
                 for(int i = ind; i < ind + 3; i++) {
                     norms[facet_vrt[i]] = norms[facet_vrt[i]] + fnormal;
                     normal_count[facet_vrt[i]]++;
@@ -87,7 +83,7 @@ Model::Model(const std::string filename) {
     if(!has_normal) {
         for(int i = 0; i < norms.size(); i++) {
             if(normal_count[i]) {
-                norms[i] = (norms[i] / normal_count[i]).normalized();
+                norms[i] = norms[i].normalized();
             }
         }
     }
