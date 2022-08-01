@@ -15,25 +15,29 @@ int tlocation_tex = -1;
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
-        vec3 pos = getattr(vbo, index, alocation_p);
-        vec3 norm = getattr(vbo, index, alocation_n);
-        vec2 uv = getattr(vbo, index, alocation_uv);
+        vec3 pos, norm;
+        vec2 uv;
+        getattr(vbo, index, alocation_p, pos);
+        getattr(vbo, index, alocation_n, norm);
+        getattr(vbo, index, alocation_uv, uv);
         
-        putvarying(varying, norm.e, 3);
-        putvarying(varying, uv.e, 2);
-        putvarying(varying, pos.e, 3);
+        putvarying(varying, norm);
+        putvarying(varying, uv);
+        putvarying(varying, pos);
 
-        mat4 mvp = getunif(ulocation_mvp);
+        mat4 mvp;
+        getunif(ulocation_mvp, mvp);
         vec4 fpos = mvp * vec4(pos, 1.0f);
         return fpos;
     }
 
     vec4 fragment_shader(floatstream& varying) const {
         int offset = 0;
-        vec3 n = getvaring(varying, 3, offset);
-        vec2 uv = getvaring(varying, 2, offset);
-        vec3 pos = getvaring(varying, 3, offset);
-
+        vec3 n, uv, pos;
+        getvaring(varying, n, offset);
+        getvaring(varying, uv, offset);
+        getvaring(varying, pos, offset);
+        
         return vec4((n.normalized() + vec3(1.0f)) / 2.0f, 1.0f);
         // return sample(tlocation_tex, uv.u(), uv.v());
     }
@@ -68,7 +72,7 @@ int main(int argc, char* argv[]) {
 
         mgl_clear(MGL_COLOR | MGL_DEPTH);
         mat4 M = translate(vec3(0.0f, 0.0f, angle)) * scale(vec3(5.0f, 5.0f, 5.0f));// * rotate(vec3(0.0f, 1.0f, 0.0f), angle);
-        ulocation_mvp = mshader.uniform((P * M).e, 16, ulocation_mvp);
+        ulocation_mvp = mshader.uniform(P * M, ulocation_mvp);
 
         mgl_draw(vbo, ebo, &mshader);
 
