@@ -2,7 +2,6 @@
 #include "model.h"
 #include <cmath>
 #include <cstdio>
-#include <omp.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -20,55 +19,6 @@ struct Tr_element {
     vec4 points[3];
     floatstream varyings[3];
 };
-
-struct Triangle {
-    Triangle() {}
-    Triangle(vec2 a, vec2 b, vec2 c) {
-        points[0] = a;
-        points[1] = b;
-        points[2] = c;
-    }
-    vec2 points[3];
-};
-
-bool inside_triangle(const Triangle& triangle, const vec2& point){
-    vec3 v[3];
-    for(int i = 0; i < 3; i++) {
-        v[i] = {triangle.points[i].x(), triangle.points[i].y(), 1.0f};
-    }
-    vec3 f0, f1, f2;
-    f0 = cross(v[1], v[0]);
-    f1 = cross(v[2], v[1]);
-    f2 = cross(v[0], v[2]);
-    vec3 p(point.x(), point.y(), 1.0f);
-    if( (dot(p, f0) * dot(f0, v[2]) > 0.0f) && 
-        (dot(p, f1) * dot(f1, v[0]) > 0.0f) && 
-        (dot(p, f2) * dot(f2, v[1]) > 0.0f))
-        return true;
-    return false;
-}
-
-void calc_tr_coords(const Triangle& tr, const vec2& point, float& alpha, float &beta, float &gamma){
-    const vec2* v = tr.points;
-    float x = point.x();
-    float y = point.y();
-    alpha = (x*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*y + (v[1].x()*v[2].y() - v[2].x()*v[1].y())) / (v[0].x()*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*v[0].y() + (v[1].x()*v[2].y() - v[2].x()*v[1].y()));
-    beta = (x*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*y + (v[2].x()*v[0].y() - v[0].x()*v[2].y())) / (v[1].x()*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*v[1].y() + (v[2].x()*v[0].y() - v[0].x()*v[2].y()));
-    gamma = (x*(v[0].y() - v[1].y()) + (v[1].x() - v[0].x())*y + (v[0].x()*v[1].y() - v[1].x()*v[0].y())) / (v[2].x()*(v[0].y() - v[1].y()) + (v[1].x() - v[0].x())*v[2].y() + (v[0].x()*v[1].y() - v[1].x()*v[0].y()));
-}
-
-// void calc_tr_coords(const Triangle& tr, const vec2& point, float& alpha, float &beta, float &gamma) {
-//     vec2 ca = tr.points[0] - tr.points[2];
-//     float cross_ac = tr.points[0].x() * tr.points[2].y() - tr.points[0].y() * tr.points[2].x();
-
-//     vec2 ba = tr.points[0] - tr.points[1];
-//     float cross_ab = tr.points[0].x() * tr.points[1].y() - tr.points[0].y() * tr.points[1].x();
-
-//     beta = (ca.y() * point.x() - ca.x() * point.y() + cross_ac) / (ca.y() * tr.points[1].x() - ca.x() * tr.points[1].y() + cross_ac);
-//     gamma = (ba.y() * point.x() - ba.x() * point.y() + cross_ab) / (ba.y() * tr.points[2].x() - ba.x() * tr.points[2].y() + cross_ab);
-//     alpha = 1.0f - beta - gamma;
-// }
-
 
 struct Component {
     Component(int size, float * data) : size(size), data(data) {}
@@ -157,8 +107,12 @@ void test_and_set_pixel(int x, int y, vec4 color, float depth) {
     }
 }
 
+float calc_edge_dis(const vec2& v1, const vec2& v2, const vec2& point) {
+    double x = point.x(), y = point.y();
+    return x * (v1.y() - v2.y()) + y * (v2.x() - v1.x()) + ((double)v1.x() * v2.y() - (double)v2.x() * v1.y());
+}
+
 void rasterize(Tr_element& tr, Shader* shader) {
-    Triangle screen_tr;
     float r_w_a = 1.0f / tr.points[0].w();
     float r_w_b = 1.0f / tr.points[1].w();
     float r_w_c = 1.0f / tr.points[2].w();
@@ -171,55 +125,53 @@ void rasterize(Tr_element& tr, Shader* shader) {
                     0.0f, height / 2.0f, 0.0f, height / 2.0f,
                     0.0f, 0.0f, 1.0f, 0.0f,
                     0.0f, 0.0f, 0.0f, 1.0f);
+    
     vec2 a = (screen_mat * (tr.points[0] * r_w_a)).e;
     vec2 b = (screen_mat * (tr.points[1] * r_w_b)).e;
     vec2 c = (screen_mat * (tr.points[2] * r_w_c)).e;
     
     // 背面剔除
-    if(cross(b - a, c - a) < 0.0f) return ;
+    // if(cross(b - a, c - a) < 0.0f) return ;
 
-    Triangle triangle(a, b, c);
+    float fa = calc_edge_dis(b, c, a);
+    float fb = calc_edge_dis(c, a, b);
+    float fc = calc_edge_dis(a, b, c);
+
+    float nfa = calc_edge_dis(b, c, vec2(-1.0f, -1.0f));
+    float nfb = calc_edge_dis(c, a, vec2(-1.0f, -1.0f));
+    float nfc = calc_edge_dis(a, b, vec2(-1.0f, -1.0f));
+
+    const float eps = 1e-5;
+    if(fa < eps || fb < eps || fc < eps) return ;
+        
+    auto shade = [&](vec2 p, vec4& color, float& z) -> bool {
+        float alpha = calc_edge_dis(b, c, p) / fa;
+        float beta  = calc_edge_dis(c, a, p) / fb;
+        float gamma = calc_edge_dis(a, b, p) / fc;
+        
+        if(alpha < 0.0f || beta < 0.0f || gamma < 0.0f) return false;
+        if( (alpha > 0.0f || fa * nfa > 0.0f) &&
+            (beta  > 0.0f || fb * nfb > 0.0f) &&
+            (gamma > 0.0f || fc * nfc > 0.0f)) {
+
+            floatstream int_varying;
+            float rone = 1.0f / (alpha * r_w_a + beta * r_w_b + gamma * r_w_c);
+            for(int k = 0; k < tr.varyings[0].size(); k++) {
+                float v =   alpha * tr.varyings[0][k] * r_w_a + 
+                            beta  * tr.varyings[1][k] * r_w_b + 
+                            gamma * tr.varyings[2][k] * r_w_c;
+                int_varying.push_back(v * rone);
+            }
+            z = alpha * z_a + beta * z_b + gamma * z_c;
+            z = (z + 1.0f) * 0.5f;
+            color = shader->fragment_shader(int_varying);
+            return true;
+        }
+        return false;
+    };
 
     auto min3f = [](float a, float b, float c) {return std::min(a, std::min(b, c));};
     auto max3f = [](float a, float b, float c) {return std::max(a, std::max(b, c));};
-    
-    auto shade = [&](vec2 pos, vec4& color, float& z) -> bool {
-        if(!inside_triangle(triangle, pos)) return false;
-        
-        float alpha, beta, gamma;
-        calc_tr_coords(triangle, pos, alpha, beta, gamma);
-
-
-        floatstream int_varying;
-        float rone = 1.0f / (alpha * r_w_a + beta * r_w_b + gamma * r_w_c);
-        for(int k = 0; k < tr.varyings[0].size(); k++) {
-            float v =   alpha * tr.varyings[0][k] * r_w_a + 
-                        beta  * tr.varyings[1][k] * r_w_b + 
-                        gamma * tr.varyings[2][k] * r_w_c;
-            // TODO: fix check inside
-            if(std::isnan(v)) {
-                const vec2* v = triangle.points;
-                float x = pos.x();
-                float y = pos.y();
-                printf("a: %f %f\n", triangle.points[0].x(), triangle.points[0].y());
-                printf("b: %f %f\n", triangle.points[1].x(), triangle.points[1].y());
-                printf("c: %f %f\n", triangle.points[2].x(), triangle.points[2].y());
-                printf("p: %f %f\n", pos.x(), pos.y());
-                printf("t: %f %f %f\n", alpha, beta, gamma);
-                printf("w: %f %f %f\n", r_w_a, r_w_b, r_w_c);
-                printf("rone: %f\n", rone);
-                printf("debug: %f\n", ((v[0].x()*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*v[0].y()) + (v[1].x()*v[2].y() - v[2].x()*v[1].y())));
-                printf("debug: %f\n", cross(triangle.points[1] - triangle.points[0], triangle.points[2] - triangle.points[0]));
-                printf("\n");
-            }
-            int_varying.push_back(v * rone);
-        }
-        z = alpha * z_a + beta * z_b + gamma * z_c;
-        z = (z + 1.0f) * 0.5f;
-        color = shader->fragment_shader(int_varying);
-        return true;
-    };
-
     int xl = floor(min3f(a.x(), b.x(), c.x())), yl = floor(min3f(a.y(), b.y(), c.y()));
     int xr = ceil(max3f(a.x(), b.x(), c.x())), yr = ceil(max3f(a.y(), b.y(), c.y()));
     xl = std::max(0, xl);
@@ -296,9 +248,11 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
 
     for(int i = 0; i < ebo.count; i += 3) {
         Tr_element tr;
-        tr.points[0] = shader->vertex_shader(vbo_ind, ebo.ind[i], tr.varyings[0]);
-        tr.points[1] = shader->vertex_shader(vbo_ind, ebo.ind[i + 1], tr.varyings[1]);
-        tr.points[2] = shader->vertex_shader(vbo_ind, ebo.ind[i + 2], tr.varyings[2]);
+        for(int j = 0; j < 3; j++) {
+            int ind = i + j;
+            if(ebo.ind) ind = ebo.ind[i + j];
+            tr.points[j] = shader->vertex_shader(vbo_ind, ind, tr.varyings[j]);
+        }
         clip(tr, triangles);       
     }
     

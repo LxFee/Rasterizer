@@ -7,9 +7,14 @@ Model::Model(const std::string filename) {
     std::ifstream in;
     in.open(filename, std::ifstream::in);
     if (in.fail()) return;
+
+    std::vector<vec3> vertexes;
     std::vector<vec3> normals;
     std::vector<vec2> uvs;
-    std::vector<int> normal_count;
+
+    std::vector<int> facet_vrt;
+    std::vector<int> facet_norm;
+    std::vector<int> facet_uv;
     
     std::string line;
     while (!in.eof()) {
@@ -20,7 +25,7 @@ Model::Model(const std::string filename) {
             iss >> trash;
             vec3 v;
             for (int i = 0; i < 3; i++) iss >> v.e[i];
-            verts.push_back(v);
+            vertexes.push_back(v);
         } else if (!line.compare(0, 3, "vn ")) {
             iss >> trash >> trash;
             vec3 n;
@@ -34,69 +39,66 @@ Model::Model(const std::string filename) {
         }
     }
     bool has_normal = !normals.empty();
+    bool has_uv = !uvs.empty();
+    if(!has_normal) {
+        normals.resize(vertexes.size(), vec3(0.0f));
+    }
+
     in.clear();
     in.seekg(0);
-    norms.resize(verts.size(), vec3(0.0f));
-    tex_coord.resize(verts.size(), vec2(0.0f));
-    normal_count.resize(verts.size(), 0);
-
     while (!in.eof()) {
         std::getline(in, line);
         std::istringstream iss(line.c_str());
         char trash;
         if (!line.compare(0, 2, "f ")) {
-            int f,t,n;
+            int f, t, n;
             iss >> trash;
             int cnt = 0;
-            if(has_normal) {
-                while (iss >> f >> trash >> t >> trash >> n) {
-                    facet_vrt.push_back(--f);
-                    norms[f] = normals[--n];
-                    tex_coord[f] = uvs[--t];
-                    cnt++;
+            while(iss >> f) {
+                cnt++;
+                facet_vrt.push_back(--f);
+                iss >> trash;
+                if(has_uv) {
+                    iss >> t;
+                    facet_uv.push_back(--t);
                 }
-                if (3!=cnt) {
-                    std::cerr << "Error: the obj file is supposed to be triangulated" << std::endl;
-                    in.close();
-                    return;
+                if(has_normal) {
+                    iss >> trash >> n;
+                    facet_norm.push_back(--n);
+                } else {
+                    facet_norm.push_back(f);
                 }
-            } else {
-                while (iss >> f >> trash >> t) {
-                    facet_vrt.push_back(--f);
-                    tex_coord[f] = uvs[--t];
-                    cnt++;
-                }
+            }
+            if(3 != cnt) {
+                std::cerr << "Error: the obj file is supposed to be triangulated" << std::endl;
+                in.close();
+                return;
+            }
+            if(!has_normal) {
                 int ind = facet_vrt.size() - 3;
-                vec3 fnormal = cross(verts[facet_vrt[ind + 1]] - verts[facet_vrt[ind]], verts[facet_vrt[ind + 2]] - verts[facet_vrt[ind]]).normalized();
+                vec3 &a = vertexes[facet_vrt[ind]], &b = vertexes[facet_vrt[ind + 1]], &c = vertexes[facet_vrt[ind + 2]];
+                vec3 f_normal = cross(b - a, c - a).normalized();
                 for(int i = ind; i < ind + 3; i++) {
-                    norms[facet_vrt[i]] = norms[facet_vrt[i]] + fnormal;
-                    normal_count[facet_vrt[i]]++;
-                }
-                if (3!=cnt) {
-                    std::cerr << "Error: the obj file is supposed to be triangulated" << std::endl;
-                    in.close();
-                    return;
+                    normals[facet_vrt[i]] = normals[facet_vrt[i]] + f_normal;
                 }
             }
         }
     } 
-    if(!has_normal) {
-        for(int i = 0; i < norms.size(); i++) {
-            if(normal_count[i]) {
-                norms[i] = norms[i].normalized();
-            }
+    for(int i = 0; i < facet_vrt.size(); i++) {
+        int f = facet_vrt[i];
+        int n = facet_norm[i];
+        verts.push_back(vertexes[f]);
+        norms.push_back(normals[n].normalized());
+        if(!facet_uv.empty()) {
+            int t = facet_uv[i];
+            tex_coord.push_back(uvs[t]);
         }
     }
     in.close();
-    std::cout << has_normal << std::endl;
-    // std::cerr << "# v# " << nverts() << " f# "  << nfaces() << " vt# " << tex_coord.size() << " vn# " << norms.size() << std::endl;
+    // std::cerr << "# v# " << nverts() << std::endl;
 }
 
 int Model::nverts() const {
     return verts.size();
-}
-
-int Model::nfaces() const {
-    return facet_vrt.size()/3;
 }
 

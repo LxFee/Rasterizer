@@ -6,7 +6,8 @@ SOURCE = $(wildcard *.cpp)
 OBJECTS = ${SOURCE:%.cpp=%.o}
 INCLUDE_DIR = ext/SDL2/include
 LIB_DIR = ext/SDL2/lib
-CFLAG = -MMD -std=c++17 -g
+CFLAG = -MMD -std=c++17
+LINKFLAG = 
 LIB = mingw32 SDL2main SDL2
 VPATH = $(INCLUDE_DIR)
 EXEC = razer
@@ -15,7 +16,7 @@ EXEC = razer
 
 
 SDL2demo: $(OBJECTS)
-	$(CC) $^ -L$(LIB_DIR) $(LIB:%=-l%) -o $(EXEC)
+	$(CC) $^ -L$(LIB_DIR) $(LIB:%=-l%) $(LINKFLAG) -o $(EXEC)
 
 $(OBJECTS) : %.o: %.cpp
 	$(CC) -I$(INCLUDE_DIR) $(CFLAG) -c $< -o $@
