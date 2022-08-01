@@ -10,7 +10,6 @@ public:
     enum INTERPOLATION {BILINEAR, NEAREST};
 
     Texture(int w, int h);
-    void swap(std::vector<vec4> &rdata);
     vec4 sample(float u, float v);
     static Texture* readfromfile(std::string image);
     void query(int* w, int *h, int *surr, int *intp);

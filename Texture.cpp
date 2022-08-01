@@ -24,10 +24,6 @@ void Texture::query(int* w, int *h, int *surr, int *intp) {
     if(intp) *intp = this->interpolation;
 }
 
-void Texture::swap(std::vector<vec4> &rdata) {
-    rdata.swap(data);
-}
-
 vec4 Texture::sample(float u, float v) {
     if(u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
         if(surround == FILLED) {
