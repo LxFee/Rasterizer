@@ -68,6 +68,7 @@ template<class T>
 void Shader::getvaring(floatstream& varying, T& var, int& offset) {
     assert(sizeof(var) % sizeof(float) == 0);
     int num = sizeof(var) / sizeof(float);
+    assert(offset + num <= varying.size());
     var = varying.data() + offset;
     offset += num;
 }

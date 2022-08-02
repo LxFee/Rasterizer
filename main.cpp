@@ -33,7 +33,8 @@ class MyShader : public Shader {
 
     vec4 fragment_shader(floatstream& varying) const {
         int offset = 0;
-        vec3 n, uv, pos;
+        vec3 n, pos;
+        vec2 uv;
         getvaring(varying, n, offset);
         getvaring(varying, uv, offset);
         getvaring(varying, pos, offset);
