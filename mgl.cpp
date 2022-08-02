@@ -131,7 +131,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
     vec2 c = (screen_mat * (tr.points[2] * r_w_c)).e;
     
     // 背面剔除
-    if(cross(b - a, c - a) < 0.0f) return ;
+    // if(cross(b - a, c - a) < 0.0f) return ;
 
     float fa = calc_edge_dis(b, c, a);
     float fb = calc_edge_dis(c, a, b);

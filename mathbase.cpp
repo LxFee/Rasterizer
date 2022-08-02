@@ -1,5 +1,6 @@
 #include "mathbase.h"
 #include <cmath>
+#include <cassert>
 
 /********************** vec4 **********************/
 vec4::vec4() {
@@ -222,10 +223,113 @@ float cross(const vec2 &lhs, const vec2 &rhs) {
     return lhs.x() * rhs.y() - rhs.x() * lhs.y();
 }
 
+/********************** mat3 **********************/
+mat3::mat3(float k) {
+    for(int i = 0; i < 9; i++) e[i] = 0.0f;
+    for(int i = 0; i < 3; i++) e[i * 3 + i] = k;
+}
+
+mat3::mat3(const float* ep) {
+    for(int i = 0; i < 9; i++) {
+        e[i] = ep[i];
+    }
+}
+
+mat3::mat3( float m00, float m01, float m02,
+            float m10, float m11, float m12,
+            float m20, float m21, float m22) {
+    e[0] = m00;
+    e[1] = m01;
+    e[2] = m02;
+    e[3] = m10;
+    e[4] = m11;
+    e[5] = m12;
+    e[6] = m20;
+    e[7] = m21;
+    e[8] = m22;
+}
+
+float mat3::det() const {
+    #define THIS_DET22(A, B, C, D) (e[(A)] * e[(D)] - e[(B)] * e[(C)])
+    return e[0] * THIS_DET22(4, 5, 7, 8) - e[1] * THIS_DET22(3, 5, 6, 8) + e[2] * THIS_DET22(3, 4, 6, 7);
+}
+
+mat3 mat3::T() const {
+    mat3 res;
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            res.e[i * 3 + j] = e[j * 3 + i];
+        }
+    }
+    return res;
+}
+
+
+mat3 mat3::inv() const {
+    mat3 res;
+    mat3 t = T();
+    #define DET22(A, B, C, D) (t.e[(A)] * t.e[(D)] - t.e[(B)] * t.e[(C)])
+    res.e[0] = DET22(4, 5, 7, 8);
+    res.e[1] = -DET22(3, 5, 6, 8);
+    res.e[2] = DET22(3, 4, 6, 7);
+    res.e[3] = -DET22(1, 2, 7, 8);
+    res.e[4] = DET22(0, 2, 6, 8);
+    res.e[5] = -DET22(0, 1, 6, 7);
+    res.e[6] = DET22(1, 2, 4, 5);
+    res.e[7] = -DET22(0, 2, 3, 5);
+    res.e[8] = DET22(0, 1, 3, 4);
+    float rd = 1.0f / det();
+    return res * rd;
+}
+
+mat3 mat3::operator * (float k) const {
+    mat3 res(*this);
+    for(int i = 0; i < 9; i++) res.e[i] *= k;
+    return res;
+}
+
+vec3 mat3::operator * (const vec3& rhs) const {
+    vec3 res(0.0f);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            res.e[i] += rhs.e[j] * e[i * 3 + j];
+        }
+    }
+    return res;
+}
+
+mat3 mat3::operator * (const mat3& rhs) const {
+    mat3 res(0.0f);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            for(int k = 0; k < 3; k++) {
+                res.e[i * 3 + j] += e[i * 3 + k] * rhs.e[k * 3 + j];
+            }
+        }
+    }
+    return res;
+}
+
+mat3 mat3::operator + (const mat3& rhs) const {
+    mat3 res(0.0f);
+    for(int i = 0; i < 9; i++) res.e[i] = e[i] + rhs.e[i];
+    return res;
+}
+
 /********************** mat4 **********************/
 mat4::mat4(float k) {
     for(int i = 0; i < 16; i++) e[i] = 0.0f;
     for(int i = 0; i < 4; i++) e[i * 4 + i] = k;
+}
+
+mat4::mat4(const mat3& m) {
+    for(int i = 0; i < 16; i++) e[i] = 0.0f;
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            e[i * 4 + j] = m.e[i * 3 + j];
+        }
+    }
+    e[15] = 1.0f;
 }
 
 mat4::mat4(const float *ep) {
@@ -252,13 +356,6 @@ mat4::mat4( float m00, float m01, float m02, float m03,
     e[13] = m31;
     e[14] = m32;
     e[15] = m33;
-}
-
-mat4::mat4(vec4 v0, vec4 v1, vec4 v2, vec4 v3) {
-    for(int i = 0; i < 4; i++) e[i * 4 + 0] = v0.e[i];
-    for(int i = 0; i < 4; i++) e[i * 4 + 1] = v1.e[i];
-    for(int i = 0; i < 4; i++) e[i * 4 + 2] = v2.e[i];
-    for(int i = 0; i < 4; i++) e[i * 4 + 3] = v3.e[i];
 }
 
 vec4 mat4::operator * (const vec4& rhs) const {
@@ -305,8 +402,6 @@ mat4 mat4::operator * (float k) const {
 }
 
 
-
-
 /********************** Tool Functions **********************/
 
 float clamp(float x, float mi, float mx) {
@@ -348,18 +443,34 @@ mat4 perspective(float n, float f, float fov, float aspect) {
 
 mat4 rotate(vec3 axis, float angle) {
     angle = radian(angle);
-    mat4 res(1.0f);
-    mat4 N( 0.0f, -axis.z(), axis.y(), 0.0f,
-            axis.z(), 0.0f, -axis.x(), 0.0f,
-            -axis.y(), axis.x(), 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f);
-    mat4 maxis( axis.x() * axis.x(), axis.x() * axis.y(), axis.x() * axis.z(), 0.0f,
-                axis.y() * axis.x(), axis.y() * axis.y(), axis.y() * axis.z(), 0.0f,
-                axis.z() * axis.x(), axis.z() * axis.y(), axis.z() * axis.z(), 0.0f,
-                0.0f, 0.0f, 0.0f, 0.0f);
+    mat3 res(1.0f);
+    mat3 N( 0.0f, -axis.z(), axis.y(),
+            axis.z(), 0.0f, -axis.x(),
+            -axis.y(), axis.x(), 0.0f);
+    mat3 maxis( axis.x() * axis.x(), axis.x() * axis.y(), axis.x() * axis.z(),
+                axis.y() * axis.x(), axis.y() * axis.y(), axis.y() * axis.z(),
+                axis.z() * axis.x(), axis.z() * axis.y(), axis.z() * axis.z());
 
     res = res * cos(angle) + maxis * (1 - cos(angle)) + N * sin(angle);
-    res.e[15] = 1.0f;
-    return res;    
+    return mat4(res);    
 }
 
+mat4 lookat(vec3 eye, vec3 at, vec3 up) {
+    vec3 z = (eye - at).normalized();    
+    vec3 x = cross(up, z).normalized();
+    vec3 y = cross(z, x).normalized();
+    return mat4( x.x(), x.y(), x.z(), -dot(eye, x),
+                 y.x(), y.y(), y.z(), -dot(eye, y),
+                 z.x(), z.y(), z.z(), -dot(eye, z),
+                 0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+mat3 clip_translate(const mat4& m) {
+    mat3 res;
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            res.e[i * 3 + j] = m.e[i * 4 + j];
+        }
+    }
+    return res;
+}

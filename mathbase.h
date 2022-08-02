@@ -104,14 +104,39 @@ vec2 operator*(const vec2& lhs, float k);
 
 float cross(const vec2 &lhs, const vec2 &rhs);
 
+
+struct mat3 {
+    mat3(float k = 0.0f);
+    mat3(const float* ep);
+    mat3(   float m00, float m01, float m02,
+            float m10, float m11, float m12,
+            float m20, float m21, float m22);
+
+    mat3 T() const;
+    
+    float det() const;
+
+    mat3 inv() const ;
+
+    mat3 operator * (float k) const;
+
+    vec3 operator * (const vec3& rhs) const ;
+
+    mat3 operator * (const mat3& rhs) const ;
+
+    mat3 operator + (const mat3& rhs) const;
+
+    float e[9];
+};
+
 struct mat4 {
     mat4(float k = 0.0f);
     mat4(const float* ep);
+    mat4(const mat3& m);
     mat4(   float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
             float m20, float m21, float m22, float m23,
             float m30, float m31, float m32, float m33);
-    mat4(vec4 v0, vec4 v1, vec4 v2, vec4 v3);
 
     mat4 T() const;
 
@@ -153,6 +178,10 @@ mat4 rotate(vec3 axis, float angle);
 mat4 ortho(float l, float r, float b, float t, float n, float f);
 
 mat4 perspective(float n, float f, float fov, float aspect);
+
+mat4 lookat(vec3 eye, vec3 at, vec3 up);
+
+mat3 clip_translate(const mat4& m);
 
 inline float radian(float d) {
     return d * PI / 180.0f;
