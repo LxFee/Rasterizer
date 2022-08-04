@@ -15,6 +15,7 @@ int alocation_uv;
 int ulocation_mvp = -1;
 int ulocation_mit = -1;
 int ulocation_m = -1;
+int ulocation_mvp_emp = -1;
 
 int tlocation_tex = -1;
 
@@ -86,6 +87,24 @@ class MyShader : public Shader {
     }
 };
 
+class EmptyShader : public Shader {
+    vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
+        vec3 pos, norm;
+        getattr(vbo, index, alocation_p, pos);
+        
+        mat4 mvp;
+        getunif(ulocation_mvp_emp, mvp);
+
+        vec4 fpos = mvp * vec4(pos, 1.0f);
+        return fpos;
+    }
+
+    vec4 fragment_shader(floatstream& varying) const {
+
+        return vec4(0.0f);
+    }
+};
+
 
 int main(int argc, char* argv[]) {
     
@@ -94,6 +113,8 @@ int main(int argc, char* argv[]) {
     mgl_set_init_zbuffer(1.0f);
 
     MyShader mshader;
+    EmptyShader eshader;
+
     // texture
     Texture* t = Texture::readfromfile("asset/cow/cow.png");
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
@@ -117,12 +138,15 @@ int main(int argc, char* argv[]) {
     ulocation_mvp = mshader.uniform(P * V * M, ulocation_mvp);
     ulocation_mit = mshader.uniform(MIT, ulocation_mit);
     ulocation_m = mshader.uniform(M, ulocation_m);
+    ulocation_mvp_emp = eshader.uniform(P * V * M, ulocation_mvp_emp);
 
     int uptime = 0;
     float angle = 0.0f;
     while(1) {
         angle += 5.0f;
         mgl_clear(MGL_COLOR | MGL_DEPTH);
+
+        mgl_draw(vbo, ebo, &eshader);
 
         mgl_draw(vbo, ebo, &mshader);
 

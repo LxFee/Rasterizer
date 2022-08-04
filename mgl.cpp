@@ -92,26 +92,28 @@ void mgl_init(const char *title, int w, int h) {
 }
 
 
-void set_pixel(int x, int y, vec4 color) {
+void set_pixel(int x, int y, vec4 color, float depth) {
     assert(x >= 0 && x < width);
     assert(y >= 0 && y < height);
     pixels[(height - y - 1) * width + x] = packRGBA8888(color);
-}
-
-void test_and_set_pixel(int x, int y, vec4 color, float depth) {
-    assert(x >= 0 && x < width);
-    assert(y >= 0 && y < height);
-    if(zbuffer[y * width + x] > depth) {
-        set_pixel(x, y, color);
-        zbuffer[y * width + x] = depth;
-    }
+    zbuffer[y * width + x] = depth;
 }
 
 bool test(int x, int y, float depth) {
     assert(x >= 0 && x < width);
     assert(y >= 0 && y < height);
-    return zbuffer[y * width + x] > depth;
+    return zbuffer[y * width + x] >= depth;
 }
+
+void test_and_set_pixel(int x, int y, vec4 color, float depth) {
+    assert(x >= 0 && x < width);
+    assert(y >= 0 && y < height);
+    if(test(x, y, depth)) {
+        set_pixel(x, y, color, depth);
+    }
+}
+
+
 
 float calc_edge_dis(const vec2& v1, const vec2& v2, const vec2& point) {
     double x = point.x(), y = point.y();
@@ -191,7 +193,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
             float z;
             vec4 color;
             if(shade(vec2(j + 0.5f, i + 0.5f), color, z)) {
-                test_and_set_pixel(j, i, color, z);
+                set_pixel(j, i, color, z);
             }
         }
     }
