@@ -6,20 +6,20 @@ SOURCE = $(wildcard *.cpp)
 OBJECTS = ${SOURCE:%.cpp=%.o}
 INCLUDE_DIR = ext/SDL2/include
 LIB_DIR = ext/SDL2/lib
-CFLAG = -MMD -std=c++17
-LINKFLAG = 
+CFLAGS = -MMD -std=c++17
+LDFLAGS = 
 LIB = mingw32 SDL2main SDL2
 VPATH = $(INCLUDE_DIR)
-EXEC = razer
+EXECUTABLE = Rasterizer
 
 # 构建目标
 
 
-SDL2demo: $(OBJECTS)
-	$(CC) $^ -L$(LIB_DIR) $(LIB:%=-l%) $(LINKFLAG) -o $(EXEC)
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $^ -L$(LIB_DIR) $(LIB:%=-l%) $(LDFLAGS) -o $(EXECUTABLE)
 
 $(OBJECTS) : %.o: %.cpp
-	$(CC) -I$(INCLUDE_DIR) $(CFLAG) -c $< -o $@
+	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) -c $< -o $@
 
 -include *.d
 
