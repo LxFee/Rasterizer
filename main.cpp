@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
 
     MyShader mshader;
     // texture
-    Texture* t = Texture::readfromfile("assert/cow/cow.png");
+    Texture* t = Texture::readfromfile("asset/cow/cow.png");
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
     
     // attr
