@@ -107,6 +107,12 @@ void test_and_set_pixel(int x, int y, vec4 color, float depth) {
     }
 }
 
+bool test(int x, int y, float depth) {
+    assert(x >= 0 && x < width);
+    assert(y >= 0 && y < height);
+    return zbuffer[y * width + x] > depth;
+}
+
 float calc_edge_dis(const vec2& v1, const vec2& v2, const vec2& point) {
     double x = point.x(), y = point.y();
     return x * (v1.y() - v2.y()) + y * (v2.x() - v1.x()) + ((double)v1.x() * v2.y() - (double)v2.x() * v1.y());
@@ -153,7 +159,9 @@ void rasterize(Tr_element& tr, Shader* shader) {
         if( (alpha > 0.0f || fa * nfa > 0.0f) &&
             (beta  > 0.0f || fb * nfb > 0.0f) &&
             (gamma > 0.0f || fc * nfc > 0.0f)) {
-
+            z = alpha * z_a + beta * z_b + gamma * z_c;
+            z = (z + 1.0f) * 0.5f;
+            if(!test(p.x(), p.y(), z)) return false;
             floatstream int_varying;
             float rone = 1.0f / (alpha * r_w_a + beta * r_w_b + gamma * r_w_c);
             for(int k = 0; k < tr.varyings[0].size(); k++) {
@@ -162,8 +170,7 @@ void rasterize(Tr_element& tr, Shader* shader) {
                             gamma * tr.varyings[2][k] * r_w_c;
                 int_varying.push_back(v * rone);
             }
-            z = alpha * z_a + beta * z_b + gamma * z_c;
-            z = (z + 1.0f) * 0.5f;
+            
             color = shader->fragment_shader(int_varying);
             return true;
         }

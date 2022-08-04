@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
     
     // attr
-    Model cow("assert/cow/cow.obj");
+    Model cow("asset/cow/cow.obj");
     int vbo = mgl_create_vbo();
     int ebo = mgl_create_ebo();
     alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)cow.verts.data());
