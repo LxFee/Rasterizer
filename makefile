@@ -4,11 +4,11 @@
 CC = g++
 SOURCE = $(wildcard *.cpp)
 OBJECTS = ${SOURCE:%.cpp=%.o}
-INCLUDE_DIR = ext/SDL2/include
-LIB_DIR = ext/SDL2/lib
+INCLUDE_DIR = ext/SDL2/include:ext/imgui/include
+LIB_DIR = ext/SDL2/lib:ext/imgui/lib
 CFLAGS = -MMD -std=c++17
 LDFLAGS = 
-LIB = mingw32 SDL2main SDL2
+LIB = mingw32 SDL2main imgui SDL2 opengl32
 VPATH = $(INCLUDE_DIR)
 EXECUTABLE = Rasterizer
 
@@ -16,10 +16,10 @@ EXECUTABLE = Rasterizer
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $^ -L$(LIB_DIR) $(LIB:%=-l%) $(LDFLAGS) -o $(EXECUTABLE)
+	$(CC) $^ -L$(subst :, -L,$(LIB_DIR)) $(LIB:%=-l%) $(LDFLAGS) -o $(EXECUTABLE)
 
 $(OBJECTS) : %.o: %.cpp
-	$(CC) -I$(INCLUDE_DIR) $(CFLAGS) -c $< -o $@
+	$(CC) -I$(subst :, -I,$(INCLUDE_DIR)) $(CFLAGS) -c $< -o $@
 
 -include *.d
 

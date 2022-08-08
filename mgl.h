@@ -1,4 +1,8 @@
 #pragma once
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_sdlrenderer.h"
+#include <SDL2/SDL_opengl.h>
 #include "SDL2/SDL.h"
 #include "cassert"
 #include "Shader.h"
@@ -18,7 +22,7 @@ void mgl_set_init_color(vec4 col);
 
 void mgl_clear(int flag);
 
-void mgl_update();
+bool mgl_update();
 
 int mgl_create_vbo();
 

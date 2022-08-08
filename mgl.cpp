@@ -79,16 +79,25 @@ int mgl_vertex_index_pointer(int ebo_ind, int count, int* ind) {
 
 
 void mgl_init(const char *title, int w, int h) {
-    SDL_Init(SDL_INIT_VIDEO);
+    assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) == 0);
     width = w;
     height = h;
-    SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+    window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, window_flags);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
     buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
     zbuffer.resize(w * h);
     SDL_LockTexture(buffer, NULL, (void**)&pixels, &pitch);
     if(title) SDL_SetWindowTitle(window, title);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_RENDERER_ACCELERATED);
-    SDL_RenderClear(renderer);
+    
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer_Init(renderer);
 }
 
 
@@ -294,14 +303,47 @@ void mgl_clear(int flag) {
     }
 }
 
-void mgl_update() {
+void gui() {
+    static bool show_window = true;
+    ImGui::Begin("hello Window", &show_window);
+    ImGui::Text("Hello window!");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+}
+
+bool mgl_update() {
+    SDL_Event event;
+    while(SDL_PollEvent(&event)) {
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        if(event.type == SDL_QUIT)
+            return true;
+        if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            return true;
+    }
+
     SDL_UnlockTexture(buffer);
-    SDL_RenderCopy(renderer, buffer, NULL, NULL);
-    SDL_RenderPresent(renderer);
     SDL_LockTexture(buffer, NULL, (void**)&pixels, &pitch);
+    SDL_RenderCopy(renderer, buffer, NULL, NULL);
+    
+    ImGui_ImplSDLRenderer_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    gui();
+
+    // Rendering
+    ImGui::Render();
+    ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+    
+    SDL_RenderPresent(renderer);
+    return false;
 }
 
 void mgl_quit() {
+    ImGui_ImplSDLRenderer_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
     SDL_DestroyTexture(buffer);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

@@ -18,9 +18,9 @@ int ulocation_m = -1;
 int ulocation_mvp_emp = -1;
 
 int tlocation_tex = -1;
-int ntlocation_tex = -1;
 
-vec3 camera_pos(-5.0f, 0.0f, 10.0f);
+vec3 camera_pos(-6.0f, 1.0f, -8.0f);
+// vec3 camera_pos(3.0f, 10.0f, -8.0f);
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
@@ -55,19 +55,16 @@ class MyShader : public Shader {
         n = n.normalized();
         
         vec4 t_color = sample(tlocation_tex, uv.u(), uv.v());
-        vec4 nt_normal = sample(ntlocation_tex, uv.u(), uv.v());
-        n = vec3(nt_normal.x(), nt_normal.y(), nt_normal.z());
-        n = (n * 2.0f - vec3(1.0f)).normalized();
 
-        vector<vec3> light_pos = {vec3(3.0f, 2.0f, 4.0f)};
-        vector<vec3> light_intensity = {vec3(40.0f, 40.0f, 40.0f)};
+        vector<vec3> light_pos = {vec3(8.0f, 10.0f, -6.0f), vec3(-8.0f, 10.0f, -6.0f)};
+        vector<vec3> light_intensity = {vec3(80.0f, 80.0f, 80.0f), vec3(80.0f, 80.0f, 80.0f)};
 
         vec3 ka = vec3(0.005, 0.005, 0.005);
         vec3 kd = vec3(t_color.x(), t_color.y(), t_color.z());
-        vec3 ks = vec3(0.30, 0.30, 0.30);
+        vec3 ks = vec3(0.7937, 0.7937, 0.7937);
 
         vec3 amb_light_intensity(10.0f, 10.0f, 10.0f);
-        float p = 150.0f;
+        float p = 200.0f;
 
         vec3 view_dir = (camera_pos - pos).normalized();
 
@@ -83,34 +80,30 @@ class MyShader : public Shader {
             vec3 Ls = ks * I * pow(max(0.0f, dot(n, h)), p);
             vec3 La = ka * amb_light_intensity;
 
-            result_color = result_color + Ld + Ls;
+            result_color = result_color + La + Ld + Ls;
         }
 
         return result_color;
     }
 };
-vector<vec3> verts = {
-    vec3(-1.0f, 1.0f, 0.0f),
-    vec3(-1.0f, -1.0f, 0.0f),
-    vec3(1.0f, -1.0f, 0.0f),
-    vec3(1.0f, 1.0f, 0.0f)
-};
 
-vector<vec2> uvs = {
-    vec2(0.0f, 1.0f),
-    vec2(0.0f, 0.0f),
-    vec2(1.0f, 0.0f),
-    vec2(1.0f, 1.0f)
-};
+class EmptyShader : public Shader {
+    vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
+        vec3 pos, norm;
+        getattr(vbo, index, alocation_p, pos);
+        
+        mat4 mvp;
+        getunif(ulocation_mvp_emp, mvp);
 
-vector<vec3> normals = {
-    vec3(0.0f, 0.0f, 1.0f),
-    vec3(0.0f, 0.0f, 1.0f),
-    vec3(0.0f, 0.0f, 1.0f),
-    vec3(0.0f, 0.0f, 1.0f)
-};
+        vec4 fpos = mvp * vec4(pos, 1.0f);
+        return fpos;
+    }
 
-vector<int> inds = {0, 1, 2, 0, 2, 3};
+    vec4 fragment_shader(floatstream& varying) const {
+
+        return vec4(0.0f);
+    }
+};
 
 
 int main(int argc, char* argv[]) {
@@ -120,40 +113,53 @@ int main(int argc, char* argv[]) {
     mgl_set_init_zbuffer(1.0f);
 
     MyShader mshader;
+    EmptyShader eshader;
 
     // texture
-    Texture* t = Texture::readfromfile("asset/textures/brickwall.jpg");
-    Texture* nt = Texture::readfromfile("asset/textures/brickwall_normal.jpg");
+    Texture* t = Texture::readfromfile("asset/cow/cow.png");
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
-    ntlocation_tex = mshader.bindtexture(nt, ntlocation_tex);
     
     // attr
+    Model cow("asset/cow/cow.obj");
     int vbo = mgl_create_vbo();
     int ebo = mgl_create_ebo();
-    alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)verts.data());
-    alocation_n = mgl_vertex_attrib_pointer(vbo, 3, (float*)normals.data());
-    alocation_uv = mgl_vertex_attrib_pointer(vbo, 2, (float*)uvs.data());
-    mgl_vertex_index_pointer(ebo, inds.size(), inds.data());
+    alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)cow.verts.data());
+    alocation_n = mgl_vertex_attrib_pointer(vbo, 3, (float*)cow.norms.data());
+    alocation_uv = mgl_vertex_attrib_pointer(vbo, 2, (float*)cow.tex_coord.data());
+    mgl_vertex_index_pointer(ebo, cow.nverts(), NULL);
 
-    
+    // MVP
+    mat4 M = scale(vec3(5.0f, 5.0f, 5.0f));
+    mat4 V = lookat(camera_pos, vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+    mat4 P = perspective(1.0f, 50.0f, 70, 800.0f / 600.0f);
+    mat3 MIT = clip_translate(M).inv().T();
+
+    // uniform
+    ulocation_mvp = mshader.uniform(P * V * M, ulocation_mvp);
+    ulocation_mit = mshader.uniform(MIT, ulocation_mit);
+    ulocation_m = mshader.uniform(M, ulocation_m);
+    ulocation_mvp_emp = eshader.uniform(P * V * M, ulocation_mvp_emp);
+
+    int uptime = 0;
     float angle = 0.0f;
-    do {
-        angle += 1.0f;
+    while(1) {
+        angle += 5.0f;
         mgl_clear(MGL_COLOR | MGL_DEPTH);
-        // MVP
-        mat4 M = scale(vec3(5.0f, 5.0f, 5.0f));
-        mat4 V = lookat(vec3(10.0f * sin(radian(angle)), 0.0f, 10.0f * cos(radian(angle))), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-        mat4 P = perspective(1.0f, 50.0f, 70, 800.0f / 600.0f);
-        mat3 MIT = clip_translate(M).inv().T();
-    
-        // uniform
-        ulocation_mvp = mshader.uniform(P * V * M, ulocation_mvp);
-        ulocation_mit = mshader.uniform(MIT, ulocation_mit);
-        ulocation_m = mshader.uniform(M, ulocation_m);
+
+        mgl_draw(vbo, ebo, &eshader);
 
         mgl_draw(vbo, ebo, &mshader);
 
-    } while(!mgl_update());
+        SDL_Event e;
+        if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
+            break;
+        }
+        int cur = SDL_GetTicks();
+        cout << cur - uptime << endl;
+        uptime = cur;
+
+        mgl_update();
+    }
     mgl_quit();
     return 0;
 }
