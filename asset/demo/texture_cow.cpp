@@ -4,23 +4,10 @@
 #include "mgl.h"
 #include "model.h"
 #include "Texture.h"
+#include "camera.h"
 #include <cmath>
 
 using namespace std;
-
-int alocation_p;
-int alocation_n;
-int alocation_uv;
-
-int ulocation_mvp = -1;
-int ulocation_mit = -1;
-int ulocation_m = -1;
-int ulocation_mvp_emp = -1;
-
-int tlocation_tex = -1;
-
-vec3 camera_pos(-6.0f, 1.0f, -8.0f);
-// vec3 camera_pos(3.0f, 10.0f, -8.0f);
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
@@ -30,11 +17,11 @@ class MyShader : public Shader {
         getattr(vbo, index, 1, norm);
         getattr(vbo, index, 2, uv);
         
-        mat4 mvp, m;
-        mat3 mit;
-        getunif(ulocation_mvp, mvp);
-        getunif(ulocation_mit, mit);
-        getunif(ulocation_m, m);
+        mat4 m, vp;
+        getunif(0, m);
+        getunif(1, vp);
+        mat4 mvp = vp * m;
+        mat3 mit = clip_translate(m).inv().T();
 
         vec4 point = m * vec4(pos);
         putvarying(varying, (mit * norm).normalized());
@@ -54,7 +41,10 @@ class MyShader : public Shader {
         getvaring(varying, pos, offset);
         n = n.normalized();
         
-        vec4 t_color = sample(tlocation_tex, uv.u(), uv.v());
+        vec3 camera_pos;
+        getunif(2, camera_pos);
+
+        vec4 t_color = sample(0, uv.u(), uv.v());
 
         vector<vec3> light_pos = {vec3(8.0f, 10.0f, -6.0f), vec3(-8.0f, 10.0f, -6.0f)};
         vector<vec3> light_intensity = {vec3(80.0f, 80.0f, 80.0f), vec3(80.0f, 80.0f, 80.0f)};
@@ -89,38 +79,45 @@ class MyShader : public Shader {
 
 
 int main(int argc, char* argv[]) {
-    
+    vec3 clear_color = vec3(0.0f, 0.0f, 0.0f);
     mgl_init("hello rasterizer", 800, 600);
-    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_clear_depth(1.0f);
 
     MyShader mshader;
-
-    // texture
-    Texture* t = Texture::readfromfile("asset/cow/cow.png");
-    tlocation_tex = mshader.bindtexture(t, tlocation_tex);
     
-    // attr
-    Model cow("asset/cow/cow.obj");
-
-    // MVP
-    mat4 M = scale(vec3(5.0f, 5.0f, 5.0f));
-    mat4 V = lookat(camera_pos, vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-    mat4 P = perspective(1.0f, 50.0f, 70, 800.0f / 600.0f);
-    mat3 MIT = clip_translate(M).inv().T();
-
-    // uniform
-    ulocation_mvp = mshader.uniform(P * V * M, ulocation_mvp);
-    ulocation_mit = mshader.uniform(MIT, ulocation_mit);
-    ulocation_m = mshader.uniform(M, ulocation_m);
+    // load texture
+    Model cow("asset/model/cow/cow.obj");
+    cow.set_size(vec3(5.0f));
+    
+    // camera init
+    PerspectiveCamera camera;
+    camera.set_translation(vec3(-6.0f, 1.0f, -8.0f));
+    float near_plane = 1.0f, far_plane = 50.0f, fov = 70.0f, ratio = 800.0f / 600.0f;
+    camera.set(&near_plane, &far_plane, &fov, &ratio);
+    vec3 rotation(-141.0f, -3.0f, 0.0f);
+    camera.set_rotation(rotation);
 
     do {
-        
+        mgl_clear_color(clear_color);
         mgl_clear(MGL_COLOR | MGL_DEPTH);
         
-        cow.draw(&mshader);
-
         gui_newframe();
+        {
+            static bool show_demo_window = true;
+            ImGui::Begin("Hello");                          // Create a window called "Hello, world!" and append into it.
+            
+            ImGui::SliderFloat("Y", &rotation.e[0], -180.0f, 180.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::SliderFloat("X", &rotation.e[1], -90.0f, 90.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            // ImGui::SliderFloat("Z", &rotation.e[2], -180.0f, 180.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+
+        camera.transfer(&mshader);
+        camera.set_rotation(rotation);
+        cow.draw(&mshader);
 
     } while(!mgl_update());
     mgl_quit();

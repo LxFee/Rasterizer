@@ -3,12 +3,60 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <filesystem>
+#include <string>
+#include <vector>
+
+static int get_id_from_filename(const std::string& filename) {
+    int l = filename.size(), r = filename.size();
+    for(int i = 0; i < filename.size(); i++) {
+        if(filename[i] == '.') r = i;
+        if(filename[i] == '_') l = i + 1;
+    }
+    int id = 0;
+    for(; l < r; l++) {
+        if(isdigit(filename[l])) {
+            id = id * 10 + filename[l] - '0';
+        }
+    }
+    return id;
+}
+
+static std::vector<std::string> get_texture_list(std::string filepath) {
+    using namespace std;
+    using namespace filesystem;
+    path dir = path(filepath).remove_filename();
+    string filename = path(filepath).filename().string();
+    
+    vector<string> list;
+    if(exists(dir) && is_directory(dir)) {
+        for(const auto& entry : directory_iterator(dir)) {
+            if(is_regular_file(entry.status())) {
+                path current_path = entry.path();
+                if(current_path.has_extension() && (!current_path.extension().compare(".jpg") || !current_path.extension().compare(".png"))) {
+                    string current_path_filename = current_path.filename().string();
+                    bool flag = true;
+                    for(int i = 0; i < filename.size(); i++) {
+                        if(filename[i] == '.') break;
+                        if(filename[i] != current_path_filename[i]) {
+                            flag = false;
+                            break;
+                        }
+                    }
+                    if(flag) list.push_back(current_path.string());
+                }
+            }
+        }
+    }
+    return list;
+}
 
 
 // order: vertex, normal, uvs(if has)
-Model::Model(const std::string filename) : translation(0.0f), size(1.0f), rotation(0.0f) {
+Model::Model(const std::string filepath) : translation(0.0f), size(1.0f), rotation(0.0f) {
+    using namespace std::filesystem;
     std::ifstream in;
-    in.open(filename, std::ifstream::in);
+    in.open(filepath, std::ifstream::in);
     if (in.fail()) return;
 
     std::vector<vec3> vertexes;
@@ -87,38 +135,52 @@ Model::Model(const std::string filename) : translation(0.0f), size(1.0f), rotati
             }
         }
     } 
-    for(int i = 0; i < facet_vrt.size(); i++) {
-        int f = facet_vrt[i];
-        int n = facet_norm[i];
-        verts.push_back(vertexes[f]);
-        norms.push_back(normals[n].normalized());
+    for(int i = 0; i < facet_vrt.size(); i += 3) {
+        for(int j = 0; j < 3; j++) {
+            int f = facet_vrt[i + j];
+            int n = facet_norm[i + j];
+            verts.push_back(vertexes[f]);
+            norms.push_back(normals[n].normalized());
+            if(!facet_uv.empty()) {
+                int t = facet_uv[i + j];
+                tex_coord.push_back(uvs[t]);
+            }
+        }
         if(!facet_uv.empty()) {
-            int t = facet_uv[i];
-            tex_coord.push_back(uvs[t]);
+            int ind = verts.size() - 3;
+            vec3 edge1 = verts[ind + 1] - verts[ind];
+            vec3 edge2 = verts[ind + 2] - verts[ind];
+            vec2 deltaUV1 = tex_coord[ind + 1] - tex_coord[ind];
+            vec2 deltaUV2 = tex_coord[ind + 2] - tex_coord[ind];
+            float f = 1.0f / std::max((deltaUV1.x() * deltaUV2.y() - deltaUV2.x() * deltaUV1.y()), 1e-5f);
+            vec3 tangent(   deltaUV2.y() * edge1.x() - deltaUV1.y() * edge2.x(),
+                            deltaUV2.y() * edge1.y() - deltaUV1.y() * edge2.y(),
+                            deltaUV2.y() * edge1.z() - deltaUV1.y() * edge2.z());
+            tangent = (f * tangent).normalized();
+            tangents.push_back(tangent);
+            tangents.push_back(tangent);
+            tangents.push_back(tangent);
         }
     }
     in.close();
 
+    // bind data
     vbo = mgl_create_vbo();
     ebo = mgl_create_ebo();
     mgl_vertex_attrib_pointer(vbo, 3, (float*)verts.data());
     mgl_vertex_attrib_pointer(vbo, 3, (float*)norms.data());
-    if(has_uv) mgl_vertex_attrib_pointer(vbo, 2, (float*)tex_coord.data());
+    if(has_uv) {
+        mgl_vertex_attrib_pointer(vbo, 2, (float*)tex_coord.data());
+        mgl_vertex_attrib_pointer(vbo, 3, (float*)tangents.data());
+    }
     mgl_vertex_index_pointer(ebo, verts.size(), NULL);
-}
 
-Model::Model(const std::vector<vec3>& vertexes, const std::vector<vec3>& normals, const std::vector<vec2> &uvs, const std::vector<int>& inds) : translation(0.0f), size(1.0f), rotation(0.0f) {
-    verts = vertexes;
-    norms = normals;
-    tex_coord = uvs;
-    indexs = inds;
-
-    vbo = mgl_create_vbo();
-    ebo = mgl_create_ebo();
-    mgl_vertex_attrib_pointer(vbo, 3, (float*)verts.data());
-    mgl_vertex_attrib_pointer(vbo, 3, (float*)norms.data());
-    mgl_vertex_attrib_pointer(vbo, 2, (float*)tex_coord.data());
-    mgl_vertex_index_pointer(ebo, indexs.size(), indexs.data());
+    // load texture
+    auto texture_path_list = get_texture_list(filepath);
+    for(auto texture_path : texture_path_list) {
+        std::string filename = path(texture_path).filename().string();
+        textures.push_back({get_id_from_filename(filename), Texture::readfromfile(texture_path)});
+    }
 }
 
 int Model::nverts() const {
@@ -128,6 +190,10 @@ int Model::nverts() const {
  
 
 void Model::draw(Shader* shader) {
+    for(int i = 0; i < textures.size(); i++) {
+        shader->bindtexture(textures[i].second, textures[i].first);
+    }
+    
     shader->uniform(get_model_matrix(), 0);
     mgl_draw(vbo, ebo, shader);
 }

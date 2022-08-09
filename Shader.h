@@ -19,9 +19,9 @@ public:
     virtual vec4 fragment_shader(floatstream& varying) const = 0;
     
     template<class T>
-    void uniform(const T& unif, int location = -1);
+    void uniform(const T& unif, int location);
 
-    int bindtexture(Texture *texture, int location = -1);
+    void bindtexture(Texture *texture, int location);
 
 protected:
     std::vector<uniform_element> uniforms;

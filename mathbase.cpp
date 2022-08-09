@@ -249,6 +249,12 @@ mat3::mat3( float m00, float m01, float m02,
     e[8] = m22;
 }
 
+mat3::mat3(vec3 v0, vec3 v1, vec3 v2) {
+    for(int i = 0; i < 3; i++) e[i * 3 + 0] = v0.e[i];
+    for(int i = 0; i < 3; i++) e[i * 3 + 1] = v1.e[i];
+    for(int i = 0; i < 3; i++) e[i * 3 + 2] = v2.e[i];
+}
+
 float mat3::det() const {
     #define THIS_DET22(A, B, C, D) (e[(A)] * e[(D)] - e[(B)] * e[(C)])
     return e[0] * THIS_DET22(4, 5, 7, 8) - e[1] * THIS_DET22(3, 5, 6, 8) + e[2] * THIS_DET22(3, 4, 6, 7);
@@ -457,7 +463,7 @@ mat4 rotate(vec3 axis, float angle) {
 
 mat4 euler_YXZ_rotate(vec3 rotation) {
     return  rotate(vec3(0.0f, 1.0f, 0.0f), rotation.x()) * 
-            rotate(vec3(1.0f, 0.0f, 0.0f), rotation.x()) * 
+            rotate(vec3(1.0f, 0.0f, 0.0f), rotation.y()) * 
             rotate(vec3(0.0f, 0.0f, 1.0f), rotation.z());
 }
 

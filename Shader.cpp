@@ -1,13 +1,9 @@
 #include "Shader.h"
 
-int Shader::bindtexture(Texture *texture, int location) {
-    if(location >= (int)textures.size()) return -1;
-    if(location < 0) {
-        textures.push_back(texture);
-        return (int)textures.size() - 1;
-    }
+void Shader::bindtexture(Texture *texture, int location) {
+    assert(location >= 0);
+    if(location >= textures.size()) textures.resize(location + 1, NULL);
     textures[location] = texture;
-    return location;
 }
 
 vec4 Shader::sample(int texture_location, float u, float v) const {
