@@ -10,9 +10,9 @@ int height;
 static int* pixels;
 static int pitch;
 
-vec4 init_col;
 SDL_Texture* buffer;
-float init_z;
+vec4 clear_color;
+float clear_depth;
 std::vector<float> zbuffer;
 
 struct Tr_element {
@@ -281,12 +281,12 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
     }
 }
 
-void mgl_set_init_zbuffer(float z) {
-    init_z = z;
+void mgl_clear_depth(float depth) {
+    clear_depth = depth;
 }
 
-void mgl_set_init_color(vec4 col) {
-    init_col = col;
+void mgl_clear_color(vec4 col) {
+    clear_color = col;
 }
  
 void mgl_clear(int flag) {
@@ -294,12 +294,12 @@ void mgl_clear(int flag) {
     if(flag & MGL_COLOR) {
         for(int i = 0; i < height; i++) {
             for(int j = 0; j < width; j++) {
-                pixels[i * width + j] = packRGBA8888(init_col);
+                pixels[i * width + j] = packRGBA8888(clear_color);
             }
         }
     }
     if(flag & MGL_DEPTH) {
-        std::fill(zbuffer.begin(), zbuffer.end(), init_z);
+        std::fill(zbuffer.begin(), zbuffer.end(), clear_depth);
     }
 }
 
@@ -325,7 +325,6 @@ bool mgl_update() {
     
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-
     SDL_RenderPresent(renderer);
     return false;
 }

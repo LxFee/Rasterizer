@@ -116,8 +116,8 @@ vector<int> inds = {0, 1, 2, 0, 2, 3};
 int main(int argc, char* argv[]) {
     
     mgl_init("hello rasterizer", 800, 600);
-    mgl_set_init_color(vec4(0.0f, 0.0f, 0.0f));
-    mgl_set_init_zbuffer(1.0f);
+    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
+    mgl_clear_depth(1.0f);
 
     MyShader mshader;
 
