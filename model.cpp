@@ -1,9 +1,12 @@
 #include "model.h"
+#include "mgl.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
 
-Model::Model(const std::string filename) {
+
+// order: vertex, normal, uvs(if has)
+Model::Model(const std::string filename) : translation(0.0f), size(1.0f), rotation(0.0f) {
     std::ifstream in;
     in.open(filename, std::ifstream::in);
     if (in.fail()) return;
@@ -95,10 +98,56 @@ Model::Model(const std::string filename) {
         }
     }
     in.close();
-    // std::cerr << "# v# " << nverts() << std::endl;
+
+    vbo = mgl_create_vbo();
+    ebo = mgl_create_ebo();
+    mgl_vertex_attrib_pointer(vbo, 3, (float*)verts.data());
+    mgl_vertex_attrib_pointer(vbo, 3, (float*)norms.data());
+    if(has_uv) mgl_vertex_attrib_pointer(vbo, 2, (float*)tex_coord.data());
+    mgl_vertex_index_pointer(ebo, verts.size(), NULL);
+}
+
+Model::Model(const std::vector<vec3>& vertexes, const std::vector<vec3>& normals, const std::vector<vec2> &uvs, const std::vector<int>& inds) : translation(0.0f), size(1.0f), rotation(0.0f) {
+    verts = vertexes;
+    norms = normals;
+    tex_coord = uvs;
+    indexs = inds;
+
+    vbo = mgl_create_vbo();
+    ebo = mgl_create_ebo();
+    mgl_vertex_attrib_pointer(vbo, 3, (float*)verts.data());
+    mgl_vertex_attrib_pointer(vbo, 3, (float*)norms.data());
+    mgl_vertex_attrib_pointer(vbo, 2, (float*)tex_coord.data());
+    mgl_vertex_index_pointer(ebo, indexs.size(), indexs.data());
 }
 
 int Model::nverts() const {
     return verts.size();
 }
 
+ 
+
+void Model::draw(Shader* shader) {
+    shader->uniform(get_model_matrix(), 0);
+    mgl_draw(vbo, ebo, shader);
+}
+
+// YXZ euler order 
+void Model::set_rotation(vec3 rotation) {
+    this->rotation = rotation;
+}
+
+void Model::set_translation(vec3 translation) {
+    this->translation = translation;
+}
+
+void Model::set_size(vec3 size) {
+    this->size = size;
+}
+
+mat4 Model::get_model_matrix() {
+    mat4 R = rotate(vec3(0.0f, 1.0f, 0.0f), rotation.x()) * rotate(vec3(1.0f, 0.0f, 0.0f), rotation.x()) * rotate(vec3(0.0f, 0.0f, 1.0f), rotation.z());
+    mat4 T = translate(translation);
+    mat4 S = scale(size);
+    return T * S * R;
+}

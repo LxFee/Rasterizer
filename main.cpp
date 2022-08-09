@@ -8,15 +8,6 @@
 
 using namespace std;
 
-int alocation_p;
-int alocation_n;
-int alocation_uv;
-
-int ulocation_mvp = -1;
-int ulocation_mit = -1;
-int ulocation_m = -1;
-int ulocation_mvp_emp = -1;
-
 int tlocation_tex = -1;
 int ntlocation_tex = -1;
 
@@ -26,15 +17,16 @@ class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
         vec3 pos, norm;
         vec2 uv;
-        getattr(vbo, index, alocation_p, pos);
-        getattr(vbo, index, alocation_n, norm);
-        getattr(vbo, index, alocation_uv, uv);
+        getattr(vbo, index, 0, pos);
+        getattr(vbo, index, 1, norm);
+        getattr(vbo, index, 2, uv);
         
-        mat4 mvp, m;
-        mat3 mit;
-        getunif(ulocation_mvp, mvp);
-        getunif(ulocation_mit, mit);
-        getunif(ulocation_m, m);
+        mat4 m, v, p;
+        getunif(0, m);
+        getunif(1, v);
+        getunif(2, p);
+        mat4 mvp = p * v * m;
+        mat3 mit = clip_translate(m).inv().T();;
 
         vec4 point = m * vec4(pos);
         putvarying(varying, (mit * norm).normalized());
@@ -119,7 +111,11 @@ int main(int argc, char* argv[]) {
     mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_clear_depth(1.0f);
 
+    // shader init
     MyShader mshader;
+    mshader.uniform(mat4());
+    mshader.uniform(mat4());
+    mshader.uniform(mat4());
 
     // texture
     Texture* t = Texture::readfromfile("asset/textures/brickwall.jpg");
@@ -127,14 +123,8 @@ int main(int argc, char* argv[]) {
     tlocation_tex = mshader.bindtexture(t, tlocation_tex);
     ntlocation_tex = mshader.bindtexture(nt, ntlocation_tex);
     
-    // attr
-    int vbo = mgl_create_vbo();
-    int ebo = mgl_create_ebo();
-    alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)verts.data());
-    alocation_n = mgl_vertex_attrib_pointer(vbo, 3, (float*)normals.data());
-    alocation_uv = mgl_vertex_attrib_pointer(vbo, 2, (float*)uvs.data());
-    mgl_vertex_index_pointer(ebo, inds.size(), inds.data());
-    
+    Model wall(verts, normals, uvs, inds);
+    wall.set_size(vec3(5.0f));
     float angle = 0.0f;
     do {
         gui_newframe();
@@ -142,17 +132,14 @@ int main(int argc, char* argv[]) {
         angle += 1.0f;
         mgl_clear(MGL_COLOR | MGL_DEPTH);
         // MVP
-        mat4 M = scale(vec3(5.0f, 5.0f, 5.0f));
         mat4 V = lookat(vec3(10.0f * sin(radian(angle)), 0.0f, 10.0f * cos(radian(angle))), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
         mat4 P = perspective(1.0f, 50.0f, 70, 800.0f / 600.0f);
-        mat3 MIT = clip_translate(M).inv().T();
-    
-        // uniform
-        ulocation_mvp = mshader.uniform(P * V * M, ulocation_mvp);
-        ulocation_mit = mshader.uniform(MIT, ulocation_mit);
-        ulocation_m = mshader.uniform(M, ulocation_m);
 
-        mgl_draw(vbo, ebo, &mshader);
+        // uniform
+        mshader.uniform(V, 1);
+        mshader.uniform(P, 2);
+
+        wall.draw(&mshader);
 
     } while(!mgl_update());
     mgl_quit();

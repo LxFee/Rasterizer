@@ -26,9 +26,9 @@ class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
         vec3 pos, norm;
         vec2 uv;
-        getattr(vbo, index, alocation_p, pos);
-        getattr(vbo, index, alocation_n, norm);
-        getattr(vbo, index, alocation_uv, uv);
+        getattr(vbo, index, 0, pos);
+        getattr(vbo, index, 1, norm);
+        getattr(vbo, index, 2, uv);
         
         mat4 mvp, m;
         mat3 mit;
@@ -87,33 +87,14 @@ class MyShader : public Shader {
     }
 };
 
-class EmptyShader : public Shader {
-    vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
-        vec3 pos, norm;
-        getattr(vbo, index, alocation_p, pos);
-        
-        mat4 mvp;
-        getunif(ulocation_mvp_emp, mvp);
-
-        vec4 fpos = mvp * vec4(pos, 1.0f);
-        return fpos;
-    }
-
-    vec4 fragment_shader(floatstream& varying) const {
-
-        return vec4(0.0f);
-    }
-};
-
 
 int main(int argc, char* argv[]) {
     
     mgl_init("hello rasterizer", 800, 600);
-    mgl_set_init_color(vec4(0.0f, 0.0f, 0.0f));
-    mgl_set_init_zbuffer(1.0f);
+    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
+    mgl_clear_depth(1.0f);
 
     MyShader mshader;
-    EmptyShader eshader;
 
     // texture
     Texture* t = Texture::readfromfile("asset/cow/cow.png");
@@ -121,12 +102,6 @@ int main(int argc, char* argv[]) {
     
     // attr
     Model cow("asset/cow/cow.obj");
-    int vbo = mgl_create_vbo();
-    int ebo = mgl_create_ebo();
-    alocation_p = mgl_vertex_attrib_pointer(vbo, 3, (float*)cow.verts.data());
-    alocation_n = mgl_vertex_attrib_pointer(vbo, 3, (float*)cow.norms.data());
-    alocation_uv = mgl_vertex_attrib_pointer(vbo, 2, (float*)cow.tex_coord.data());
-    mgl_vertex_index_pointer(ebo, cow.nverts(), NULL);
 
     // MVP
     mat4 M = scale(vec3(5.0f, 5.0f, 5.0f));
@@ -138,28 +113,16 @@ int main(int argc, char* argv[]) {
     ulocation_mvp = mshader.uniform(P * V * M, ulocation_mvp);
     ulocation_mit = mshader.uniform(MIT, ulocation_mit);
     ulocation_m = mshader.uniform(M, ulocation_m);
-    ulocation_mvp_emp = eshader.uniform(P * V * M, ulocation_mvp_emp);
 
-    int uptime = 0;
-    float angle = 0.0f;
-    while(1) {
-        angle += 5.0f;
+    do {
+        
         mgl_clear(MGL_COLOR | MGL_DEPTH);
+        
+        cow.draw(&mshader);
 
-        mgl_draw(vbo, ebo, &eshader);
+        gui_newframe();
 
-        mgl_draw(vbo, ebo, &mshader);
-
-        SDL_Event e;
-        if (SDL_PollEvent(&e) & e.type == SDL_QUIT) {
-            break;
-        }
-        int cur = SDL_GetTicks();
-        cout << cur - uptime << endl;
-        uptime = cur;
-
-        mgl_update();
-    }
+    } while(!mgl_update());
     mgl_quit();
     return 0;
 }

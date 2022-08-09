@@ -6,7 +6,7 @@ SOURCE = $(wildcard *.cpp)
 OBJECTS = ${SOURCE:%.cpp=%.o}
 INCLUDE_DIR = ext/SDL2/include:ext/imgui/include
 LIB_DIR = ext/SDL2/lib:ext/imgui/lib
-CFLAGS = -MMD -std=c++17
+CFLAGS = -MMD -std=c++17 -g
 LDFLAGS = 
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 VPATH = $(INCLUDE_DIR)
