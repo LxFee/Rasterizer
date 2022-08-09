@@ -7,19 +7,24 @@
 using floatstream = std::vector<float>;
 extern float* mgl_query_vbo(int, int, int, int*);
 
+struct uniform_element {
+    uniform_element() : size(0) {}
+    int size; // element size (num of float)
+    floatstream value;
+};
+
 class Shader {
 public:
     virtual vec4 vertex_shader(int vbo, int index,floatstream & varying) const = 0;
     virtual vec4 fragment_shader(floatstream& varying) const = 0;
     
     template<class T>
-    int uniform(const T& unif, int location = -1);
+    void uniform(const T& unif, int location = -1);
 
     int bindtexture(Texture *texture, int location = -1);
 
 protected:
-    std::vector<float> uniforms;
-    std::vector<int> uniforms_offset;
+    std::vector<uniform_element> uniforms;
     std::vector<Texture*> textures;
 
     vec4 sample(int texture_location, float u, float v) const ;
@@ -38,21 +43,17 @@ protected:
 };
 
 template<class T>
-int Shader::uniform(const T& unif, int location) {
+void Shader::uniform(const T& unif, int location) {
     assert(sizeof(unif) % sizeof(float) == 0);
     int num = sizeof(unif) / sizeof(float);   
-    assert(location < (int)uniforms_offset.size());
-    if(location < 0) {
-        for(int i = 0; i < num; i++) uniforms.push_back(((float*)&unif)[i]);
-        int pre = uniforms_offset.empty() ? 0 : uniforms_offset.back();
-        uniforms_offset.emplace_back(num + pre);
-        return (int)uniforms_offset.size() - 1;
+    assert(location >= 0);
+    if(location >= uniforms.size()) uniforms.resize(location + 1);
+    assert(uniforms[location].size == 0 || uniforms[location].size == num);
+    uniforms[location].size = num;
+    uniforms[location].value.resize(num);
+    for(int i = 0; i < num; i++) {
+        uniforms[location].value[i] = ((float*)&unif)[i];
     }
-    int pre = location > 0 ? uniforms_offset[location - 1] : 0;
-    int cur = uniforms_offset[location];
-    assert(cur - pre == num);
-    for(int i = 0; i < num; i++) uniforms[pre + i] = ((float*)&unif)[i];
-    return location;
 }
 
 template<class T>
@@ -78,11 +79,8 @@ void Shader::getunif(int location, T& unif) const {
     assert(sizeof(unif) % sizeof(float) == 0);
     int num = sizeof(unif) / sizeof(float);
     assert(location >= 0 && location < (int)uniforms.size());
-    int offset = 0;
-    if(location) offset = uniforms_offset[location - 1];
-    int len = uniforms_offset[location] - offset;
-    assert(len == num);
-    unif = uniforms.data() + offset;
+    assert(uniforms[location].size == num);
+    unif = uniforms[location].value.data();
 }
 
 template<class T>

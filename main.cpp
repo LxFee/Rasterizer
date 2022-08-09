@@ -113,9 +113,6 @@ int main(int argc, char* argv[]) {
 
     // shader init
     MyShader mshader;
-    mshader.uniform(mat4());
-    mshader.uniform(mat4());
-    mshader.uniform(mat4());
 
     // texture
     Texture* t = Texture::readfromfile("asset/textures/brickwall.jpg");
