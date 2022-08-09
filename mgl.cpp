@@ -303,12 +303,10 @@ void mgl_clear(int flag) {
     }
 }
 
-void gui() {
-    static bool show_window = true;
-    ImGui::Begin("hello Window", &show_window);
-    ImGui::Text("Hello window!");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::End();
+void gui_newframe() {
+    ImGui_ImplSDLRenderer_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();   
 }
 
 bool mgl_update() {
@@ -325,16 +323,9 @@ bool mgl_update() {
     SDL_LockTexture(buffer, NULL, (void**)&pixels, &pitch);
     SDL_RenderCopy(renderer, buffer, NULL, NULL);
     
-    ImGui_ImplSDLRenderer_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
-
-    gui();
-
-    // Rendering
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-    
+
     SDL_RenderPresent(renderer);
     return false;
 }

@@ -33,3 +33,5 @@ int mgl_vertex_index_pointer(int ebo_ind, int length, int* ind);
 int mgl_vertex_attrib_pointer(int vbo_ind, int size, float* data);
 
 float* mgl_query_vbo(int vbo_ind, int index, int location, int* size);
+
+void gui_newframe();

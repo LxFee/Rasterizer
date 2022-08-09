@@ -134,10 +134,11 @@ int main(int argc, char* argv[]) {
     alocation_n = mgl_vertex_attrib_pointer(vbo, 3, (float*)normals.data());
     alocation_uv = mgl_vertex_attrib_pointer(vbo, 2, (float*)uvs.data());
     mgl_vertex_index_pointer(ebo, inds.size(), inds.data());
-
     
     float angle = 0.0f;
     do {
+        gui_newframe();
+
         angle += 1.0f;
         mgl_clear(MGL_COLOR | MGL_DEPTH);
         // MVP
