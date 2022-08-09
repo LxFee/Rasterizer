@@ -455,6 +455,12 @@ mat4 rotate(vec3 axis, float angle) {
     return mat4(res);    
 }
 
+mat4 euler_YXZ_rotate(vec3 rotation) {
+    return  rotate(vec3(0.0f, 1.0f, 0.0f), rotation.x()) * 
+            rotate(vec3(1.0f, 0.0f, 0.0f), rotation.x()) * 
+            rotate(vec3(0.0f, 0.0f, 1.0f), rotation.z());
+}
+
 mat4 lookat(vec3 eye, vec3 at, vec3 up) {
     vec3 z = (eye - at).normalized();    
     vec3 x = cross(up, z).normalized();

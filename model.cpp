@@ -146,7 +146,7 @@ void Model::set_size(vec3 size) {
 }
 
 mat4 Model::get_model_matrix() {
-    mat4 R = rotate(vec3(0.0f, 1.0f, 0.0f), rotation.x()) * rotate(vec3(1.0f, 0.0f, 0.0f), rotation.x()) * rotate(vec3(0.0f, 0.0f, 1.0f), rotation.z());
+    mat4 R = euler_YXZ_rotate(rotation);
     mat4 T = translate(translation);
     mat4 S = scale(size);
     return T * S * R;

@@ -173,6 +173,8 @@ mat4 translate(vec3 tr);
 
 mat4 scale(vec3 sc);
 
+mat4 euler_YXZ_rotate(vec3 rotation);
+
 mat4 rotate(vec3 axis, float angle);
 
 mat4 ortho(float l, float r, float b, float t, float n, float f);
@@ -182,6 +184,7 @@ mat4 perspective(float n, float f, float fov, float aspect);
 mat4 lookat(vec3 eye, vec3 at, vec3 up);
 
 mat3 clip_translate(const mat4& m);
+
 
 inline float radian(float d) {
     return d * PI / 180.0f;

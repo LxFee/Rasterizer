@@ -4,14 +4,10 @@
 #include "mgl.h"
 #include "model.h"
 #include "Texture.h"
+#include "camera.h"
 #include <cmath>
 
 using namespace std;
-
-int tlocation_tex = -1;
-int ntlocation_tex = -1;
-
-vec3 camera_pos(-5.0f, 0.0f, 10.0f);
 
 class MyShader : public Shader {
     vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
@@ -21,11 +17,10 @@ class MyShader : public Shader {
         getattr(vbo, index, 1, norm);
         getattr(vbo, index, 2, uv);
         
-        mat4 m, v, p;
+        mat4 m, vp;
         getunif(0, m);
-        getunif(1, v);
-        getunif(2, p);
-        mat4 mvp = p * v * m;
+        getunif(1, vp);
+        mat4 mvp = vp * m;
         mat3 mit = clip_translate(m).inv().T();;
 
         vec4 point = m * vec4(pos);
@@ -45,9 +40,12 @@ class MyShader : public Shader {
         getvaring(varying, uv, offset);
         getvaring(varying, pos, offset);
         n = n.normalized();
+
+        vec3 camera_pos;
+        getunif(2, camera_pos);
         
-        vec4 t_color = sample(tlocation_tex, uv.u(), uv.v());
-        vec4 nt_normal = sample(ntlocation_tex, uv.u(), uv.v());
+        vec4 t_color = sample(0, uv.u(), uv.v());
+        vec4 nt_normal = sample(1, uv.u(), uv.v());
         n = vec3(nt_normal.x(), nt_normal.y(), nt_normal.z());
         n = (n * 2.0f - vec3(1.0f)).normalized();
 
@@ -111,14 +109,20 @@ int main(int argc, char* argv[]) {
     mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_clear_depth(1.0f);
 
+    // camera init
+    PerspectiveCamera camera;
+    camera.set_translation(vec3(-5.0f, 0.0f, 10.0f));
+    float near_plane = 1.0f, far_plane = 50.0f, fov = 70.0f, ratio = 800.0f / 600.0f;
+    camera.set(&near_plane, &far_plane, &fov, &ratio);
+
     // shader init
     MyShader mshader;
 
-    // texture
+    // texture init
     Texture* t = Texture::readfromfile("asset/textures/brickwall.jpg");
     Texture* nt = Texture::readfromfile("asset/textures/brickwall_normal.jpg");
-    tlocation_tex = mshader.bindtexture(t, tlocation_tex);
-    ntlocation_tex = mshader.bindtexture(nt, ntlocation_tex);
+    mshader.bindtexture(t);
+    mshader.bindtexture(nt);
     
     Model wall(verts, normals, uvs, inds);
     wall.set_size(vec3(5.0f));
@@ -128,13 +132,8 @@ int main(int argc, char* argv[]) {
 
         angle += 1.0f;
         mgl_clear(MGL_COLOR | MGL_DEPTH);
-        // MVP
-        mat4 V = lookat(vec3(10.0f * sin(radian(angle)), 0.0f, 10.0f * cos(radian(angle))), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-        mat4 P = perspective(1.0f, 50.0f, 70, 800.0f / 600.0f);
 
-        // uniform
-        mshader.uniform(V, 1);
-        mshader.uniform(P, 2);
+        camera.transfer(&mshader);
 
         wall.draw(&mshader);
 
