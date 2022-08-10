@@ -125,22 +125,20 @@ Model::Model(const std::string filepath) : translation(0.0f), size(1.0f), rotati
                 in.close();
                 return;
             }
-            if(!has_normal) {
-                int ind = facet_vrt.size() - 3;
-                vec3 &a = vertexes[facet_vrt[ind]], &b = vertexes[facet_vrt[ind + 1]], &c = vertexes[facet_vrt[ind + 2]];
-                vec3 f_normal = cross(b - a, c - a).normalized();
-                for(int i = ind; i < ind + 3; i++) {
-                    normals[facet_vrt[i]] = normals[facet_vrt[i]] + f_normal;
-                }
-            }
         }
     } 
     for(int i = 0; i < facet_vrt.size(); i += 3) {
+        vec3 &a = vertexes[facet_vrt[i + 0]], &b = vertexes[facet_vrt[i + 1]], &c = vertexes[facet_vrt[i + 2]];
+        vec3 f_normal = cross(b - a, c - a).normalized();
         for(int j = 0; j < 3; j++) {
             int f = facet_vrt[i + j];
             int n = facet_norm[i + j];
             verts.push_back(vertexes[f]);
-            norms.push_back(normals[n].normalized());
+            if(!has_normal) {
+                norms.push_back(f_normal);
+            } else {
+                norms.push_back(normals[n].normalized());
+            }
             if(!facet_uv.empty()) {
                 int t = facet_uv[i + j];
                 tex_coord.push_back(uvs[t]);

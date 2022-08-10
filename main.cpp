@@ -51,23 +51,23 @@ class MyShader : public Shader {
         getvaring(varying, uv, offset);
         getvaring(varying, pos, offset);
         getvaring(varying, TBN, offset);
-        // n = n.normalized();
+        n = n.normalized();
 
         vec3 camera_pos;
         getunif(2, camera_pos);
         
         vec4 t_color = sample(0, uv.u(), uv.v());
-        vec4 spec_color = sample(1, uv.u(), uv.v());
-        vec4 nt_normal = sample(2, uv.u(), uv.v());
-        n = vec3(nt_normal.x(), nt_normal.y(), nt_normal.z());
-        n = (n * 2.0f - vec3(1.0f)).normalized();
-        n = (TBN * n).normalized();
-        vector<vec3> light_pos = {vec3(3.0f, 2.0f, 4.0f)};
-        vector<vec3> light_intensity = {vec3(40.0f, 40.0f, 40.0f)};
+        // vec4 spec_color = sample(1, uv.u(), uv.v());
+        // vec4 nt_normal = sample(2, uv.u(), uv.v());
+        // n = vec3(nt_normal.x(), nt_normal.y(), nt_normal.z());
+        // n = (n * 2.0f - vec3(1.0f)).normalized();
+        // n = (TBN * n).normalized();
+        vector<vec3> light_pos = {vec3(5.0f, 5.0f, 5.0f)};
+        vector<vec3> light_intensity = {vec3(100.0f, 100.0f, 100.0f)};
 
         vec3 ka = vec3(0.005, 0.005, 0.005);
         vec3 kd = vec3(t_color.x(), t_color.y(), t_color.z());
-        vec3 ks = spec_color.e; // vec3(0.30, 0.30, 0.30);
+        vec3 ks = vec3(0.30, 0.30, 0.30);
 
         vec3 amb_light_intensity(10.0f, 10.0f, 10.0f);
         float p = 150.0f;
@@ -85,17 +85,18 @@ class MyShader : public Shader {
             vec3 Ld = kd * I * max(0.0f, dot(n, light_dir));
             vec3 Ls = ks * I * pow(max(0.0f, dot(n, h)), p);
             vec3 La = ka * amb_light_intensity;
-
-            result_color = result_color + Ld + Ls;
+            // std::cout << dot(n, light_dir) << std::endl;
+            result_color = result_color + La + Ld + Ls;
         }
 
         return result_color;
+        // return t_color;
     }
 };
 
 int main(int argc, char* argv[]) {
     
-    mgl_init("hello rasterizer", 1400, 800);
+    mgl_init("hello rasterizer", 800, 600);
     mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_clear_depth(1.0f);
 
@@ -107,8 +108,8 @@ int main(int argc, char* argv[]) {
     // shader init
     MyShader mshader;
     
-    Model wall("asset/model/diablo3_pose/diablo3_pose.obj");
-    wall.set_size(vec3(5.0f));
+    Model wall("asset/model/cube/cube.obj");
+    // wall.set_size(vec3(5.0f));
 
     vec3 rotation(0.0f);
     vec3 wall_rotation(0.0f);
