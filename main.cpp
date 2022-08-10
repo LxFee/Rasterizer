@@ -57,7 +57,8 @@ class MyShader : public Shader {
         getunif(2, camera_pos);
         
         vec4 t_color = sample(0, uv.u(), uv.v());
-        vec4 nt_normal = sample(1, uv.u(), uv.v());
+        vec4 spec_color = sample(1, uv.u(), uv.v());
+        vec4 nt_normal = sample(2, uv.u(), uv.v());
         n = vec3(nt_normal.x(), nt_normal.y(), nt_normal.z());
         n = (n * 2.0f - vec3(1.0f)).normalized();
         n = (TBN * n).normalized();
@@ -66,7 +67,7 @@ class MyShader : public Shader {
 
         vec3 ka = vec3(0.005, 0.005, 0.005);
         vec3 kd = vec3(t_color.x(), t_color.y(), t_color.z());
-        vec3 ks = vec3(0.30, 0.30, 0.30);
+        vec3 ks = spec_color.e; // vec3(0.30, 0.30, 0.30);
 
         vec3 amb_light_intensity(10.0f, 10.0f, 10.0f);
         float p = 150.0f;
@@ -94,19 +95,19 @@ class MyShader : public Shader {
 
 int main(int argc, char* argv[]) {
     
-    mgl_init("hello rasterizer", 800, 600);
+    mgl_init("hello rasterizer", 1400, 800);
     mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
     mgl_clear_depth(1.0f);
 
     // camera init
     PerspectiveCamera camera;
-    float near_plane = 1.0f, far_plane = 50.0f, fov = 70.0f, ratio = 800.0f / 600.0f;
+    float near_plane = 1.0f, far_plane = 50.0f, fov = 70.0f, ratio = 1400.0f / 800.0f;
     camera.set(&near_plane, &far_plane, &fov, &ratio);
 
     // shader init
     MyShader mshader;
     
-    Model wall("asset/model/brickwall/brickwall.obj");
+    Model wall("asset/model/diablo3_pose/diablo3_pose.obj");
     wall.set_size(vec3(5.0f));
 
     vec3 rotation(0.0f);
