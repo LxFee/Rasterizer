@@ -1,9 +1,9 @@
-#include "Texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include "ext/stb_image.h"
+#include "stb_image.h"
 
+#include "Texture.h"
 #define DATA(X, Y) data[(Y) * w + (X)]
 
 vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
