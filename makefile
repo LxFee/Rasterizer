@@ -1,8 +1,5 @@
 .PHONY : clean all
 
-EMPTY =
-SPACE = $(EMPTY) $(EMPTY)
-
 # 构建需要的变量
 CC = g++
 D_SRC = src
@@ -30,9 +27,9 @@ all : $(TARGETS)
 $(TARGETS): $(ALL_OBJECTS)
 	$(CC) $(OBJECTS) $(filter %$@.o, $^) $(addprefix -L,$(D_LIB)) $(LIB:%=-l%) $(CXXFLAGS) $(LDFLAGS) -o $@
 
-$(ALL_OBJECTS): $(ALL_SOURCES)
+$(ALL_OBJECTS): $(D_TMP)/%.o : %.cpp
 	@mkd $(dir $@)
-	$(CC) $(addprefix -I,$(D_INC)) $(CXXFLAGS) -MMD -c $(subst $(D_TMP)/,,$(@:%.o=%.cpp)) -o $@
+	$(CC) $(addprefix -I,$(D_INC)) $(CXXFLAGS) -MMD -c $< -o $@
 
 
 -include $(ALL_OBJECTS:%.o=%.d)

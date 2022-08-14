@@ -98,6 +98,10 @@ void mgl_init(const char *title, int w, int h) {
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer_Init(renderer);
+
+    ImGui_ImplSDLRenderer_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
 }
 
 
@@ -303,11 +307,6 @@ void mgl_clear(int flag) {
     }
 }
 
-void gui_newframe() {
-    ImGui_ImplSDLRenderer_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();   
-}
 
 bool mgl_update() {
     SDL_Event event;
@@ -326,6 +325,11 @@ bool mgl_update() {
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
     SDL_RenderPresent(renderer);
+    
+    ImGui_ImplSDLRenderer_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
     return false;
 }
 

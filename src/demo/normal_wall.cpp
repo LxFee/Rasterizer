@@ -27,7 +27,7 @@ class MyShader : public Shader {
         mat3 mit = clip_translate(m).inv().T();
 
 
-        vec3 T = (mit * tangent).normalized();
+        vec3 T = (clip_translate(m) * tangent).normalized();
         vec3 N = (mit * norm).normalized();
         vec3 B = cross(N, T).normalized();
         mat3 TBN(T, B, N);
@@ -116,17 +116,13 @@ int main(int argc, char* argv[]) {
     do {
         mgl_clear(MGL_COLOR | MGL_DEPTH);
 
-        gui_newframe();
-        {
-            static bool show_demo_window = true;
-            ImGui::Begin("Control Pannel");
-            ImGui::SliderFloat3("rotation", rotation.e, -180.0f, 180.0f);
-            ImGui::SliderFloat3("translation", translation.e, -20.0f, 20.0f);
-            ImGui::SliderFloat3("wall rotation", wall_rotation.e, -180.0f, 180.0f);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
+        static bool show_demo_window = true;
+        ImGui::Begin("Control Pannel");
+        ImGui::SliderFloat3("rotation", rotation.e, -180.0f, 180.0f);
+        ImGui::SliderFloat3("translation", translation.e, -20.0f, 20.0f);
+        ImGui::SliderFloat3("wall rotation", wall_rotation.e, -180.0f, 180.0f);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
 
         camera.set_rotation(rotation);
         camera.set_translation(translation);

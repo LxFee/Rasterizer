@@ -5,7 +5,6 @@ void Shader::bindtexture(Texture *texture, int location) {
     if(location >= textures.size()) textures.resize(location + 1, NULL);
     textures[location] = texture;
 }
-
 vec4 Shader::sample(int texture_location, float u, float v) const {
     if(texture_location < 0 || texture_location >= textures.size()) {
         return vec4(0.0f);

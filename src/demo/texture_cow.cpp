@@ -101,19 +101,13 @@ int main(int argc, char* argv[]) {
         mgl_clear_color(clear_color);
         mgl_clear(MGL_COLOR | MGL_DEPTH);
         
-        gui_newframe();
-        {
-            static bool show_demo_window = true;
-            ImGui::Begin("Hello");                          // Create a window called "Hello, world!" and append into it.
-            
-            ImGui::SliderFloat("Y", &rotation.e[0], -180.0f, 180.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::SliderFloat("X", &rotation.e[1], -90.0f, 90.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            // ImGui::SliderFloat("Z", &rotation.e[2], -180.0f, 180.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
+        static bool show_demo_window = true;
+        ImGui::Begin("Control Pannel");
+        ImGui::SliderFloat("Y", &rotation.e[0], -180.0f, 180.0f);
+        ImGui::SliderFloat("X", &rotation.e[1], -90.0f, 90.0f);
+        ImGui::ColorEdit3("clear color", (float*)&clear_color);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
 
         camera.transfer(&mshader);
         camera.set_rotation(rotation);
