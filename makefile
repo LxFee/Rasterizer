@@ -11,7 +11,6 @@ D_INC = ext/include $(D_SRC)
 D_LIB = ext/lib
 CXXFLAGS = -std=c++17
 LDFLAGS = 
-VPATH = $(subst $(SPACE),:,$(D_INC))
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 
 SOURCES = $(wildcard $(D_SRC)/impl/*.cpp)
