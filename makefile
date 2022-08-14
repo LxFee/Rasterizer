@@ -1,8 +1,4 @@
 .PHONY : clean all
-
-EMPTY =
-SPACE = $(EMPTY) $(EMPTY)
-
 # 构建需要的变量
 CC = g++
 D_SRC = src
