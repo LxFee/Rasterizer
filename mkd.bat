@@ -1,3 +1,3 @@
 @echo off
-SET logFolder=%1
-IF NOT EXIST %logFolder% (mkdir "%logFolder%")
+SET Folder=%1
+IF NOT EXIST %Folder% (mkdir "%Folder%")
