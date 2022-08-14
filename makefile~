@@ -27,6 +27,7 @@ ALL_OBJECTS = $(addprefix $(D_TMP)/, $(ALL_SOURCES:%.cpp=%.o))
 
 # 构建目标
 all : $(TARGETS)
+	echo $(VPATH)
 
 $(TARGETS): $(ALL_OBJECTS)
 	$(CC) $(OBJECTS) $(filter %$@.o, $^) $(addprefix -L,$(D_LIB)) $(LIB:%=-l%) $(CXXFLAGS) $(LDFLAGS) -o $@
