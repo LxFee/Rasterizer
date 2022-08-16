@@ -111,10 +111,12 @@ int main(int argc, char* argv[]) {
 
     vec3 rotation(0.0f);
     vec3 wall_rotation(0.0f);
-    vec3 translation(-5.0f, 0.0f, 10.0f);
+    vec3 translation(0.0f, 0.0f, 10.0f);
 
     do {
         mgl_clear(MGL_COLOR | MGL_DEPTH);
+
+
 
         static bool show_demo_window = true;
         ImGui::Begin("Control Pannel");

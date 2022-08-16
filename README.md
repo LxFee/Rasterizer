@@ -12,15 +12,24 @@
 
 `make`（或`mingw32-make`）可以编译所有src/demo下的所有示例。`make <文件名>`可以指定编译src/demo中的示例。
 
-## feature
+## Feature
 
 + 近平面裁剪
 + 自定义shader
 + 纹理采样支持双线性插值
 + 使用imgui，更加便于调试
 
+## Demo
 
-## todo
+![image-20220816222610007](https://minioapi.limil.top:9000/images/2022/08/16/image-20220816222610007_repeat_1660659975603__726553.png)
+
+
+
+![image-20220816222720100](https://minioapi.limil.top:9000/images/2022/08/16/image-20220816222720100_repeat_1660660045391__775806.png)
+
+
+
+## Todo
 
 - [ ] 实现mipmapping
 - [ ] 多线程优化运行效率
