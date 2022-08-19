@@ -6,6 +6,8 @@
 
 通过继承Shader类，重写fragment_shader和vertex_shader来实现可编程shader。
 
+使用的坐标系是右手坐标系；相机朝向为z轴负方向；屏幕坐标系左下角为(0, 0)，高为y轴，宽为x轴。
+
 ## 如何使用
 
 使用到了SDL2和imgui库。SDL2需要安装运行时环境。所有的库都是在window下编译使用mingw编译器编译，因此只支持window环境。
