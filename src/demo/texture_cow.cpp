@@ -93,6 +93,7 @@ int main(int argc, char* argv[]) {
     PerspectiveCamera camera;
     vec3 translation(-6.0f, 1.0f, -8.0f);
     vec3 rotation(-141.0f, -3.0f, 0.0f);
+    vec3 cow_rotation(0.0f);
     
     float near_plane = 1.0f, far_plane = 50.0f, fov = 70.0f, ratio = 800.0f / 600.0f;
     camera.set(&near_plane, &far_plane, &fov, &ratio);
@@ -106,6 +107,7 @@ int main(int argc, char* argv[]) {
         ImGui::Begin("Control Pannel");
         ImGui::SliderFloat3("rotation", rotation.e, -180.0f, 180.0f);
         ImGui::SliderFloat3("translation", translation.e, -20.0f, 20.0f);
+        ImGui::SliderFloat3("cow rotation", cow_rotation.e, -180.0f, 180.0f);
         ImGui::ColorEdit3("clear color", (float*)&clear_color);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
@@ -113,6 +115,7 @@ int main(int argc, char* argv[]) {
         camera.set_translation(translation);
         camera.set_rotation(rotation);
         camera.transfer(&mshader);
+        cow.set_rotation(cow_rotation);
         cow.draw(&mshader);
 
     } while(!mgl_update());
