@@ -9,6 +9,7 @@ public:
     mat4 get_view_matrix();
     virtual mat4 get_camera_matrix() = 0;
     virtual void transfer(Shader* shader) = 0;
+    virtual ~Camera();
 protected:
     vec3 translation;
     vec3 rotation;

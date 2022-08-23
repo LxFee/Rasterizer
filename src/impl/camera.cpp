@@ -1,5 +1,7 @@
 #include "camera.h"
 
+Camera::~Camera() {}
+
 Camera::Camera() : translation(0.0f), rotation(0.0f) {}
 
 void Camera::set_translation(vec3 translation) {

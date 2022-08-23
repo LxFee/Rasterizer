@@ -1,5 +1,7 @@
 #include "Shader.h"
 
+Shader::~Shader() {}
+
 void Shader::bindtexture(Texture *texture, int location) {
     assert(location >= 0);
     if(location >= textures.size()) textures.resize(location + 1, NULL);

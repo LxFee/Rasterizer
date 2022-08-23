@@ -23,6 +23,7 @@ public:
 
     void bindtexture(Texture *texture, int location);
 
+    virtual ~Shader();
 protected:
     std::vector<uniform_element> uniforms;
     std::vector<Texture*> textures;
