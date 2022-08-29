@@ -35,7 +35,7 @@ class MyShader : public Shader {
         return fpos;
     }
 
-    vec4 fragment_shader(floatstream& varying) const {
+    vec4 fragment_shader(const floatstream& varying) const {
         int offset = 0;
         vec3 n, pos;
         vec2 uv;

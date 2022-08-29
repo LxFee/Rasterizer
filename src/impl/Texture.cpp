@@ -71,7 +71,7 @@ void Texture::set_filled_color(vec4 color) {
     filled_color = color;
 }
 
-void Texture::set_srround(SURROUND surr) {
+void Texture::set_surround(SURROUND surr) {
     surround = surr;
 }
 

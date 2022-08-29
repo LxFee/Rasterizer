@@ -42,7 +42,7 @@ public:
      * 
      * @param surr 可选：REPEAT，FILLED
      */
-    void set_srround(SURROUND surr);
+    void set_surround(SURROUND surr);
 
     /**
      * @brief 设置采样模式

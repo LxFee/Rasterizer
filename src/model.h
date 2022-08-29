@@ -18,8 +18,20 @@ struct vertex {
 
 class Model {
 public:
+    /**
+     * @brief 从文件中读取物体，并自动绑定vbo，ebo。如果同一文件夹下有同名带编号的图片文件（png或jpg），会读入作为该物体的纹理。
+     * 纹理名格式：模型名_备注_编号.jpg(png)
+     * 纹理用于确定传入shader第几号texture，从0开始。
+     * 
+     * @param filepath 模型文件路径（只支持obj）
+     */
     Model(const std::string& filepath);
     
+    /**
+     * @brief 调用mgl_draw绘制物体
+     * 
+     * @param shader 物体变换矩阵传入到location=0的uniform变量中；将纹理按顺序传入shader中
+     */
     void draw(Shader* shader);
     
     int nverts() const;

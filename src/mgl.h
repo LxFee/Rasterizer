@@ -91,7 +91,7 @@ int mgl_create_ebo(const int *data, int count);
  * @brief 设置顶点属性格式
  * 
  * @param vbo_ind VBO编号
- * @param location 该属性的位置
+ * @param location 该属性的位置，从0开始
  * @param size 该属性的大小，单位：float（4字节）
  * @param offset 该属性的偏移，单位：float（4字节）
  * @return int 失败返回-1，否则返回vbo_ind
