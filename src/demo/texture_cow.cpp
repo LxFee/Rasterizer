@@ -1,9 +1,9 @@
 #include <iostream>
 #include <vector>
-#include "Shader.h"
+#include "shader.h"
 #include "mgl.h"
 #include "model.h"
-#include "Texture.h"
+#include "texture.h"
 #include "camera.h"
 #include <cmath>
 
@@ -23,7 +23,7 @@ class MyShader : public Shader {
         mat4 mvp = vp * m;
         mat3 mit = clip_translate(m).inv().T();
 
-        vec4 point = m * vec4(pos);
+        vec4 point = m * vec4(pos, 1.0f);
         putvarying(varying, (mit * norm).normalized());
         putvarying(varying, uv);
         putvarying(varying, vec3(point.x(), point.y(), point.z()));
@@ -47,7 +47,7 @@ class MyShader : public Shader {
         vec4 t_color = sample(0, uv.u(), uv.v());
 
         vector<vec3> light_pos = {vec3(8.0f, 10.0f, -6.0f), vec3(-8.0f, 10.0f, -6.0f)};
-        vector<vec3> light_intensity = {vec3(80.0f, 80.0f, 80.0f), vec3(80.0f, 80.0f, 80.0f)};
+        vector<vec3> light_intensity = {vec3(100.0f, 100.0f, 100.0f), vec3(100.0f, 100.0f, 100.0f)};
 
         vec3 ka = vec3(0.005, 0.005, 0.005);
         vec3 kd = vec3(t_color.x(), t_color.y(), t_color.z());
@@ -73,7 +73,7 @@ class MyShader : public Shader {
             result_color = result_color + La + Ld + Ls;
         }
 
-        return result_color;
+        return vec4(result_color, 1.0f);
     }
 };
 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     camera.set_rotation(rotation);
 
     do {
-        mgl_clear_color(clear_color);
+        mgl_clear_color(vec4(clear_color, 1.0f));
         mgl_clear(MGL_COLOR | MGL_DEPTH);
         
         static bool show_demo_window = true;

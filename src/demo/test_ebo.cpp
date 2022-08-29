@@ -1,9 +1,9 @@
 #include <iostream>
 #include <vector>
-#include "Shader.h"
+#include "shader.h"
 #include "mgl.h"
 #include "model.h"
-#include "Texture.h"
+#include "texture.h"
 #include "camera.h"
 #include <cmath>
 
@@ -39,7 +39,7 @@ vector<int> indexes{0, 1, 2, 0, 2, 3};
 int main(int argc, char* argv[]) {
     
     mgl_init("hello rasterizer", 800, 600);
-    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
+    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f, 1.0f));
     mgl_clear_depth(1.0f);
 
     // camera init

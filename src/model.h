@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 
-#include "Shader.h"
+#include "shader.h"
 #include "Texture.h"
 #include "mathbase.h"
 

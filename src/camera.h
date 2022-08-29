@@ -2,7 +2,7 @@
 #define RASTERIZER_CAMERA_H_
 
 #include "mathbase.h"
-#include "Shader.h"
+#include "shader.h"
 
 class Camera {
 public:

@@ -9,7 +9,7 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_opengl.h"
 
-#include "Shader.h"
+#include "shader.h"
 
 #define MGL_COLOR (1 << 0)
 #define MGL_DEPTH (1 << 1)

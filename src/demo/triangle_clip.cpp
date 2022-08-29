@@ -1,9 +1,9 @@
 #include <iostream>
 #include <vector>
-#include "Shader.h"
+#include "shader.h"
 #include "mgl.h"
 #include "model.h"
-#include "Texture.h"
+#include "texture.h"
 #include "camera.h"
 #include <cmath>
 
@@ -26,7 +26,7 @@ class MyShader : public Shader {
         mat4 mvp = vp * m;
         mat3 mit = clip_translate(m).inv().T();
 
-        vec4 point = m * vec4(pos);
+        vec4 point = m * vec4(pos, 1.0f);
         putvarying(varying, (mit * norm).normalized());
         putvarying(varying, uv);
         putvarying(varying, vec3(point.x(), point.y(), point.z()));
@@ -56,7 +56,7 @@ class MyShader : public Shader {
 int main(int argc, char* argv[]) {
     
     mgl_init("hello rasterizer", 800, 600);
-    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f));
+    mgl_clear_color(vec4(0.0f, 0.0f, 0.0f, 1.0f));
     mgl_clear_depth(1.0f);
 
     // camera init

@@ -6,7 +6,7 @@
 
 struct vec3 {
     vec3();
-    vec3(float k);
+    explicit vec3(float k);
     vec3(const float* ep);
     vec3(float x, float y, float z);
     float length_squared() const ;
@@ -47,10 +47,10 @@ const vec3 operator*(const vec3& lhs, float k);
 
 struct vec4 {
     vec4();
-    vec4(float k);
+    explicit vec4(float k);
     vec4(const float* ep);
-    vec4(float x, float y, float z, float w = 1.0f);
-    vec4(const vec3& v, float w = 1.0f);
+    vec4(float x, float y, float z, float w);
+    explicit vec4(const vec3& v, float w);
     float length_squared() const ;
     float length() const ;
     const vec4 normalized() const ;
@@ -83,13 +83,13 @@ struct vec4 {
 };
 
 const vec4 operator*(float k, const vec4& rhs);
-
+ 
 const vec4 operator*(const vec4& lhs, float k);
 
 
 struct vec2 {
     vec2();
-    vec2(float k);
+    explicit vec2(float k);
     vec2(const float* ep);
     vec2(float x, float y);
     float length_squared() const ;
@@ -124,12 +124,12 @@ float det(const vec2 &lhs, const vec2 &rhs);
 
 
 struct mat3 {
-    mat3(float k = 0.0f);
+    explicit mat3(float k = 0.0f);
     mat3(const float* ep);
     mat3(   float m00, float m01, float m02,
             float m10, float m11, float m12,
             float m20, float m21, float m22);
-    mat3(vec3 v0, vec3 v1, vec3 v2);
+    explicit mat3(vec3 v0, vec3 v1, vec3 v2);
     mat3 T() const;
     
     float det() const;
@@ -145,9 +145,9 @@ struct mat3 {
 };
 
 struct mat4 {
-    mat4(float k = 0.0f);
+    explicit mat4(float k = 0.0f);
     mat4(const float* ep);
-    mat4(const mat3& m);
+    explicit mat4(const mat3& m);
     mat4(   float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
             float m20, float m21, float m22, float m23,
@@ -181,21 +181,21 @@ inline vec4 unpackRGBA888(unsigned char *col) {
     return vec4(col[0] / 255.0f, col[1] / 255.0f, col[2] / 255.0f, 1.0f);
 }
 
-mat4 translate(vec3 tr);
+const mat4 translate(vec3 tr);
 
-mat4 scale(vec3 sc);
+const mat4 scale(vec3 sc);
 
-mat4 euler_YXZ_rotate(vec3 rotation);
+const mat4 euler_YXZ_rotate(vec3 rotation);
 
-mat4 rotate(vec3 axis, float angle);
+const mat4 rotate(vec3 axis, float angle);
 
-mat4 ortho(float l, float r, float b, float t, float n, float f);
+const mat4 ortho(float l, float r, float b, float t, float n, float f);
 
-mat4 perspective(float n, float f, float fov, float aspect);
+const mat4 perspective(float n, float f, float fov, float aspect);
 
-mat4 lookat(vec3 eye, vec3 at, vec3 up);
+const mat4 lookat(vec3 eye, vec3 at, vec3 up);
 
-mat3 clip_translate(const mat4& m);
+const mat3 clip_translate(const mat4& m);
 
 
 inline float radian(float d) {

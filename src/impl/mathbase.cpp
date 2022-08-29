@@ -303,7 +303,7 @@ const mat3 mat3::inv() const {
     res.e[7] = -rdet22(0, 2, 3, 5);
     res.e[8] = rdet22(0, 1, 3, 4);
     float rd = 1.0f / det();
-    return res * rd;
+    return (res * rd).T();
 }
 
 const mat3 mat3::operator * (float k) const {
@@ -435,21 +435,21 @@ float clamp(float x, float mi, float mx) {
     return x;
 }
 
-mat4 translate(vec3 tr) {
+const mat4 translate(vec3 tr) {
     return mat4(1.0f, 0.0f, 0.0f, tr.x(),
                 0.0f, 1.0f, 0.0f, tr.y(),
                 0.0f, 0.0f, 1.0f, tr.z(),
                 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-mat4 scale(vec3 sc) {
+const mat4 scale(vec3 sc) {
     return mat4(sc.x(), 0.0f, 0.0f, 0.0f,
                 0.0f, sc.y(), 0.0f, 0.0f,
                 0.0f, 0.0f, sc.z(), 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-mat4 ortho(float l, float r, float b, float t, float n, float f) {
+const mat4 ortho(float l, float r, float b, float t, float n, float f) {
     return  mat4(2.0f / (r - l), 0.0f, 0.0f, (l + r) / (l - r),
                  0.0f, 2.0f / (t - b), 0.0f, (b + t) / (b - t),
                  0.0f, 0.0f, 2.0f / (n - f), (n + f) / (n - f),
@@ -457,7 +457,7 @@ mat4 ortho(float l, float r, float b, float t, float n, float f) {
 }
 
 // fov: degree
-mat4 perspective(float n, float f, float fov, float aspect) {
+const mat4 perspective(float n, float f, float fov, float aspect) {
     float t = tan(radian(fov) / 2.0f) * n;
     float r = aspect * t;
     return  mat4(   n / r, 0.0f, 0.0f, 0.0f,
@@ -466,7 +466,7 @@ mat4 perspective(float n, float f, float fov, float aspect) {
                     0.0f, 0.0f, -1.0f, 0.0f);
 }
 
-mat4 rotate(vec3 axis, float angle) {
+const mat4 rotate(vec3 axis, float angle) {
     angle = radian(angle);
     mat3 res(1.0f);
     mat3 N( 0.0f, -axis.z(), axis.y(),
@@ -480,13 +480,13 @@ mat4 rotate(vec3 axis, float angle) {
     return mat4(res);    
 }
 
-mat4 euler_YXZ_rotate(vec3 rotation) {
+const mat4 euler_YXZ_rotate(vec3 rotation) {
     return  rotate(vec3(0.0f, 1.0f, 0.0f), rotation.x()) * 
             rotate(vec3(1.0f, 0.0f, 0.0f), rotation.y()) * 
             rotate(vec3(0.0f, 0.0f, 1.0f), rotation.z());
 }
 
-mat4 lookat(vec3 eye, vec3 at, vec3 up) {
+const mat4 lookat(vec3 eye, vec3 at, vec3 up) {
     vec3 z = (eye - at).normalized();    
     vec3 x = cross(up, z).normalized();
     vec3 y = cross(z, x).normalized();
@@ -496,7 +496,7 @@ mat4 lookat(vec3 eye, vec3 at, vec3 up) {
                  0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-mat3 clip_translate(const mat4& m) {
+const mat3 clip_translate(const mat4& m) {
     mat3 res;
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
