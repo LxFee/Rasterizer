@@ -7,7 +7,7 @@ D_TMP = tmp
 D_INC = ext/include $(D_SRC)
 D_LIB = ext/lib
 CXXFLAGS = -std=c++17 -O3
-LDFLAGS = 
+LDFLAGS = -fopenmp
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 
 SOURCES = $(wildcard $(D_SRC)/impl/*.cpp)

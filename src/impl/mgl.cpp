@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <memory>
 #include <iostream>
-
 #include "model.h"
 
 namespace {
@@ -154,7 +153,18 @@ namespace {
         
     }
 
+    bool pre_clip(const Tr_element &tr) {
+        const vec4 &a = tr.points[0];
+        const vec4 &b = tr.points[1];
+        const vec4 &c = tr.points[2];
+        bool c_a = a.w() < -a.z();
+        bool c_b = b.w() < -b.z();
+        bool c_c = c.w() < -c.z();
+        return (c_a && c_b && c_c);
+    }
+
     void clip(Tr_element &tr, std::vector<Tr_element>& triangles) {
+
         vec4 &a = tr.points[0];
         vec4 &b = tr.points[1];
         vec4 &c = tr.points[2];
@@ -166,13 +176,12 @@ namespace {
         bool c_b = b.w() < -b.z();
         bool c_c = c.w() < -c.z();
 
-        if(c_a && c_b && c_c) {
-            return ;
-        }
+        assert(!(c_a && c_b && c_c));
+
         if(!c_a && !c_b && !c_c) {
-            triangles.emplace_back(tr);
             return ;
         }
+
         bool dif = c_a ^ c_b ^ c_c;
         if(c_b == dif) {
             std::swap(a, c);
@@ -195,10 +204,15 @@ namespace {
             vac.push_back(va[i] + t2 * (vc[i] - va[i]));
         }
         if(dif) {
-            triangles.emplace_back(Tr_element{{pab, b, c}, {vab, vb, vc}});
-            triangles.emplace_back(Tr_element{{pab, c, pac}, {vab, vc, vac}});
+            Tr_element ntr{{pab, c, pac}, {vab, vc, vac}};
+            std::swap(a, pab);
+            std::swap(va, vab);
+            triangles.emplace_back(ntr);
         } else {
-            triangles.emplace_back(Tr_element{{a, pab, pac}, {va, vab, vac}});
+            std::swap(b, pab);
+            std::swap(c, pac);
+            std::swap(vb, vab);
+            std::swap(vc, vac);
         }
     }
 }
@@ -229,6 +243,7 @@ void mgl_init(const char *title, int w, int h) {
     ImGui_ImplSDLRenderer_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
+
 }
 
 void mgl_quit() {
@@ -255,7 +270,7 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
         count = ebos[ebo_ind].count;
         indexes = ebos[ebo_ind].data.get();
     }
-
+    
     for(int i = 0; i < count; i += 3) {
         Tr_element tr;
         for(int j = 0; j < 3; j++) {
@@ -264,11 +279,17 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
             else ind = i + j;
             tr.points[j] = shader->vertex_shader((const float*)((const char*)vbo.data.get() + ind * vbo.size), vbo.format, tr.varyings[j]);
         }
-        clip(tr, triangles);       
+        if(!pre_clip(tr)) {
+            triangles.emplace_back(tr);
+        }
     }
-    
-    int tr_count = triangles.size();
 
+    int tr_count = triangles.size();
+    for(int i = 0; i < tr_count; i++) {
+        clip(triangles[i], triangles);       
+    }
+    tr_count = triangles.size();
+    
     for(int i = 0; i < tr_count; i++) {
         rasterize(triangles[i], shader);
     }
