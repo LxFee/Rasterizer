@@ -10,12 +10,12 @@
 using namespace std;
 
 class MyShader : public Shader {
-    vec4 vertex_shader(int vbo, int index,floatstream & varying) const {
+    vec4 vertex_shader(const float* const vert, const std::vector<int>& offset, floatstream & varying) const {
         vec3 pos, norm;
         vec2 uv;
-        getattr(vbo, index, 0, pos);
-        getattr(vbo, index, 1, norm);
-        getattr(vbo, index, 2, uv);
+        getattr(vert, offset[0], pos);
+        getattr(vert, offset[1], norm);
+        getattr(vert, offset[2], uv);
         
         mat4 m, vp;
         getunif(0, m);

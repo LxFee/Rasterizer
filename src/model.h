@@ -5,9 +5,16 @@
 #include <string>
 #include "Texture.h"
 
+struct vertex {
+    vec3 position;
+    vec3 normal;
+    vec2 texcoord;
+    vec3 tangent;
+};
+
 class Model {
 public:
-    Model(const std::string filepath);
+    Model(const std::string& filepath);
     void draw(Shader* shader);
     int nverts() const;
     void set_rotation(vec3 rotation); // YXZ euler order 
@@ -17,13 +24,8 @@ public:
     std::vector<std::pair<int, Texture*>> textures;
 
 private:
-    vec3 translation, size;
-    vec3 rotation;
+    vec3 translation, size, rotation;
     int vbo, ebo;
-    std::vector<vec3> verts{};
-    std::vector<vec2> tex_coord{};
-    std::vector<vec3> norms{};
-    std::vector<vec3> tangents{};
-    std::vector<int> indexs;
-
+    std::vector<vertex> verts{};
+    void load_from_file(const std::string& filepath);
 };
