@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RASTERIZER_MATHBASE_H_
+#define RASTERIZER_MATHBASE_H_
 
 #define PI 3.141592653589793238
 #define INV_PI 0.318309886183790691
@@ -10,33 +11,38 @@ struct vec3 {
     vec3(float x, float y, float z);
     float length_squared() const ;
     float length() const ;
-    vec3 normalized() const ;
+    const vec3 normalized() const ;
     
-    vec3 operator + (const vec3& rhs) const;
-    vec3 operator - () const ;
-    vec3 operator - (const vec3& rhs) const;
-    vec3 operator * (const vec3& rhs) const;
-    vec3 operator / (float k) const ; 
+    const vec3 operator + (const vec3& rhs) const;
+    const vec3 operator - () const ;
+    const vec3 operator - (const vec3& rhs) const;
+    const vec3 operator * (const vec3& rhs) const;
+    const vec3 operator / (float k) const ; 
     
-    float x() const; 
-    float y() const; 
-    float z() const;
+    const float& x() const; 
+    const float& y() const; 
+    const float& z() const;
+    float& x(); 
+    float& y(); 
+    float& z();
     
-    float r() const; 
-    float g() const; 
-    float b() const;
+    const float& r() const; 
+    const float& g() const; 
+    const float& b() const;
+    float& r(); 
+    float& g(); 
+    float& b();
 
     float e[3];
 };
 
-vec3 cross(const vec3 &lhs, const vec3 &rhs);
-
+const vec3 cross(const vec3 &lhs, const vec3 &rhs);
 
 float dot(const vec3 &lhs, const vec3 &rhs);
 
-vec3 operator*(float k, const vec3& rhs);
+const vec3 operator*(float k, const vec3& rhs);
 
-vec3 operator*(const vec3& lhs, float k);
+const vec3 operator*(const vec3& lhs, float k);
 
 
 struct vec4 {
@@ -47,30 +53,38 @@ struct vec4 {
     vec4(const vec3& v, float w = 1.0f);
     float length_squared() const ;
     float length() const ;
-    vec4 normalized() const ;
+    const vec4 normalized() const ;
     
-    vec4 operator + (const vec4& rhs) const;
-    vec4 operator - () const ;
-    vec4 operator - (const vec4& rhs) const;
-    vec4 operator * (const vec4& rhs) const;
-    vec4 operator / (float k) const ; 
+    const vec4 operator + (const vec4& rhs) const;
+    const vec4 operator - () const ;
+    const vec4 operator - (const vec4& rhs) const;
+    const vec4 operator * (const vec4& rhs) const;
+    const vec4 operator / (float k) const ; 
     
-    float x() const; 
-    float y() const; 
-    float z() const;
-    float w() const;
+    const float& x() const; 
+    const float& y() const; 
+    const float& z() const;
+    const float& w() const;
+    float& x(); 
+    float& y(); 
+    float& z();
+    float& w();
     
-    float r() const; 
-    float g() const; 
-    float b() const;
-    float a() const;
+    const float& r() const; 
+    const float& g() const; 
+    const float& b() const;
+    const float& a() const;
+    float& r(); 
+    float& g(); 
+    float& b();
+    float& a();
 
     float e[4];
 };
 
-vec4 operator*(float k, const vec4& rhs);
+const vec4 operator*(float k, const vec4& rhs);
 
-vec4 operator*(const vec4& lhs, float k);
+const vec4 operator*(const vec4& lhs, float k);
 
 
 struct vec2 {
@@ -80,29 +94,33 @@ struct vec2 {
     vec2(float x, float y);
     float length_squared() const ;
     float length() const ;
-    vec2 normalized() const ;
+    const vec2 normalized() const ;
     
-    vec2 operator + (const vec2& rhs) const;
-    vec2 operator - () const ;
-    vec2 operator - (const vec2& rhs) const;
-    vec2 operator * (const vec2& rhs) const;
-    vec2 operator / (float k) const ; 
+    const vec2 operator + (const vec2& rhs) const;
+    const vec2 operator - () const ;
+    const vec2 operator - (const vec2& rhs) const;
+    const vec2 operator * (const vec2& rhs) const;
+    const vec2 operator / (float k) const ; 
     
-    float x() const; 
-    float y() const; 
+    const float& x() const; 
+    const float& y() const; 
+    float& x(); 
+    float& y(); 
 
-    float u() const; 
-    float v() const; 
+    const float& u() const; 
+    const float& v() const; 
+    float& u(); 
+    float& v(); 
 
     float e[2];
 };
 
 
-vec2 operator*(float k, const vec2& rhs);
+const vec2 operator*(float k, const vec2& rhs);
 
-vec2 operator*(const vec2& lhs, float k);
+const vec2 operator*(const vec2& lhs, float k);
 
-float cross(const vec2 &lhs, const vec2 &rhs);
+float det(const vec2 &lhs, const vec2 &rhs);
 
 
 struct mat3 {
@@ -116,15 +134,12 @@ struct mat3 {
     
     float det() const;
 
-    mat3 inv() const ;
+    const mat3 inv() const ;
 
-    mat3 operator * (float k) const;
-
-    vec3 operator * (const vec3& rhs) const ;
-
-    mat3 operator * (const mat3& rhs) const ;
-
-    mat3 operator + (const mat3& rhs) const;
+    const mat3 operator * (float k) const;
+    const vec3 operator * (const vec3& rhs) const ;
+    const mat3 operator * (const mat3& rhs) const ;
+    const mat3 operator + (const mat3& rhs) const;
 
     float e[9];
 };
@@ -138,15 +153,12 @@ struct mat4 {
             float m20, float m21, float m22, float m23,
             float m30, float m31, float m32, float m33);
 
-    mat4 T() const;
+    const mat4 T() const;
 
-    mat4 operator * (float k) const;
-
-    vec4 operator * (const vec4& rhs) const ;
-
-    mat4 operator * (const mat4& rhs) const ;
-
-    mat4 operator + (const mat4& rhs) const;
+    const mat4 operator * (float k) const;
+    const vec4 operator * (const vec4& rhs) const ;
+    const mat4 operator * (const mat4& rhs) const ;
+    const mat4 operator + (const mat4& rhs) const;
 
     float e[16];
 };
@@ -193,3 +205,5 @@ inline float radian(float d) {
 inline float degree(float r) {
     return r * 180.0f * INV_PI;
 }
+
+#endif // RASTERIZER_MATHBASE_H_

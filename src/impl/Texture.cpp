@@ -1,9 +1,11 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
+#include "Texture.h"
+
 #include "stb/stb_image.h"
 
-#include "Texture.h"
+
 #define DATA(X, Y) data[(Y) * w + (X)]
 
 vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
@@ -14,14 +16,6 @@ vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
 
 Texture::Texture(int w, int h) : w(w), h(h) {
     data.resize(w * h);
-}
-
-
-void Texture::query(int* w, int *h, int *surr, int *intp) {
-    if(w) *w = this->w;
-    if(h) *h = this->h;
-    if(surr) *surr = this->surround;
-    if(intp) *intp = this->interpolation;
 }
 
 vec4 Texture::sample(float u, float v) {
@@ -50,30 +44,28 @@ vec4 Texture::sample(float u, float v) {
     return vec4(0.0f);    
 }
 
-Texture* Texture::readfromfile(std::string image) {
+std::shared_ptr<Texture> texture_from_file(std::string image) {
     int width, height, nrChannels;
     unsigned char *data = stbi_load(image.c_str(), &width, &height, &nrChannels, 0);
-    if (data) {
-        if(nrChannels != 3 && nrChannels != 4) return NULL;
-        Texture* texture = new Texture(width, height);
-        if(nrChannels == 3) {
-            for(int i = 0; i < height; i++) {
-                for(int j = 0; j < width; j++) {
-                    texture->data[(height - i - 1) * width + j] = unpackRGBA888(data + 3 * (i * width + j));
-                }
-            }
-        } else { // nrChannels == 4
-            for(int i = 0; i < height; i++) {
-                for(int j = 0; j < width; j++) {
-                    texture->data[(height - i - 1) * width + j] = unpackRGBA8888(data + 4 * (i * width + j));
-                }
+    if (!data) return nullptr;
+    if(nrChannels != 3 && nrChannels != 4) return NULL;
+    std::shared_ptr<Texture> texture_ptr(new Texture(width, height));
+    if(nrChannels == 3) {
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
+                texture_ptr->data[(height - i - 1) * width + j] = unpackRGBA888(data + 3 * (i * width + j));
             }
         }
-        stbi_image_free(data);
-        return texture;
+    } else { // nrChannels == 4
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
+                texture_ptr->data[(height - i - 1) * width + j] = unpackRGBA8888(data + 4 * (i * width + j));
+            }
+        }
     }
-    return NULL;
-}
+    stbi_image_free(data);
+    return texture_ptr;
+} 
 
 void Texture::set_filled_color(vec4 color) {
     filled_color = color;

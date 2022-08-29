@@ -1,3 +1,6 @@
+#ifndef RASTERIZER_CAMERA_H_
+#define RASTERIZER_CAMERA_H_
+
 #include "mathbase.h"
 #include "Shader.h"
 
@@ -27,3 +30,5 @@ private:
     float n, f;
     float fov, ratio;
 };
+
+#endif // RASTERIZER_CAMERA_H_

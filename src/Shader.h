@@ -1,8 +1,12 @@
-#pragma once
+#ifndef RASTERIZER_SHADER_H_
+#define RASTERIZER_SHADER_H_
+
 #include <vector>
+#include <cassert>
+#include <memory>
+
 #include "mathbase.h"
 #include "Texture.h"
-#include <cassert>
 
 using floatstream = std::vector<float>;
 extern float* mgl_query_vbo(int, int, int, int*);
@@ -19,16 +23,38 @@ public:
     virtual vec4 fragment_shader(floatstream& varying) const = 0;
     
     template<class T>
-    void uniform(const T& unif, int location);
+    inline void uniform(const T& unif, int location) {
+        assert( (sizeof(unif) % sizeof(float) == 0));
+        int num = sizeof(unif) / sizeof(float);   
+        if(location >= uniforms.size()) 
+            uniforms.resize(location + 1);
+        assert(uniforms[location].size == 0 || uniforms[location].size == num);
+        uniforms[location].size = num;
+        uniforms[location].value.resize(num);
+        for(int i = 0; i < num; i++) {
+            uniforms[location].value[i] = ((const float*)&unif)[i];
+        }
+    }
 
-    void bindtexture(Texture *texture, int location);
+    inline void bindtexture(std::shared_ptr<Texture> texture, int location) {
+        assert(location >= 0);
+        if(location >= textures.size()) textures.resize(location + 1, NULL);
+        textures[location] = texture;
+    }
 
-    virtual ~Shader();
+    virtual ~Shader() {}
+
 protected:
     std::vector<uniform_element> uniforms;
-    std::vector<Texture*> textures;
+    std::vector<std::shared_ptr<Texture>> textures;
 
-    vec4 sample(int texture_location, float u, float v) const ;
+    vec4 sample(int texture_location, float u, float v) const {
+        if(texture_location < 0 || texture_location >= textures.size()) {
+            return vec4(0.0f);
+        }
+        auto &texture = textures[texture_location];
+        return texture->sample(u, v);
+    }
 
     template<class T>
     inline void getunif(int location, T& unif) const {
@@ -45,39 +71,21 @@ protected:
     }
 
     template<class T>
-    static void putvarying(floatstream& varying, const T& var);
+    static inline void putvarying(floatstream& varying, const T& var) {
+        assert(sizeof(var) % sizeof(float) == 0);
+        for(int i = 0; i < sizeof(var) / sizeof(float); i++) {
+            varying.push_back(((const float*)&var)[i]);
+        }
+    }
     
     template<class T>
-    static void getvaring(floatstream& varying, T& var, int& offset); 
+    static inline void getvaring(floatstream& varying, T& var, int& offset) {
+        assert( (sizeof(var) % sizeof(float) == 0) &&
+                (offset + sizeof(var) / sizeof(float) <= varying.size()));
+        var = varying.data() + offset;
+        offset += sizeof(var) / sizeof(float);
+    }
 };
 
-template<class T>
-void Shader::uniform(const T& unif, int location) {
-    assert(sizeof(unif) % sizeof(float) == 0 && location >= 0);
-    int num = sizeof(unif) / sizeof(float);   
-    if(location >= uniforms.size()) uniforms.resize(location + 1);
-    assert(uniforms[location].size == 0 || uniforms[location].size == num);
-    uniforms[location].size = num;
-    uniforms[location].value.resize(num);
-    for(int i = 0; i < num; i++) {
-        uniforms[location].value[i] = ((const float*)&unif)[i];
-    }
-}
 
-template<class T>
-void Shader::putvarying(floatstream& varying, const T& var) {
-    assert(sizeof(var) % sizeof(float) == 0);
-    int num = sizeof(var) / sizeof(float);
-    for(int i = 0; i < num; i++) {
-        varying.push_back(((const float*)&var)[i]);
-    }
-}
-
-template<class T>
-void Shader::getvaring(floatstream& varying, T& var, int& offset) {
-    assert(sizeof(var) % sizeof(float) == 0);
-    int num = sizeof(var) / sizeof(float);
-    assert(offset + num <= varying.size());
-    var = varying.data() + offset;
-    offset += num;
-}
+#endif // RASTERIZER_SHADER_H_

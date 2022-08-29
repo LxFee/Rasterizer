@@ -1,11 +1,13 @@
 #include "model.h"
-#include "mgl.h"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
 #include <string>
 #include <vector>
+
+#include "mgl.h"
 
 static int get_id_from_filename(const std::string& filename) {
     int l = filename.size(), r = filename.size();
@@ -181,7 +183,7 @@ void Model::load_from_file(const std::string& filepath) {
     auto texture_path_list = get_texture_list(filepath);
     for(auto texture_path : texture_path_list) {
         std::string filename = path(texture_path).filename().string();
-        textures.push_back({get_id_from_filename(filename), Texture::readfromfile(texture_path)});
+        textures.push_back({get_id_from_filename(filename), texture_from_file(texture_path)});
     }
 }
 

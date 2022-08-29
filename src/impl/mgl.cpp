@@ -69,7 +69,7 @@ namespace {
         return zbuffer[y * width + x] >= depth;
     }
 
-    float calc_edge_dis(const vec2& v1, const vec2& v2, const vec2& point) {
+    inline float calc_edge_dis(const vec2& v1, const vec2& v2, const vec2& point) {
         double x = point.x(), y = point.y();
         return x * (v1.y() - v2.y()) + y * (v2.x() - v1.x()) + ((double)v1.x() * v2.y() - (double)v2.x() * v1.y());
     }
@@ -93,7 +93,7 @@ namespace {
         vec2 c = (screen_mat * (tr.points[2] * r_w_c)).e;
         
         // 背面剔除
-        if(cross(b - a, c - a) < 0.0f) return ;
+        if(det(b - a, c - a) < 0.0f) return ;
 
         float fa = calc_edge_dis(b, c, a);
         float fb = calc_edge_dis(c, a, b);
