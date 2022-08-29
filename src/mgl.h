@@ -33,9 +33,9 @@ void mgl_quit();
 /**
  * @brief 绘制
  * 
- * @param vbo_ind 
- * @param ebo_ind 
- * @param shader
+ * @param vbo_ind VBO编号
+ * @param ebo_ind EBO编号，当为-1时，按照0,1,2...顺序绘制
+ * @param shader shader指针
  */
 void mgl_draw(int vbo_ind, int ebo_ind, Shader *shader);
 
@@ -81,7 +81,7 @@ int mgl_create_vbo(int size, const void *data, int count);
 /**
  * @brief 创建EBO
  * 
- * @param data 索引数据。当为NULL时，按照0，1，2...顺序
+ * @param data 索引数据，单位：int（4字节）
  * @param count 索引个数
  * @return int EBO编号
  */
