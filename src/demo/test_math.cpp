@@ -7,15 +7,16 @@ using namespace std;
 
 
 int main() {
-    mat3 m;
+    float data[9];
     for(int i = 0; i < 9; i++) {
-        m.e[i] = rand();
+        data[i] = rand();
     }
+    mat3 m(data);
 
-    auto mm = m * m.inv();
+    m = m * m.inv();
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
-            cout << mm.e[i * 3 + j]  << " ";
+            cout << m.data()[i * 3 + j]  << " ";
         }
         cout << endl;
     }

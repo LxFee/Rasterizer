@@ -105,9 +105,9 @@ int main(int argc, char* argv[]) {
         
         static bool show_demo_window = true;
         ImGui::Begin("Control Pannel");
-        ImGui::SliderFloat3("rotation", rotation.e, -180.0f, 180.0f);
-        ImGui::SliderFloat3("translation", translation.e, -20.0f, 20.0f);
-        ImGui::SliderFloat3("cow rotation", cow_rotation.e, -180.0f, 180.0f);
+        ImGui::SliderFloat3("rotation", rotation.data(), -180.0f, 180.0f);
+        ImGui::SliderFloat3("translation", translation.data(), -20.0f, 20.0f);
+        ImGui::SliderFloat3("cow rotation", cow_rotation.data(), -180.0f, 180.0f);
         ImGui::ColorEdit3("clear color", (float*)&clear_color);
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();

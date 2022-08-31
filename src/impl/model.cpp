@@ -81,19 +81,20 @@ void Model::load_from_file(const std::string& filepath) {
         char trash;
         if (!line.compare(0, 2, "v ")) {
             iss >> trash;
-            vec3 v;
-            for (int i = 0; i < 3; i++) iss >> v.e[i];
-            vertexes.push_back(v);
+            float x, y, z;
+            iss >> x >> y >> z;
+            vertexes.emplace_back(x, y, z);
         } else if (!line.compare(0, 3, "vn ")) {
             iss >> trash >> trash;
-            vec3 n;
-            for (int i = 0; i < 3; i++) iss >> n.e[i];
-            normals.push_back(n.normalized());
+            float x, y, z;
+            iss >> x >> y >> z;
+            vec3 n(x, y, z);
+            normals.emplace_back(n.normalized());
         } else if (!line.compare(0, 3, "vt ")) {
             iss >> trash >> trash;
-            vec2 uv;
-            for (int i = 0;i < 2; i++) iss >> uv.e[i];
-            uvs.push_back(uv);
+            float u, v;
+            iss >> u >> v;
+            uvs.emplace_back(u, v);
         }
     }
     bool has_normal = !normals.empty();

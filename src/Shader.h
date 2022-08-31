@@ -106,7 +106,7 @@ protected:
         assert( (sizeof(unif) % sizeof(float) == 0) && 
                 (location >= 0 && location < (int)uniforms.size()) && 
                 (uniforms[location].size == sizeof(unif) / sizeof(float)));
-        unif = uniforms[location].value.data();
+        unif = T(uniforms[location].value.data());
     }
 
     /**
@@ -120,7 +120,7 @@ protected:
     template<class T>
     inline void getattr(const float* const vert, int offset, T& attr) const {
         assert(sizeof(attr) % sizeof(float) == 0);
-        attr = vert + offset;
+        attr = T(vert + offset);
     }
 
     /**
@@ -152,7 +152,7 @@ protected:
     static inline void getvaring(const floatstream& varying, T& var, int& offset) {
         assert( (sizeof(var) % sizeof(float) == 0) &&
                 (offset + sizeof(var) / sizeof(float) <= varying.size()));
-        var = varying.data() + offset;
+        var = T(varying.data() + offset);
         offset += sizeof(var) / sizeof(float);
     }
 };

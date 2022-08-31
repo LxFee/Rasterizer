@@ -4,11 +4,11 @@
 #define PI 3.141592653589793238
 #define INV_PI 0.318309886183790691
 
-struct vec3 {
-    vec3();
-    explicit vec3(float k);
-    vec3(const float* ep);
-    vec3(float x, float y, float z);
+class vec3 {
+public:
+    vec3(float k = 0.0f);
+    explicit vec3(const float* ep);
+    explicit vec3(float x, float y, float z);
     float length_squared() const ;
     float length() const ;
     const vec3 normalized() const ;
@@ -16,40 +16,35 @@ struct vec3 {
     const vec3 operator + (const vec3& rhs) const;
     const vec3 operator - () const ;
     const vec3 operator - (const vec3& rhs) const;
-    const vec3 operator * (const vec3& rhs) const;
     const vec3 operator / (float k) const ; 
     
-    const float& x() const; 
-    const float& y() const; 
-    const float& z() const;
-    float& x(); 
-    float& y(); 
-    float& z();
-    
-    const float& r() const; 
-    const float& g() const; 
-    const float& b() const;
-    float& r(); 
-    float& g(); 
-    float& b();
+    float* data();
+    const float* data() const ;
 
+    float x() const; 
+    float y() const; 
+    float z() const;
+    
+    float r() const; 
+    float g() const; 
+    float b() const;
+
+private:
     float e[3];
 };
+
+const vec3 operator*(const vec3& lhs, const vec3& rhs);
 
 const vec3 cross(const vec3 &lhs, const vec3 &rhs);
 
 float dot(const vec3 &lhs, const vec3 &rhs);
 
-const vec3 operator*(float k, const vec3& rhs);
 
-const vec3 operator*(const vec3& lhs, float k);
-
-
-struct vec4 {
-    vec4();
-    explicit vec4(float k);
-    vec4(const float* ep);
-    vec4(float x, float y, float z, float w);
+class vec4 {
+public:
+    vec4(float k = 0.0f);
+    explicit vec4(const float* ep);
+    explicit vec4(float x, float y, float z, float w);
     explicit vec4(const vec3& v, float w);
     float length_squared() const ;
     float length() const ;
@@ -58,40 +53,32 @@ struct vec4 {
     const vec4 operator + (const vec4& rhs) const;
     const vec4 operator - () const ;
     const vec4 operator - (const vec4& rhs) const;
-    const vec4 operator * (const vec4& rhs) const;
     const vec4 operator / (float k) const ; 
     
-    const float& x() const; 
-    const float& y() const; 
-    const float& z() const;
-    const float& w() const;
-    float& x(); 
-    float& y(); 
-    float& z();
-    float& w();
-    
-    const float& r() const; 
-    const float& g() const; 
-    const float& b() const;
-    const float& a() const;
-    float& r(); 
-    float& g(); 
-    float& b();
-    float& a();
+    float* data();
+    const float* data() const ;
 
+    float x() const; 
+    float y() const; 
+    float z() const;
+    float w() const;
+    
+    float r() const; 
+    float g() const; 
+    float b() const;
+    float a() const;
+private:
     float e[4];
 };
 
-const vec4 operator*(float k, const vec4& rhs);
- 
-const vec4 operator*(const vec4& lhs, float k);
+const vec4 operator*(const vec4& lhs, const vec4& rhs);
 
 
 struct vec2 {
-    vec2();
-    explicit vec2(float k);
-    vec2(const float* ep);
-    vec2(float x, float y);
+public:
+    vec2(float k = 0.0f);
+    explicit vec2(const float* ep);
+    explicit vec2(float x, float y);
     float length_squared() const ;
     float length() const ;
     const vec2 normalized() const ;
@@ -99,69 +86,84 @@ struct vec2 {
     const vec2 operator + (const vec2& rhs) const;
     const vec2 operator - () const ;
     const vec2 operator - (const vec2& rhs) const;
-    const vec2 operator * (const vec2& rhs) const;
     const vec2 operator / (float k) const ; 
     
-    const float& x() const; 
-    const float& y() const; 
-    float& x(); 
-    float& y(); 
+    float* data();
+    const float* data() const ;
 
-    const float& u() const; 
-    const float& v() const; 
-    float& u(); 
-    float& v(); 
+    float x() const; 
+    float y() const;  
 
+    float u() const; 
+    float v() const;
+private:
     float e[2];
 };
 
 
-const vec2 operator*(float k, const vec2& rhs);
-
-const vec2 operator*(const vec2& lhs, float k);
+const vec2 operator*(const vec2 &lhs, const vec2& rhs);
 
 float det(const vec2 &lhs, const vec2 &rhs);
 
 
-struct mat3 {
+class mat3 {
+public:
     explicit mat3(float k = 0.0f);
-    mat3(const float* ep);
-    mat3(   float m00, float m01, float m02,
-            float m10, float m11, float m12,
-            float m20, float m21, float m22);
+    explicit mat3(const float* ep);
+    explicit mat3(  float m00, float m01, float m02,
+                    float m10, float m11, float m12,
+                    float m20, float m21, float m22);
     explicit mat3(vec3 v0, vec3 v1, vec3 v2);
     mat3 T() const;
     
+    float* data();
+    const float* data() const;
+
     float det() const;
 
     const mat3 inv() const ;
-
-    const mat3 operator * (float k) const;
-    const vec3 operator * (const vec3& rhs) const ;
     const mat3 operator * (const mat3& rhs) const ;
+    const vec3 operator * (const vec3& rhs) const ;
     const mat3 operator + (const mat3& rhs) const;
 
+    const mat3 dot(const mat3& rhs) const;
+private:
     float e[9];
 };
 
-struct mat4 {
+const mat3 operator * (const mat3& rhs, float k);
+
+const mat3 operator * (float k, const mat3& rhs);
+
+
+
+class mat4 {
+public:
     explicit mat4(float k = 0.0f);
-    mat4(const float* ep);
+    explicit mat4(const float* ep);
     explicit mat4(const mat3& m);
-    mat4(   float m00, float m01, float m02, float m03,
-            float m10, float m11, float m12, float m13,
-            float m20, float m21, float m22, float m23,
-            float m30, float m31, float m32, float m33);
+    explicit mat4(  float m00, float m01, float m02, float m03,
+                    float m10, float m11, float m12, float m13,
+                    float m20, float m21, float m22, float m23,
+                    float m30, float m31, float m32, float m33);
 
     const mat4 T() const;
 
-    const mat4 operator * (float k) const;
+    float* data();
+    const float* data() const;
+
     const vec4 operator * (const vec4& rhs) const ;
     const mat4 operator * (const mat4& rhs) const ;
     const mat4 operator + (const mat4& rhs) const;
+    const mat4 dot(const mat4& rhs) const;
 
+private:
     float e[16];
 };
+
+const mat4 operator * (const mat4& rhs, float k);
+
+const mat4 operator * (float k, const mat4& rhs);
 
 float clamp(float x, float mi, float mx);
 

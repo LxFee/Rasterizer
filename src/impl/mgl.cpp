@@ -87,9 +87,9 @@ namespace {
                         0.0f, 0.0f, 1.0f, 0.0f,
                         0.0f, 0.0f, 0.0f, 1.0f);
         
-        vec2 a = (screen_mat * (tr.points[0] * r_w_a)).e;
-        vec2 b = (screen_mat * (tr.points[1] * r_w_b)).e;
-        vec2 c = (screen_mat * (tr.points[2] * r_w_c)).e;
+        vec2 a((screen_mat * (tr.points[0] * r_w_a)).data());
+        vec2 b((screen_mat * (tr.points[1] * r_w_b)).data());
+        vec2 c((screen_mat * (tr.points[2] * r_w_c)).data());
         
         // 背面剔除
         if(det(b - a, c - a) < 0.0f) return ;
