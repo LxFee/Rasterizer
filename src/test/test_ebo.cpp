@@ -1,3 +1,14 @@
+/**
+ * @file test_ebo.cpp
+ * @author limil (limil.top@qq.com)
+ * @brief 测试ebo是否工作正常。正常应当显示一个正方体
+ * @date 2022-09-02
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
+
 #include <iostream>
 #include <vector>
 #include "shader.h"
