@@ -29,6 +29,8 @@
 
 ## Todo
 
-- [ ] 实现mipmapping
-- [ ] 多线程优化运行效率
+- [ ] 添加直线模式
 - [ ] 添加线框模式
+- [ ] 支持framebuffer，添加demo：shadow map
+- [ ] 实现mipmapping
+- [ ] 实现鼠标交互，场景漫游
