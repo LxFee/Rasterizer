@@ -117,8 +117,15 @@ namespace {
     float clear_depth;
     std::vector<float> zbuffer;
 
-    std::vector<VBO> vbos;
-    std::vector<EBO> ebos;
+    inline std::vector<VBO>& vbos() {
+        static std::vector<VBO> vbo_entities;
+        return vbo_entities;
+    }
+
+    inline std::vector<EBO>& ebos() {
+        static std::vector<EBO> ebo_entities;
+        return ebo_entities;
+    }
 
     inline std::vector<mgltexture::Texture>& texs() {
         static std::vector<mgltexture::Texture> texture_entities;
@@ -315,17 +322,17 @@ void mgl_quit() {
 }
 
 void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
-    if(vbo_ind < 0 || vbo_ind >= (int)vbos.size()) return ;
-    if(ebo_ind >= (int)ebos.size()) return ;
+    if(vbo_ind < 0 || vbo_ind >= (int)vbos().size()) return ;
+    if(ebo_ind >= (int)ebos().size()) return ;
     
-    VBO& vbo = vbos[vbo_ind];
+    VBO& vbo = vbos()[vbo_ind];
     std::vector<Tr_element> triangles;
     
     int* indexes = NULL;
     int count = vbo.count;
     if(ebo_ind >= 0) { 
-        count = ebos[ebo_ind].count;
-        indexes = ebos[ebo_ind].data.get();
+        count = ebos()[ebo_ind].count;
+        indexes = ebos()[ebo_ind].data.get();
     }
     
     for(int i = 0; i < count; i += 3) {
@@ -399,20 +406,20 @@ bool mgl_update() {
 
 int mgl_create_vbo(int size, const void* data, int count) {
     assert(data);
-    vbos.emplace_back(size, (const float*)data, count);
-    return (int)vbos.size() - 1;
+    vbos().emplace_back(size, (const float*)data, count);
+    return (int)vbos().size() - 1;
 }
 
 int mgl_create_ebo(const int* data, int count) {
     assert(data);
-    ebos.emplace_back(data, count);
-    return (int)ebos.size() - 1;
+    ebos().emplace_back(data, count);
+    return (int)ebos().size() - 1;
 }
 
 int mgl_vertex_attrib_pointer(int vbo_ind, int location, int size, int offset) {
-    if(vbo_ind < 0 || vbo_ind >= (int)vbos.size()) return -1;
+    if(vbo_ind < 0 || vbo_ind >= (int)vbos().size()) return -1;
     if(location < 0) return -1;
-    VBO &vbo = vbos[vbo_ind];
+    VBO &vbo = vbos()[vbo_ind];
     if(location + 1 >= vbo.format.size())
         vbo.format.resize(location + 2, 0);
     vbo.format[location] = offset;

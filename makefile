@@ -33,7 +33,7 @@ $(TARGETS) : $(CORE_OBJECTS) $(OBJECTS) $(DEMO_OBJECTS)
 $(TESTS) : $(CORE_OBJECTS) $(TEST_OBJECTS)
 	$(CC) $(CORE_OBJECTS) $(filter %$@.o, $^) $(addprefix -L,$(D_LIB)) $(LIB:%=-l%) $(CXXFLAGS) $(LDFLAGS) -o $@
 
-$(OBJECTS) $(DEMO_OBJECTS) $(TEST_OBJECTS) : $(D_TMP)/%.o : %.cpp
+$(OBJECTS) $(CORE_OBJECTS) $(DEMO_OBJECTS) $(TEST_OBJECTS) : $(D_TMP)/%.o : %.cpp
 	@mkd $(dir $@)
 	$(CC) $(addprefix -I,$(D_INC)) $(CXXFLAGS) -MMD -c $< -o $@
 
