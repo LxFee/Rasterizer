@@ -3,13 +3,13 @@
 CC = g++
 D_SRC = src
 D_TMP = tmp
-D_INC = ext/include $(D_SRC)
+D_INC = ext/include $(D_SRC)/core $(D_SRC)/utils
 D_LIB = ext/lib
 CXXFLAGS = -std=c++17 -O3
 LDFLAGS = 
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 
-SOURCES = $(wildcard $(D_SRC)/impl/*.cpp)
+SOURCES = $(wildcard $(D_SRC)/core/*.cpp) $(wildcard $(D_SRC)/utils/*.cpp)
 DEMO_SOURCES = $(wildcard $(D_SRC)/demo/*.cpp)
 TEST_SOURCES = $(wildcard $(D_SRC)/test/*.cpp)
 
