@@ -424,21 +424,19 @@ int mgl_gen_texture(int w, int h) {
 int mgl_gen_texture_image(int w, int h, int wide, const unsigned char* data) {
     if (!data) return -1;
     if(wide != 3 && wide != 4) return -1;
-    
     auto &texture_entities = texs();
     texture_entities.emplace_back(w, h);
     int texture_id = (int)texture_entities.size() - 1;
-
     if(wide == 3) {
         for(int i = 0; i < h; i++) {
             for(int j = 0; j < w; j++) {
-                texture_entities[texture_id].data[(height - i - 1) * width + j] = unpackRGBA888(data + 3 * (i * width + j));
+                texture_entities[texture_id].data[(h - i - 1) * w + j] = unpackRGBA888(data + 3 * (i * w + j));
             }
         }
     } else { // nrChannels == 4
-        for(int i = 0; i < height; i++) {
-            for(int j = 0; j < width; j++) {
-                texture_entities[texture_id].data[(height - i - 1) * width + j] = unpackRGBA8888(data + 4 * (i * width + j));
+        for(int i = 0; i < h; i++) {
+            for(int j = 0; j < w; j++) {
+                texture_entities[texture_id].data[(h - i - 1) * w + j] = unpackRGBA8888(data + 4 * (i * w + j));
             }
         }
     }

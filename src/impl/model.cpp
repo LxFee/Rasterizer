@@ -86,6 +86,7 @@ void Model::load_from_file(const std::string& filepath) {
     std::ifstream in;
     in.open(filepath, std::ifstream::in);
     if (in.fail()) return;
+    
 
     std::vector<vec3> vertexes;
     std::vector<vec3> normals;
@@ -200,7 +201,6 @@ void Model::load_from_file(const std::string& filepath) {
     mgl_vertex_attrib_pointer(vbo, 1, 3, 3); // normal
     mgl_vertex_attrib_pointer(vbo, 2, 2, 6); // texcoord
     mgl_vertex_attrib_pointer(vbo, 3, 3, 8); // tangent
-
     // load texture
     auto texture_path_list = get_texture_list(filepath);
     for(auto texture_path : texture_path_list) {

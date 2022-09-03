@@ -103,7 +103,6 @@ int main(int argc, char* argv[]) {
 
     // shader init
     MyShader mshader;
-    
     Model wall("asset/model/brickwall/brickwall.obj");
     wall.set_size(vec3(5.0f));
 
