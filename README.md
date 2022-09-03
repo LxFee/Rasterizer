@@ -10,7 +10,7 @@
 
 ## 如何使用
 
-使用到了SDL2和imgui库。SDL2需要安装运行时环境。所有的库都是在window下编译使用mingw编译器编译，因此只支持window环境。
+使用了预编译的SDL2和imgui库。SDL2需要安装运行时环境。所有的库都是在window下使用mingw编译器编译，因此只支持window环境。
 
 `make`（或`mingw32-make`）可以编译所有src/demo下的所有示例。`make <文件名>`可以指定编译src/demo中的示例。
 
@@ -18,8 +18,7 @@
 
 + 近平面裁剪
 + 自定义shader
-+ 纹理采样支持双线性插值
-+ 使用imgui，更加便于调试
++ 双线性插值采样纹理
 
 ## Demo
 
