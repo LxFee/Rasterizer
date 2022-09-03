@@ -3,7 +3,6 @@
 #include "shader.h"
 #include "mgl.h"
 #include "model.h"
-#include "texture.h"
 #include "camera.h"
 #include <cmath>
 
@@ -55,8 +54,8 @@ class MyShader : public Shader {
         vec3 camera_pos;
         getunif(2, camera_pos);
         
-        vec4 t_color = sample(0, uv.u(), uv.v());
-        vec4 nt_normal = sample(1, uv.u(), uv.v());
+        vec4 t_color = mgl_texture_sample2d(0, uv.u(), uv.v());
+        vec4 nt_normal = mgl_texture_sample2d(1, uv.u(), uv.v());
         n = vec3(nt_normal.x(), nt_normal.y(), nt_normal.z());
         n = (n * 2.0f - vec3(1.0f)).normalized();
         n = (TBN * n).normalized();

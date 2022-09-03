@@ -6,19 +6,18 @@
 #include <memory>
 
 #include "mathbase.h"
-#include "Texture.h"
+#include "mgl.h"
 
-using floatstream = std::vector<float>;
-extern float* mgl_query_vbo(int, int, int, int*);
 
 struct uniform_element {
     uniform_element() : size(0) {}
     int size; // 单位：float（4字节）
-    floatstream value;
+    std::vector<float> value;
 };
 
 class Shader {
 public:
+    using floatstream = std::vector<float>;
     /**
      * @brief 顶点着色器
      * 
@@ -59,39 +58,10 @@ public:
         }
     }
 
-    /**
-     * @brief 绑定纹理
-     * 
-     * @param texture 纹理指针
-     * @param location 绑定的位置
-     */
-    inline void bindtexture(std::shared_ptr<Texture> texture, int location) {
-        assert(location >= 0);
-        if(location >= textures.size()) textures.resize(location + 1, NULL);
-        textures[location] = texture;
-    }
-
     virtual ~Shader() {}
 
-protected:
+protected:    
     std::vector<uniform_element> uniforms;
-    std::vector<std::shared_ptr<Texture>> textures;
-
-    /**
-     * @brief 在着色器中使用。采样纹理
-     * 
-     * @param texture_location 纹理编号，在bindtexture()中的设置的
-     * @param u 
-     * @param v 
-     * @return vec4 
-     */
-    vec4 sample(int texture_location, float u, float v) const {
-        if(texture_location < 0 || texture_location >= textures.size()) {
-            return vec4(0.0f);
-        }
-        auto &texture = textures[texture_location];
-        return texture->sample(u, v);
-    }
 
     /**
      * @brief 在着色器中使用。获得uniform变量

@@ -167,7 +167,7 @@ const mat4 operator * (float k, const mat4& rhs);
 
 float clamp(float x, float mi, float mx);
 
-inline int packRGBA8888(vec4 col) {
+inline unsigned int packRGBA8888(const vec4 col) {
     int r = static_cast<int>(255 * clamp(col.r(), 0.0, 1.0));
     int g = static_cast<int>(255 * clamp(col.g(), 0.0, 1.0));
     int b = static_cast<int>(255 * clamp(col.b(), 0.0, 1.0));
@@ -175,11 +175,11 @@ inline int packRGBA8888(vec4 col) {
     return a + (r << 8) + (g << 16) + (b << 24);
 }
 
-inline vec4 unpackRGBA8888(unsigned char *col) {
+inline const vec4 unpackRGBA8888(const unsigned char *col) {
     return vec4(col[0] / 255.0f, col[1] / 255.0f, col[2] / 255.0f, col[3] / 255.0f);
 }
 
-inline vec4 unpackRGBA888(unsigned char *col) {
+inline const vec4 unpackRGBA888(const unsigned char *col) {
     return vec4(col[0] / 255.0f, col[1] / 255.0f, col[2] / 255.0f, 1.0f);
 }
 

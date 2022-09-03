@@ -3,7 +3,6 @@
 #include "shader.h"
 #include "mgl.h"
 #include "model.h"
-#include "texture.h"
 #include "camera.h"
 #include <cmath>
 
@@ -44,7 +43,7 @@ class MyShader : public Shader {
         vec3 camera_pos;
         getunif(2, camera_pos);
 
-        vec4 t_color = sample(0, uv.u(), uv.v());
+        vec4 t_color = mgl_texture_sample2d(0, uv.u(), uv.v());
 
         vector<vec3> light_pos = {vec3(8.0f, 10.0f, -6.0f), vec3(-8.0f, 10.0f, -6.0f)};
         vector<vec3> light_intensity = {vec3(100.0f, 100.0f, 100.0f), vec3(100.0f, 100.0f, 100.0f)};

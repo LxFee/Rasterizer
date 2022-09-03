@@ -4,12 +4,73 @@
 #include <cstdio>
 #include <memory>
 #include <iostream>
+
 #include "model.h"
+
+namespace mgltexture {
+    namespace {
+        vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
+            vec4 i0 = i00 + u * (i10 - i00);
+            vec4 i1 = i01 + u * (i11 - i01);
+            return i0 + v * (i1 - i0);
+        }
+    }
+
+    struct Texture {
+        Texture(int w, int h)
+        : w(w), 
+        h(h), 
+        data(), 
+        surround(FILLED), 
+        interpolation(BILINEAR), 
+        filled_color(0.0f) 
+        {        
+            data.resize(w * h);
+        }
+
+        vec4 sample(float u, float v) const {
+            if(u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) {
+                if(surround == FILLED) {
+                    return filled_color;
+                }
+                if(surround == REPEAT) {
+                    u = u - floor(u);
+                    v = v - floor(v);
+                }
+            }
+            if(interpolation == NEAREST) {
+                int x = std::min(int(u * w), w - 1);
+                int y = std::min(int(v * h), h - 1);
+                return data[y * w + x];
+            }
+            if(interpolation == BILINEAR) {
+                int x = u * (w - 1);
+                int y = v * (h - 1);
+                if(x == w - 1 || y == h - 1) return data[y * w + x];
+                float local_u = u * (w - 1) - x; 
+                float local_v = v * (h - 1) - y;
+                return bilinear(data[y * w + x], data[y * w + x + 1], data[y * w + x + w], data[y * w + x + w + 1], local_u, local_v);
+            }
+            return vec4(0.0f);
+        }
+
+        int w, h;
+        std::vector<vec4> data;
+        SURROUND surround;
+        INTERPOLATION interpolation;
+        vec4 filled_color;
+    };
+
+    inline std::vector<const mgltexture::Texture*>& active_textures() {
+        static std::vector<const mgltexture::Texture*> active_texture_entities;
+        return active_texture_entities;
+    }    
+}
 
 namespace {
     struct Tr_element {
         vec4 points[3];
-        floatstream varyings[3];
+        std::vector<float> varyings[3];
     };
 
     struct VBO {
@@ -53,6 +114,11 @@ namespace {
 
     std::vector<VBO> vbos;
     std::vector<EBO> ebos;
+
+    inline std::vector<mgltexture::Texture>& texs() {
+        static std::vector<mgltexture::Texture> texture_entities;
+        return texture_entities;
+    }
 
 
     void set_pixel(int x, int y, vec4 color, float depth) {
@@ -117,7 +183,7 @@ namespace {
                 z = alpha * z_a + beta * z_b + gamma * z_c;
                 z = (z + 1.0f) * 0.5f;
                 if(!test(p.x(), p.y(), z)) return false;
-                floatstream int_varying;
+                std::vector<float> int_varying;
                 float rone = 1.0f / (alpha * r_w_a + beta * r_w_b + gamma * r_w_c);
                 for(int k = 0; k < tr.varyings[0].size(); k++) {
                     float v =   alpha * tr.varyings[0][k] * r_w_a + 
@@ -157,9 +223,9 @@ namespace {
         vec4 &a = tr.points[0];
         vec4 &b = tr.points[1];
         vec4 &c = tr.points[2];
-        floatstream &va = tr.varyings[0];
-        floatstream &vb = tr.varyings[1];
-        floatstream &vc = tr.varyings[2];
+        std::vector<float> &va = tr.varyings[0];
+        std::vector<float> &vb = tr.varyings[1];
+        std::vector<float> &vc = tr.varyings[2];
 
         bool c_a = a.w() < -a.z();
         bool c_b = b.w() < -b.z();
@@ -188,7 +254,7 @@ namespace {
         float t2 = (a.w() + a.z()) / ((a.z() + a.w()) - (c.z() + c.w()));
         vec4 pab = a + t1 * (b - a);
         vec4 pac = a + t2 * (c - a);
-        floatstream vab, vac;
+        std::vector<float> vab, vac;
         for(int i = 0; i < va.size(); i++) {
             vab.push_back(va[i] + t1 * (vb[i] - va[i]));
             vac.push_back(va[i] + t2 * (vc[i] - va[i]));
@@ -201,6 +267,7 @@ namespace {
         }
     }
 }
+
 
 void mgl_init(const char *title, int w, int h) {
     assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) == 0);
@@ -346,4 +413,66 @@ int mgl_vertex_attrib_pointer(int vbo_ind, int location, int size, int offset) {
     vbo.format[location] = offset;
     vbo.format[location + 1] = offset + size;
     return location;
+}
+
+int mgl_gen_texture(int w, int h) {
+    auto &texture_entities = texs();
+    texture_entities.emplace_back(w, h);
+    return (int)texture_entities.size() - 1;
+}
+
+int mgl_gen_texture_image(int w, int h, int wide, const unsigned char* data) {
+    if (!data) return -1;
+    if(wide != 3 && wide != 4) return -1;
+    
+    auto &texture_entities = texs();
+    texture_entities.emplace_back(w, h);
+    int texture_id = (int)texture_entities.size() - 1;
+
+    if(wide == 3) {
+        for(int i = 0; i < h; i++) {
+            for(int j = 0; j < w; j++) {
+                texture_entities[texture_id].data[(height - i - 1) * width + j] = unpackRGBA888(data + 3 * (i * width + j));
+            }
+        }
+    } else { // nrChannels == 4
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
+                texture_entities[texture_id].data[(height - i - 1) * width + j] = unpackRGBA8888(data + 4 * (i * width + j));
+            }
+        }
+    }
+    return texture_id;
+}
+
+void mgl_active_texture(int texture_id, int location) {
+    auto &texture_entities = texs();
+    auto &active_texture_entities = mgltexture::active_textures();
+    if(location < 0) return ;
+    if(texture_id >= texture_entities.size() || texture_id < 0) return ;
+    if(location >= active_texture_entities.size()) {
+        active_texture_entities.resize(location + 1, NULL);
+    }
+    active_texture_entities[location] = &(texs()[texture_id]);
+}
+
+void mgl_texture_parameteri(int texture_id, mgltexture::SURROUND surr, mgltexture::INTERPOLATION intp) {
+    auto &texture_entities = texs();
+    if(texture_id >= texture_entities.size() || texture_id < 0) return ;
+    texs()[texture_id].surround = surr;
+    texs()[texture_id].interpolation = intp;
+}
+
+void mgl_texture_parameterv(int texture_id, vec4 filled_color) {
+    auto &texture_entities = texs();
+    if(texture_id >= texture_entities.size() || texture_id < 0) return ;
+    texs()[texture_id].filled_color = filled_color;
+}
+
+const vec4 mgl_texture_sample2d(int texture_location, float u, float v) {
+    auto &active_texture_entities = mgltexture::active_textures();
+    if(texture_location < 0 || texture_location >= active_texture_entities.size()) {
+        return vec4(0.0f);
+    }
+    return active_texture_entities[texture_location]->sample(u, v);
 }

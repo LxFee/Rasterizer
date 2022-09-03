@@ -8,59 +8,80 @@
 #include <vector>
 
 #include "mgl.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
 
-static int get_id_from_filename(const std::string& filename) {
-    int l = filename.size(), r = filename.size();
-    for(int i = 0; i < filename.size(); i++) {
-        if(filename[i] == '.') r = i;
-        if(filename[i] == '_') l = i + 1;
+
+namespace {
+
+    /**
+     * @brief 从文件中读取纹理
+     * 
+     * @param image 文件路径
+     * @return std::shared_ptr<Texture> 
+     */
+    int texture_from_file(std::string image) {
+        int width, height, nrChannels;
+        unsigned char *data = stbi_load(image.c_str(), &width, &height, &nrChannels, 0);
+        if (!data) return -1;
+        int texture_id = mgl_gen_texture_image(width, height, nrChannels, data);
+        stbi_image_free(data);
+        return texture_id;
     }
-    int id = 0;
-    for(; l < r; l++) {
-        if(isdigit(filename[l])) {
-            id = id * 10 + filename[l] - '0';
+
+    static int get_id_from_filename(const std::string& filename) {
+        int l = filename.size(), r = filename.size();
+        for(int i = 0; i < filename.size(); i++) {
+            if(filename[i] == '.') r = i;
+            if(filename[i] == '_') l = i + 1;
         }
+        int id = 0;
+        for(; l < r; l++) {
+            if(isdigit(filename[l])) {
+                id = id * 10 + filename[l] - '0';
+            }
+        }
+        return id;
     }
-    return id;
-}
 
-static std::vector<std::string> get_texture_list(const std::string& filepath) {
-    using namespace std;
-    using namespace filesystem;
-    path dir = path(filepath).remove_filename();
-    string filename = path(filepath).filename().string();
-    
-    vector<string> list;
-    if(!exists(dir) || !is_directory(dir)) {
+    static std::vector<std::string> get_texture_list(const std::string& filepath) {
+        using namespace std;
+        using namespace filesystem;
+        path dir = path(filepath).remove_filename();
+        string filename = path(filepath).filename().string();
+        
+        vector<string> list;
+        if(!exists(dir) || !is_directory(dir)) {
+            return list;
+        }
+        for(const auto& entry : directory_iterator(dir)) {
+            if(!is_regular_file(entry.status())) continue;
+            path current_path = entry.path();
+            if( (current_path.has_extension()) && 
+                (!current_path.extension().compare(".jpg") || !current_path.extension().compare(".png"))) {
+                string current_path_filename = current_path.filename().string();
+                bool flag = true;
+                for(int i = 0; i < filename.size(); i++) {
+                    if(filename[i] == '.') break;
+                    if(filename[i] != current_path_filename[i]) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if(flag) 
+                    list.push_back(current_path.string());
+            }
+        }
         return list;
     }
-    for(const auto& entry : directory_iterator(dir)) {
-        if(!is_regular_file(entry.status())) continue;
-        path current_path = entry.path();
-        if( (current_path.has_extension()) && 
-            (!current_path.extension().compare(".jpg") || !current_path.extension().compare(".png"))) {
-            string current_path_filename = current_path.filename().string();
-            bool flag = true;
-            for(int i = 0; i < filename.size(); i++) {
-                if(filename[i] == '.') break;
-                if(filename[i] != current_path_filename[i]) {
-                    flag = false;
-                    break;
-                }
-            }
-            if(flag) 
-                list.push_back(current_path.string());
-        }
-    }
-    return list;
 }
-
 
 Model::Model(const std::string& filepath) : translation(0.0f), size(1.0f), rotation(0.0f) {
     load_from_file(filepath);
 }
 
 void Model::load_from_file(const std::string& filepath) {
+    std::vector<vertex> verts{};
     using namespace std::filesystem;
     std::ifstream in;
     in.open(filepath, std::ifstream::in);
@@ -188,13 +209,9 @@ void Model::load_from_file(const std::string& filepath) {
     }
 }
 
-int Model::nverts() const {
-    return verts.size();
-}
-
 void Model::draw(Shader* shader) {
     for(int i = 0; i < textures.size(); i++) {
-        shader->bindtexture(textures[i].second, textures[i].first);
+        mgl_active_texture(textures[i].second, textures[i].first);
     }
     shader->uniform(get_model_matrix(), 0);
     mgl_draw(vbo, ebo, shader);

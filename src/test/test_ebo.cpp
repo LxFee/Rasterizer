@@ -8,13 +8,11 @@
  * 
  */
 
-
 #include <iostream>
 #include <vector>
 #include "shader.h"
 #include "mgl.h"
 #include "model.h"
-#include "texture.h"
 #include "camera.h"
 #include <cmath>
 

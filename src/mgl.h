@@ -9,7 +9,9 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_opengl.h"
 
-#include "shader.h"
+#include "mathbase.h"
+
+class Shader;
 
 #define MGL_COLOR (1 << 0)
 #define MGL_DEPTH (1 << 1)
@@ -97,5 +99,66 @@ int mgl_create_ebo(const int *data, int count);
  * @return int 失败返回-1，否则返回vbo_ind
  */
 int mgl_vertex_attrib_pointer(int vbo_ind, int location, int size, int offset);
+
+namespace mgltexture {
+    enum SURROUND {REPEAT, FILLED};
+    enum INTERPOLATION {BILINEAR, NEAREST};   
+}
+
+/**
+ * @brief 生成空纹理
+ * 
+ * @param w 
+ * @param h 
+ * @return texture 编号
+ */
+int mgl_gen_texture(int w, int h);
+
+
+/**
+ * @brief 生成图像纹理
+ * 
+ * @param w 
+ * @param h 
+ * @param wide 字长，单位4字节。只支持wide为3或4
+ * @param data 
+ * @return int 
+ */
+int mgl_gen_texture_image(int w, int h, int wide, const unsigned char* data);
+
+/**
+ * @brief 激活纹理
+ * 
+ * @param texture_id 
+ * @param location 
+ */
+void mgl_active_texture(int texture_id, int location);
+
+/**
+ * @brief 采样纹理
+ * 
+ * @param texture_location 纹理位置（非编号），在mgl_active_texture()中的设置
+ * @param u 
+ * @param v 
+ * @return vec4 
+ */
+const vec4 mgl_texture_sample2d(int texture_location, float u, float v);
+
+/**
+ * @brief 设置纹理属性（参数）
+ * 
+ * @param texture_id 
+ * @param surr 
+ * @param intp 
+ */
+void mgl_texture_parameteri(int texture_id, mgltexture::SURROUND surr, mgltexture::INTERPOLATION intp);
+
+/**
+ * @brief 设置纹理属性（值）
+ * 
+ * @param texture_id 
+ * @param border_color 
+ */
+void mgl_texture_parameterv(int texture_id, vec4 filled_color);
 
 #endif // RASTERIZER_MGL_H_
