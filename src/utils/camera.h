@@ -36,7 +36,7 @@ public:
 
     mat4 get_camera_matrix();
     /**
-     * @brief 设置相机参数。传入NULL代表无需修改 
+     * @brief 设置相机参数，传入NULL代表无需修改
      * 
      * @param n 进平面距离（正值）
      * @param f 远平面距离（正值）
@@ -46,7 +46,7 @@ public:
     void set(const float* n, const float* f, const float* fov, const float* ratio);
 
     /**
-     * @brief 获得相机参数。传入NULL代表无需获得
+     * @brief 获得相机参数，传入NULL代表无需获得
      * 
      * @param n 进平面距离
      * @param f 远平面距离

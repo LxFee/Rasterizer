@@ -38,6 +38,8 @@ public:
     
     /**
      * @brief 向着色器传入uniform变量
+     * 
+     * @details
      * 第一次传入可以是任意mathbase中的类型的值；否则如果传入到相同location时，类型必须一致，并将覆盖掉原有的值。
      * 
      * @tparam T 
@@ -64,7 +66,9 @@ protected:
     std::vector<uniform_element> uniforms;
 
     /**
-     * @brief 在着色器中使用。获得uniform变量
+     * @brief 获得uniform变量（着色器中使用）
+     * 
+     * @details
      * 当uniform中记录的变量类型和传入的unif类型不符时，会触发assert
      * 
      * @tparam T 
@@ -80,7 +84,7 @@ protected:
     }
 
     /**
-     * @brief 在顶点着色器中使用。获得顶点属性
+     * @brief 获得顶点属性（顶点着色器中使用）
      * 
      * @tparam T 
      * @param vert 顶点属性数据。从顶点着色器的参数得到。
@@ -94,7 +98,9 @@ protected:
     }
 
     /**
-     * @brief 在顶点着色器中使用，放入需要插值并传递到片元着色器的量
+     * @brief 放入需要插值并传递到片元着色器的量（顶点着色器中使用）
+     * 
+     * @details
      * 注意放入顺序和取出顺序要相同
      * 
      * @tparam T 
@@ -110,7 +116,9 @@ protected:
     }
     
     /**
-     * @brief 在片元着色器中使用，得到从顶点着色器来的，经过插值的量
+     * @brief 得到从顶点着色器来的，经过插值的量（片元着色器中使用）
+     * 
+     * @details
      * 注意取出顺序要和放入顺序相同
      * 
      * @tparam T 

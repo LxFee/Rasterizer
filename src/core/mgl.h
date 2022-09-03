@@ -106,38 +106,41 @@ namespace mgltexture {
 }
 
 /**
- * @brief 生成空纹理
+ * @brief 生成一个四通道float类型的纹理
  * 
- * @param w 
- * @param h 
+ * 
+ * @param w 纹理宽
+ * @param h 纹理高
  * @return texture 编号
  */
 int mgl_gen_texture(int w, int h);
 
 
 /**
- * @brief 生成图像纹理
+ * @brief 生成一个四通道float类型的图像纹理
  * 
- * @param w 
- * @param h 
+ * @param w 纹理宽
+ * @param h 纹理高
  * @param wide 字长，单位4字节。只支持wide为3或4
  * @param data 
  * @return int 
  */
+
+
 int mgl_gen_texture_image(int w, int h, int wide, const unsigned char* data);
 
 /**
  * @brief 激活纹理
  * 
- * @param texture_id 
- * @param location 
+ * @param texture_id 纹理编号 
+ * @param texture_location 纹理激活位置（非编号）
  */
-void mgl_active_texture(int texture_id, int location);
+void mgl_active_texture(int texture_id, int texture_location);
 
 /**
  * @brief 采样纹理
  * 
- * @param texture_location 纹理位置（非编号），在mgl_active_texture()中的设置
+ * @param texture_location 纹理激活位置（非编号），在mgl_active_texture()中的设置
  * @param u 
  * @param v 
  * @return vec4 
@@ -147,17 +150,17 @@ const vec4 mgl_texture_sample2d(int texture_location, float u, float v);
 /**
  * @brief 设置纹理属性（参数）
  * 
- * @param texture_id 
- * @param surr 
- * @param intp 
+ * @param texture_id 纹理编号 
+ * @param surr 环绕模式，可选：mgltexture::REPEAT，mgltexture::FILLED
+ * @param intp 插值模式，可选：mgltexture::BILINEAR，mgltexture::NEAREST
  */
 void mgl_texture_parameteri(int texture_id, mgltexture::SURROUND surr, mgltexture::INTERPOLATION intp);
 
 /**
  * @brief 设置纹理属性（值）
  * 
- * @param texture_id 
- * @param border_color 
+ * @param texture_id 纹理编号
+ * @param border_color 设置环绕模式为mgltexture::FILLED时采样超范围时的填充颜色
  */
 void mgl_texture_parameterv(int texture_id, vec4 filled_color);
 

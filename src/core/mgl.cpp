@@ -443,15 +443,15 @@ int mgl_gen_texture_image(int w, int h, int wide, const unsigned char* data) {
     return texture_id;
 }
 
-void mgl_active_texture(int texture_id, int location) {
+void mgl_active_texture(int texture_id, int texture_location) {
     auto &texture_entities = texs();
     auto &active_texture_entities = mgltexture::active_textures();
-    if(location < 0) return ;
+    if(texture_location < 0) return ;
     if(texture_id >= texture_entities.size() || texture_id < 0) return ;
-    if(location >= active_texture_entities.size()) {
-        active_texture_entities.resize(location + 1, NULL);
+    if(texture_location >= active_texture_entities.size()) {
+        active_texture_entities.resize(texture_location + 1, NULL);
     }
-    active_texture_entities[location] = &(texs()[texture_id]);
+    active_texture_entities[texture_location] = &(texs()[texture_id]);
 }
 
 void mgl_texture_parameteri(int texture_id, mgltexture::SURROUND surr, mgltexture::INTERPOLATION intp) {
