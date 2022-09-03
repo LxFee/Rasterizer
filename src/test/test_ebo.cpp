@@ -83,7 +83,6 @@ int main(int argc, char* argv[]) {
 
     // texture
     int texture_id = texture_from_file("asset/model/brickwall/brickwall_diffuse_0.jpg");
-    cout << texture_id;
     mgl_active_texture(texture_id, 0);
 
     do {
