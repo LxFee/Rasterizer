@@ -2,10 +2,15 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cassert>
 #include <memory>
 #include <iostream>
+#include <vector>
 
-#include "model.h"
+#include "mathbase.h"
+#include "Shader.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_opengl.h"
 
 namespace mgltexture {
     namespace {

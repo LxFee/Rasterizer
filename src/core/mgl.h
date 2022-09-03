@@ -1,15 +1,10 @@
 #ifndef RASTERIZER_MGL_H_
 #define RASTERIZER_MGL_H_
 
-#include <cassert>
-
+#include "mathbase.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_opengl.h"
-
-#include "mathbase.h"
 
 class Shader;
 
