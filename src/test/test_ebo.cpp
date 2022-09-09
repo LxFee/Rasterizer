@@ -27,7 +27,7 @@ int texture_from_file(std::string image) {
 }
 
 class MyShader : public Shader {
-    vec4 vertex_shader(const float* const vert, const std::vector<int>& offset, floatstream & varying) const {
+    void vertex_shader(const float* const vert, const std::vector<int>& offset, V2FO & v2f) const {
         vec3 pos;
         vec2 uv;
         getattr(vert, offset[0], pos);
@@ -36,18 +36,15 @@ class MyShader : public Shader {
         mat4 vp;
         getunif(0, vp);
 
-        putvarying(varying, uv);
-
-        vec4 fpos = vp * vec4(pos, 1.0f);
-        return fpos;
+        v2f.texcoord = uv;
+        v2f.position = vp * vec4(pos, 1.0f);
     }
 
-    vec4 fragment_shader(const floatstream& varying) const {
+    void fragment_shader(const V2FI & v2f, F2B& f2b) const {
         vec2 uv;
-        int offset = 0;
-        getvaring(varying, uv, offset);
+        uv = v2f.texcoord;
         
-        return mgl_texture_sample2d(0, uv.u(), uv.v());
+        f2b.color0 = mgl_texture_sample2d(0, uv.u(), uv.v());
     }
 };
 

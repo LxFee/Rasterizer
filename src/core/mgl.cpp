@@ -73,10 +73,6 @@ namespace mgltexture {
 }
 
 namespace {
-    struct Tr_element {
-        vec4 points[3];
-        std::vector<float> varyings[3];
-    };
 
     struct VBO {
         VBO(int el_size, const float* _data, int cnt) 
@@ -132,6 +128,26 @@ namespace {
         return texture_entities;
     }
 
+    void lerp(const Shader::V2FO& a, const Shader::V2FO& b, float t, Shader::V2FO& c) {
+        c.position = a.position + t * (b.position - a.position);
+        c.texcoord = a.texcoord + t * (b.texcoord - a.texcoord);
+        c.varying.resize(a.varying.size());
+        for(int i = 0; i < a.varying.size(); i++) {
+            c.varying[i] = a.varying[i] + t * (b.varying[i] - a.varying[i]);
+        }
+    }
+
+    void interpolation( const Shader::V2FO& a, const Shader::V2FO& b, const Shader::V2FO& c, 
+                        float alpha, float beta, float gamma, Shader::V2FI& d, bool correction) {
+        float weight = 1.0f;
+        if(correction) weight = 1.0 / (alpha + beta + gamma);
+        d.position = (alpha * a.position + beta * b.position + gamma * c.position) * weight;
+        d.texcoord = (alpha * a.texcoord + beta * b.texcoord + gamma * c.texcoord) * weight;
+        d.varying.resize(a.varying.size());
+        for(int i = 0; i < a.varying.size(); i++) {
+            d.varying[i] = (alpha * a.varying[i] + beta * b.varying[i] + gamma * c.varying[i]) * weight;
+        }
+    }
 
     void set_pixel(int x, int y, vec4 color, float depth) {
         assert(x >= 0 && x < width);
@@ -151,69 +167,64 @@ namespace {
         return x * (v1.y() - v2.y()) + y * (v2.x() - v1.x()) + ((double)v1.x() * v2.y() - (double)v2.x() * v1.y());
     }
 
-    void rasterize(Tr_element& tr, Shader* shader) {
-        float r_w_a = 1.0f / tr.points[0].w();
-        float r_w_b = 1.0f / tr.points[1].w();
-        float r_w_c = 1.0f / tr.points[2].w();
+    void rasterize(const Shader::V2FO& a, const Shader::V2FO& b, const Shader::V2FO& c, Shader* shader) {
+        float r_w_a = 1.0f / a.position.w();
+        float r_w_b = 1.0f / b.position.w();
+        float r_w_c = 1.0f / c.position.w();
 
-        float z_a = tr.points[0].z() * r_w_a;
-        float z_b = tr.points[1].z() * r_w_b;
-        float z_c = tr.points[2].z() * r_w_c;
+        float z_a = a.position.z() * r_w_a;
+        float z_b = b.position.z() * r_w_b;
+        float z_c = c.position.z() * r_w_c;
 
         mat4 screen_mat(width / 2.0f, 0.0f, 0.0f, width / 2.0f,
                         0.0f, height / 2.0f, 0.0f, height / 2.0f,
                         0.0f, 0.0f, 1.0f, 0.0f,
                         0.0f, 0.0f, 0.0f, 1.0f);
         
-        vec2 a((screen_mat * (tr.points[0] * r_w_a)).data());
-        vec2 b((screen_mat * (tr.points[1] * r_w_b)).data());
-        vec2 c((screen_mat * (tr.points[2] * r_w_c)).data());
+        vec2 pa((screen_mat * (a.position * r_w_a)).data());
+        vec2 pb((screen_mat * (b.position * r_w_b)).data());
+        vec2 pc((screen_mat * (c.position * r_w_c)).data());
+        
+        // std::cout << pa.x() << " " << pa.y() << std::endl;
+        // std::cout << pb.x() << " " << pb.y() << std::endl;
+        // std::cout << pc.x() << " " << pc.y() << std::endl;
+        // std::cout << std::endl;
         
         // 背面剔除
-        if(det(b - a, c - a) < 0.0f) return ;
+        if(det(pb - pa, pc - pa) < 0.0f) return ;
 
-        float fa = calc_edge_dis(b, c, a);
-        float fb = calc_edge_dis(c, a, b);
-        float fc = calc_edge_dis(a, b, c);
-
-        float nfa = calc_edge_dis(b, c, vec2(-1.0f, -1.0f));
-        float nfb = calc_edge_dis(c, a, vec2(-1.0f, -1.0f));
-        float nfc = calc_edge_dis(a, b, vec2(-1.0f, -1.0f));
+        float fa = calc_edge_dis(pb, pc, pa);
+        float fb = calc_edge_dis(pc, pa, pb);
+        float fc = calc_edge_dis(pa, pb, pc);
 
         const float eps = 1e-5;
         if(fabs(fa) < eps || fabs(fb) < eps || fabs(fc) < eps) return ;
             
         auto shade = [&](vec2 p, vec4& color, float& z) -> bool {
-            float alpha = calc_edge_dis(b, c, p) / fa;
-            float beta  = calc_edge_dis(c, a, p) / fb;
-            float gamma = calc_edge_dis(a, b, p) / fc;
-            
+            float alpha = calc_edge_dis(pb, pc, p) / fa;
+            float beta  = calc_edge_dis(pc, pa, p) / fb;
+            float gamma = calc_edge_dis(pa, pb, p) / fc;
+
             if(alpha < 0.0f || beta < 0.0f || gamma < 0.0f) return false;
-            if( (alpha > 0.0f || fa * nfa > 0.0f) &&
-                (beta  > 0.0f || fb * nfb > 0.0f) &&
-                (gamma > 0.0f || fc * nfc > 0.0f)) {
-                z = alpha * z_a + beta * z_b + gamma * z_c;
-                z = (z + 1.0f) * 0.5f;
-                if(!test(p.x(), p.y(), z)) return false;
-                std::vector<float> int_varying;
-                float rone = 1.0f / (alpha * r_w_a + beta * r_w_b + gamma * r_w_c);
-                for(int k = 0; k < tr.varyings[0].size(); k++) {
-                    float v =   alpha * tr.varyings[0][k] * r_w_a + 
-                                beta  * tr.varyings[1][k] * r_w_b + 
-                                gamma * tr.varyings[2][k] * r_w_c;
-                    int_varying.push_back(v * rone);
-                }
-                
-                color = shader->fragment_shader(int_varying);
-                return true;
-            }
-            return false;
+            z = alpha * z_a + beta * z_b + gamma * z_c;
+            z = (z + 1.0f) * 0.5f;
+            if(!test(p.x(), p.y(), z)) return false;
+            Shader::V2FI v2f;
+            Shader::F2B f2b;
+
+            interpolation(a, b, c, alpha * r_w_a, beta * r_w_b, gamma * r_w_c, v2f, true);
+            
+            shader->fragment_shader(v2f, f2b);
+            color = f2b.color0;
+            return true;
         };
 
         auto min3f = [](float a, float b, float c) {return std::min(a, std::min(b, c));};
         auto max3f = [](float a, float b, float c) {return std::max(a, std::max(b, c));};
-        int xl = floor(min3f(a.x(), b.x(), c.x())), yl = floor(min3f(a.y(), b.y(), c.y()));
-        int xr = ceil(max3f(a.x(), b.x(), c.x())), yr = ceil(max3f(a.y(), b.y(), c.y()));
+        int xl = floor(min3f(pa.x(), pb.x(), pc.x()));
+        int yl = floor(min3f(pa.y(), pb.y(), pc.y()));
+        int xr = ceil(max3f(pa.x(), pb.x(), pc.x()));
+        int yr = ceil(max3f(pa.y(), pb.y(), pc.y()));
         xl = std::max(0, xl);
         yl = std::max(0, yl);
         xr = std::min(xr, width - 1);
@@ -231,51 +242,52 @@ namespace {
         
     }
 
-    void clip(Tr_element &tr, std::vector<Tr_element>& triangles) {
-        vec4 &a = tr.points[0];
-        vec4 &b = tr.points[1];
-        vec4 &c = tr.points[2];
-        std::vector<float> &va = tr.varyings[0];
-        std::vector<float> &vb = tr.varyings[1];
-        std::vector<float> &vc = tr.varyings[2];
+    void clip(Shader::V2FO v2fs[3], std::vector<Shader::V2FO>& triangles) {
+        Shader::V2FO &a = v2fs[0];
+        Shader::V2FO &b = v2fs[1];
+        Shader::V2FO &c = v2fs[2];
 
-        bool c_a = a.w() < -a.z();
-        bool c_b = b.w() < -b.z();
-        bool c_c = c.w() < -c.z();
+        bool c_a = a.position.w() < -a.position.z();
+        bool c_b = b.position.w() < -b.position.z();
+        bool c_c = c.position.w() < -c.position.z();
 
         if(c_a && c_b && c_c) {
             return ;
         }
         if(!c_a && !c_b && !c_c) {
-            triangles.emplace_back(tr);
+            triangles.emplace_back(v2fs[0]);
+            triangles.emplace_back(v2fs[1]);
+            triangles.emplace_back(v2fs[2]);
             return ;
         }
         bool dif = c_a ^ c_b ^ c_c;
         if(c_b == dif) {
             std::swap(a, c);
             std::swap(a, b);
-            std::swap(va, vc);
-            std::swap(va, vb);
         } else if(c_c == dif) {
             std::swap(a, b);
             std::swap(a, c);
-            std::swap(va, vb);
-            std::swap(va, vc);
         }
-        float t1 = (a.w() + a.z()) / ((a.z() + a.w()) - (b.z() + b.w()));
-        float t2 = (a.w() + a.z()) / ((a.z() + a.w()) - (c.z() + c.w()));
-        vec4 pab = a + t1 * (b - a);
-        vec4 pac = a + t2 * (c - a);
-        std::vector<float> vab, vac;
-        for(int i = 0; i < va.size(); i++) {
-            vab.push_back(va[i] + t1 * (vb[i] - va[i]));
-            vac.push_back(va[i] + t2 * (vc[i] - va[i]));
-        }
+        float t1 = (a.position.w() + a.position.z()) / ((a.position.z() + a.position.w()) - (b.position.z() + b.position.w()));
+        float t2 = (a.position.w() + a.position.z()) / ((a.position.z() + a.position.w()) - (c.position.z() + c.position.w()));
+        
+        Shader::V2FO pab, pac;
+        lerp(a, b, t1, pab);
+        lerp(a, c, t2, pac);
+
         if(dif) {
-            triangles.emplace_back(Tr_element{{pab, b, c}, {vab, vb, vc}});
-            triangles.emplace_back(Tr_element{{pab, c, pac}, {vab, vc, vac}});
+            triangles.emplace_back(pab);
+            triangles.emplace_back(b);
+            triangles.emplace_back(c);
+            
+            triangles.emplace_back(pab);
+            triangles.emplace_back(c);
+            triangles.emplace_back(pac);
+            
         } else {
-            triangles.emplace_back(Tr_element{{a, pab, pac}, {va, vab, vac}});
+            triangles.emplace_back(a);
+            triangles.emplace_back(pab);
+            triangles.emplace_back(pac);
         }
     }
 }
@@ -326,7 +338,7 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
     if(ebo_ind >= (int)ebos().size()) return ;
     
     VBO& vbo = vbos()[vbo_ind];
-    std::vector<Tr_element> triangles;
+    std::vector<Shader::V2FO> triangles;
     
     int* indexes = NULL;
     int count = vbo.count;
@@ -336,19 +348,21 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
     }
     
     for(int i = 0; i < count; i += 3) {
-        Tr_element tr;
+        Shader::V2FO v2fs[3];
         for(int j = 0; j < 3; j++) {
             int ind;
             if(indexes) ind = indexes[i + j];
             else ind = i + j;
-            tr.points[j] = shader->vertex_shader((const float*)((const char*)vbo.data.get() + ind * vbo.size), vbo.format, tr.varyings[j]);
+            shader->vertex_shader((const float*)((const char*)vbo.data.get() + ind * vbo.size), vbo.format, v2fs[j]);
+            // std::cout << v2fs[j].position.x() << " " << v2fs[j].position.y() << " " << v2fs[j].position.z() << std::endl;
         }
-        clip(tr, triangles);
+        // std::cout << std::endl;
+        clip(v2fs, triangles);
     }
 
     int tr_count = triangles.size();
-    for(int i = 0; i < tr_count; i++) {
-        rasterize(triangles[i], shader);
+    for(int i = 0; i < tr_count; i += 3) {
+        rasterize(triangles[i], triangles[i + 1], triangles[i + 2], shader);
     }
 }
 

@@ -32,4 +32,4 @@
 - [ ] 添加线框模式
 - [ ] 支持framebuffer，添加demo：shadow map
 - [ ] 实现mipmapping
-- [ ] 实现鼠标交互，场景漫游
+- [ ] 添加几何着色器、曲面细分着色器

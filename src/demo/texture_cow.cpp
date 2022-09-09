@@ -9,7 +9,7 @@
 using namespace std;
 
 class MyShader : public Shader {
-    vec4 vertex_shader(const float* const vert, const std::vector<int>& offset, floatstream & varying) const {
+    void vertex_shader(const float* const vert, const std::vector<int>& offset, V2FO & v2f) const {
         vec3 pos, norm;
         vec2 uv;
         getattr(vert, offset[0], pos);
@@ -23,22 +23,21 @@ class MyShader : public Shader {
         mat3 mit = clip_translate(m).inv().T();
 
         vec4 point = m * vec4(pos, 1.0f);
-        putvarying(varying, (mit * norm).normalized());
-        putvarying(varying, uv);
-        putvarying(varying, vec3(point.x(), point.y(), point.z()));
+        putvarying(v2f.varying, (mit * norm).normalized());
+        putvarying(v2f.varying, vec3(point.x(), point.y(), point.z()));
 
-        vec4 fpos = mvp * vec4(pos, 1.0f);
-        return fpos;
+        v2f.texcoord = uv;
+        v2f.position = mvp * vec4(pos, 1.0f);
     }
 
-    vec4 fragment_shader(const floatstream& varying) const {
+    void fragment_shader(const V2FI & v2f, F2B& f2b) const {
         int offset = 0;
         vec3 n, pos;
         vec2 uv;
-        getvaring(varying, n, offset);
-        getvaring(varying, uv, offset);
-        getvaring(varying, pos, offset);
+        getvaring(v2f.varying, n, offset);
+        getvaring(v2f.varying, pos, offset);
         n = n.normalized();
+        uv = v2f.texcoord;
         
         vec3 camera_pos;
         getunif(2, camera_pos);
@@ -71,8 +70,8 @@ class MyShader : public Shader {
 
             result_color = result_color + La + Ld + Ls;
         }
-
-        return vec4(result_color, 1.0f);
+        
+        f2b.color0 = vec4(result_color, 1.0f);
     }
 };
 

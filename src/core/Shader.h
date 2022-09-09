@@ -9,15 +9,43 @@
 #include "mgl.h"
 
 
-struct uniform_element {
-    uniform_element() : size(0) {}
-    int size; // 单位：float（4字节）
-    std::vector<float> value;
-};
-
 class Shader {
+    struct uniform_element {
+        uniform_element() : size(0) {}
+        int size; // 单位：float（4字节）
+        std::vector<float> value;
+    };
 public:
     using floatstream = std::vector<float>;
+
+    /**
+     * @brief 顶点着色器到片元着色器（输出）
+     * 
+     */
+    struct V2FO {
+        vec4 position;
+        vec2 texcoord;
+        floatstream varying;
+    };
+
+    /**
+     * @brief 顶点着色器到片元着色器（输入）
+     * 
+     */
+    struct V2FI {
+        vec4 position;
+        vec2 texcoord;
+        floatstream varying;
+    };
+
+    /**
+     * @brief 片元着色器到帧缓冲
+     * 
+     */
+    struct F2B {
+        vec4 color0;
+    };
+
     /**
      * @brief 顶点着色器
      * 
@@ -26,7 +54,7 @@ public:
      * @param varying 需要传入片元着色器（fragment_shader）的量，请配合putvarying使用
      * @return vec4 经过顶点着色器处理后的顶点位置
      */
-    virtual vec4 vertex_shader(const float* const vert, const std::vector<int>& offset, floatstream & varying) const = 0;
+    virtual void vertex_shader(const float* const vert, const std::vector<int>& offset, V2FO & v2f) const = 0;
     
     /**
      * @brief 片元着色器
@@ -34,7 +62,7 @@ public:
      * @param varying 从顶点着色器过来，经过插值的量。请配合getvarying使用
      * @return vec4 最终颜色
      */
-    virtual vec4 fragment_shader(const floatstream& varying) const = 0;
+    virtual void fragment_shader(const V2FI & v2f, F2B& f2b) const = 0;
     
     /**
      * @brief 向着色器传入uniform变量
@@ -47,7 +75,7 @@ public:
      * @param location 传入的位置
      */
     template<class T>
-    inline void uniform(const T& unif, int location) {
+    void uniform(const T& unif, int location) {
         assert( (sizeof(unif) % sizeof(float) == 0));
         int num = sizeof(unif) / sizeof(float);   
         if(location >= uniforms.size()) 
@@ -76,7 +104,7 @@ protected:
      * @param unif 用于存放得到的uniform变量
      */
     template<class T>
-    inline void getunif(int location, T& unif) const {
+    void getunif(int location, T& unif) const {
         assert( (sizeof(unif) % sizeof(float) == 0) && 
                 (location >= 0 && location < (int)uniforms.size()) && 
                 (uniforms[location].size == sizeof(unif) / sizeof(float)));
@@ -92,7 +120,7 @@ protected:
      * @param attr 用于存放得到的顶点属性
      */
     template<class T>
-    inline void getattr(const float* const vert, int offset, T& attr) const {
+    void getattr(const float* const vert, int offset, T& attr) const {
         assert(sizeof(attr) % sizeof(float) == 0);
         attr = T(vert + offset);
     }
@@ -108,7 +136,7 @@ protected:
      * @param var 需要传入到片元着色器的量
      */
     template<class T>
-    static inline void putvarying(floatstream& varying, const T& var) {
+    static void putvarying(floatstream& varying, const T& var) {
         assert(sizeof(var) % sizeof(float) == 0);
         for(int i = 0; i < sizeof(var) / sizeof(float); i++) {
             varying.push_back(((const float*)&var)[i]);
@@ -127,7 +155,7 @@ protected:
      * @param offset 辅助使用，第一个放入的量offset=0。getvaring会自动帮你累加offset，因此在取下一个变量的重复传入同一个offset即可。
      */
     template<class T>
-    static inline void getvaring(const floatstream& varying, T& var, int& offset) {
+    static void getvaring(const floatstream& varying, T& var, int& offset) {
         assert( (sizeof(var) % sizeof(float) == 0) &&
                 (offset + sizeof(var) / sizeof(float) <= varying.size()));
         var = T(varying.data() + offset);
