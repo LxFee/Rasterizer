@@ -73,6 +73,7 @@ private:
 
 const vec4 operator*(const vec4& lhs, const vec4& rhs);
 
+float dot(const vec4 &lhs, const vec4 &rhs);
 
 struct vec2 {
 public:

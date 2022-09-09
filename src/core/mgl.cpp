@@ -185,11 +185,6 @@ namespace {
         vec2 pb((screen_mat * (b.position * r_w_b)).data());
         vec2 pc((screen_mat * (c.position * r_w_c)).data());
         
-        // std::cout << pa.x() << " " << pa.y() << std::endl;
-        // std::cout << pb.x() << " " << pb.y() << std::endl;
-        // std::cout << pc.x() << " " << pc.y() << std::endl;
-        // std::cout << std::endl;
-        
         // 背面剔除
         if(det(pb - pa, pc - pa) < 0.0f) return ;
 
@@ -242,52 +237,71 @@ namespace {
         
     }
 
-    void clip(Shader::V2FO v2fs[3], std::vector<Shader::V2FO>& triangles) {
-        Shader::V2FO &a = v2fs[0];
-        Shader::V2FO &b = v2fs[1];
-        Shader::V2FO &c = v2fs[2];
+    void clip(Shader::V2FO v2fs[3], std::vector<Shader::V2FO>& vertexes, std::vector<int>& indexes) {
+        const static vec4 planes[6] {
+            vec4(0, 0, 1, 1), // near
+            vec4(0, 0, -1, 1), // far
+            vec4(1, 0, 0, 1), // left
+            vec4(-1, 0, 0, 1), // right
+            vec4(0, 1, 0, 1), // top
+            vec4(0, -1, 0, 1) // bottom
+        };
 
-        bool c_a = a.position.w() < -a.position.z();
-        bool c_b = b.position.w() < -b.position.z();
-        bool c_c = c.position.w() < -c.position.z();
+        std::vector<Shader::V2FO> vertex_list;
+        std::vector<int> input;
+        for(int i = 0; i < 3; i++) {
+            input.push_back(i);
+            vertex_list.emplace_back(std::move(v2fs[i]));
+        }
 
-        if(c_a && c_b && c_c) {
-            return ;
+        for(int i = 0; i < 6; i++) {
+            const vec4 &C = planes[i];
+            if(input.empty()) break;
+            std::vector<int> output;
+            int p = 0, s = input.size() - 1;
+            while(p < input.size()) {
+                float d1 = dot(vertex_list[input[p]].position, C);
+                float d2 = dot(vertex_list[input[s]].position, C);
+                int situation = ((d1 >= 0) | ((d2 >= 0) << 1));
+                if(situation == 0) {
+                    // do nothing
+                }
+                else if(situation == 1) {
+                    if(fabs(d1 - d2) > 1e-5) {
+                        vertex_list.emplace_back();
+                        lerp(vertex_list[input[p]], vertex_list[input[s]], d1 / (d1 - d2), vertex_list.back());
+                        output.push_back(vertex_list.size() - 1);
+                    }
+                    output.push_back(input[p]);
+                }
+                else if(situation == 2) {
+                    if(fabs(d1 - d2) > 1e-5) {
+                        vertex_list.emplace_back();
+                        lerp(vertex_list[input[p]], vertex_list[input[s]], d1 / (d1 - d2), vertex_list.back());
+                        output.push_back(vertex_list.size() - 1);
+                    }
+                }
+                else if(situation == 3) {
+                    output.push_back(input[p]);
+                }
+                else {
+                    assert(0);
+                }
+                s = p;
+                p++;
+            }
+            input.swap(output);
         }
-        if(!c_a && !c_b && !c_c) {
-            triangles.emplace_back(v2fs[0]);
-            triangles.emplace_back(v2fs[1]);
-            triangles.emplace_back(v2fs[2]);
-            return ;
-        }
-        bool dif = c_a ^ c_b ^ c_c;
-        if(c_b == dif) {
-            std::swap(a, c);
-            std::swap(a, b);
-        } else if(c_c == dif) {
-            std::swap(a, b);
-            std::swap(a, c);
-        }
-        float t1 = (a.position.w() + a.position.z()) / ((a.position.z() + a.position.w()) - (b.position.z() + b.position.w()));
-        float t2 = (a.position.w() + a.position.z()) / ((a.position.z() + a.position.w()) - (c.position.z() + c.position.w()));
-        
-        Shader::V2FO pab, pac;
-        lerp(a, b, t1, pab);
-        lerp(a, c, t2, pac);
 
-        if(dif) {
-            triangles.emplace_back(pab);
-            triangles.emplace_back(b);
-            triangles.emplace_back(c);
-            
-            triangles.emplace_back(pab);
-            triangles.emplace_back(c);
-            triangles.emplace_back(pac);
-            
-        } else {
-            triangles.emplace_back(a);
-            triangles.emplace_back(pab);
-            triangles.emplace_back(pac);
+        if(input.size() <= 2) return ;
+        int start = vertexes.size();
+        for(int i = 0; i < input.size(); i++) {
+            vertexes.emplace_back(std::move(vertex_list[input[i]]));
+        }
+        for(int i = 1; i + 1 < input.size(); i++) {
+            indexes.push_back(start);
+            indexes.push_back(start + i);
+            indexes.push_back(start + i + 1);
         }
     }
 }
@@ -338,31 +352,29 @@ void mgl_draw(int vbo_ind, int ebo_ind, Shader* shader) {
     if(ebo_ind >= (int)ebos().size()) return ;
     
     VBO& vbo = vbos()[vbo_ind];
-    std::vector<Shader::V2FO> triangles;
+    std::vector<Shader::V2FO> vertexes;
+    std::vector<int> indexes;
     
-    int* indexes = NULL;
+    int* inds = NULL;
     int count = vbo.count;
     if(ebo_ind >= 0) { 
         count = ebos()[ebo_ind].count;
-        indexes = ebos()[ebo_ind].data.get();
+        inds = ebos()[ebo_ind].data.get();
     }
     
     for(int i = 0; i < count; i += 3) {
         Shader::V2FO v2fs[3];
         for(int j = 0; j < 3; j++) {
             int ind;
-            if(indexes) ind = indexes[i + j];
+            if(inds) ind = inds[i + j];
             else ind = i + j;
             shader->vertex_shader((const float*)((const char*)vbo.data.get() + ind * vbo.size), vbo.format, v2fs[j]);
-            // std::cout << v2fs[j].position.x() << " " << v2fs[j].position.y() << " " << v2fs[j].position.z() << std::endl;
         }
-        // std::cout << std::endl;
-        clip(v2fs, triangles);
+        clip(v2fs, vertexes, indexes);
     }
 
-    int tr_count = triangles.size();
-    for(int i = 0; i < tr_count; i += 3) {
-        rasterize(triangles[i], triangles[i + 1], triangles[i + 2], shader);
+    for(int i = 0; i < indexes.size(); i += 3) {
+        rasterize(vertexes[indexes[i]], vertexes[indexes[i + 1]], vertexes[indexes[i + 2]], shader);
     }
 }
 

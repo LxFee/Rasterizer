@@ -68,6 +68,10 @@ const vec4 operator*(const vec4& lhs, const vec4& rhs) {
     return vec4(lhs.x() * rhs.x(), lhs.y() * rhs.y(), lhs.z() * rhs.z(), lhs.w() * rhs.w());
 }
 
+float dot(const vec4 &lhs, const vec4 &rhs) {
+    return lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z() + lhs.w() * rhs.w();
+}
+
 float* vec4::data() {
     return e;
 }
