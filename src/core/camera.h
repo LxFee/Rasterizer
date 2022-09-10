@@ -1,63 +1,50 @@
 #ifndef RASTERIZER_CAMERA_H_
 #define RASTERIZER_CAMERA_H_
 
-#include "mathbase.h"
-#include "shader.h"
+#include "maths.h"
 
-class Camera {
+typedef enum {PROJECTION_MODE_ORTHO, PROJECTION_MODE_PERSPECTIVE} projection_mode_t;
+
+class camera_t {
 public:
-    Camera();
-    void set_translation(vec3 translation);
-    void set_rotation(vec3 rotation);
-    mat4 get_view_matrix();
-    virtual mat4 get_camera_matrix() = 0;
-    virtual void transfer(Shader* shader) = 0;
-    virtual ~Camera();
-protected:
-    vec3 translation;
-    vec3 rotation;
-};
+    camera_t(float _aspect, projection_mode_t _mode);
+    virtual ~camera_t();
 
+    const mat4 get_projection_matrix() const ;
+    virtual const mat4 get_view_matrix() const = 0;
 
-class PerspectiveCamera : public Camera {
-public:
-    /**
-     * @brief 透视相机
-     * 
-     */
-    PerspectiveCamera();
+    /** setter **/
+    void set_near(float _n);
+    void set_far(float _f);
+    void set_zoom(float _zoom);
+    void set_aspect(float _aspect);
+    void set_mode(projection_mode_t _mode);
+
+    /** getter **/
+    float get_near() const ;
+    float get_far() const ;
+    float get_zoom() const ;
+    float get_aspect() const ;
+    projection_mode_t get_mode() const ;
     
-    /**
-     * @brief 传递相机参数到shader中
-     * 
-     * @param shader 相机矩阵传入到location=1的uniform变量中；相机位置传入到location=2的uniform变量中
-     */
-    void transfer(Shader* shader);
-
-    mat4 get_camera_matrix();
-    /**
-     * @brief 设置相机参数，传入NULL代表无需修改
-     * 
-     * @param n 进平面距离（正值）
-     * @param f 远平面距离（正值）
-     * @param fov 视角，角度制
-     * @param ratio 宽高比
-     */
-    void set(const float* n, const float* f, const float* fov, const float* ratio);
-
-    /**
-     * @brief 获得相机参数，传入NULL代表无需获得
-     * 
-     * @param n 进平面距离
-     * @param f 远平面距离
-     * @param fov 视角，角度制
-     * @param ratio 宽高比
-     */
-    void get(float* n, float* f, float* fov, float* ratio);
-
 private:
     float n, f;
-    float fov, ratio;
+    float zoom, aspect;
+    projection_mode_t mode;
 };
+typedef struct {vec2 orbit; vec2 pan; float dolly;} motion_t;
+
+class pinned_camera_t : public camera_t {
+public:
+    pinned_camera_t(float _aspect, projection_mode_t _mode);
+    void set_transform(vec3 _position, vec3 _target);
+    void update_transform(motion_t motion);
+
+    const mat4 get_view_matrix() const override;
+private:
+    vec3 position;
+    vec3 target;
+};
+
 
 #endif // RASTERIZER_CAMERA_H_

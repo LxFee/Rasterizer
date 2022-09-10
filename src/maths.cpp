@@ -1,6 +1,5 @@
-#include "mathbase.h"
-
 #include <cmath>
+#include "maths.h"
 
 /********************** vec4 **********************/
 vec4::vec4(float k) {

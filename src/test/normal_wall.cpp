@@ -1,10 +1,7 @@
 #include <iostream>
 #include <vector>
-#include "shader.h"
-#include "mgl.h"
-#include "model.h"
-#include "camera.h"
 #include <cmath>
+#include "api.h"
 
 using namespace std;
 
