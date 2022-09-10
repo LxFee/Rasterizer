@@ -1,7 +1,7 @@
 /**
  * @file test_ebo.cpp
  * @author limil (limil.top@qq.com)
- * @brief 测试ebo是否工作正常。正常应当显示一个正方体
+ * @brief 测试ebo是否工作正常。正常应当显示一个正方形
  * @date 2022-09-02
  * 
  * @copyright Copyright (c) 2022
@@ -12,19 +12,8 @@
 #include "shader.h"
 #include "mgl.h"
 #include <cmath>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
 
 using namespace std;
-
-int texture_from_file(std::string image) {
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load(image.c_str(), &width, &height, &nrChannels, 0);
-    if (!data) return -1;
-    int texture_id = mgl_gen_texture_image(width, height, nrChannels, data);
-    stbi_image_free(data);
-    return texture_id;
-}
 
 class MyShader : public Shader {
     void vertex_shader(const float* const vert, const std::vector<int>& offset, V2FO & v2f) const {
@@ -44,7 +33,7 @@ class MyShader : public Shader {
         vec2 uv;
         uv = v2f.texcoord;
         
-        f2b.color0 = mgl_texture_sample2d(0, uv.u(), uv.v());
+        f2b.color0 = vec4(uv.u(), uv.v(), 0.5f, 1.0f);
     }
 };
 
@@ -77,10 +66,6 @@ int main(int argc, char* argv[]) {
     int vbo = mgl_create_vbo(sizeof(Vertex), vertex.data(), vertex.size());
     mgl_vertex_attrib_pointer(vbo, 0, 3, 0);
     mgl_vertex_attrib_pointer(vbo, 1, 2, 3);
-
-    // texture
-    int texture_id = texture_from_file("asset/model/brickwall/brickwall_diffuse_0.jpg");
-    mgl_active_texture(texture_id, 0);
 
     do {
         mgl_clear(MGL_COLOR | MGL_DEPTH);
