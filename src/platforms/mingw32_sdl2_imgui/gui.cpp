@@ -34,8 +34,8 @@ void draw_gui(window_t* window, widget_t* widget) {
                     case ITEM_TYPE_FLOAT3:
                         ImGui::SliderFloat3(item.name.c_str(), (float*)item.data, item.mi, item.mx);
                         break;
-                    case ITEM_TYPE_COLOR:
-                        ImGui::ColorEdit3(item.name.c_str(), (float*)item.data);
+                    case ITEM_TYPE_COLOR4:
+                        ImGui::ColorEdit4(item.name.c_str(), (float*)item.data);
                         break;
                 } 
             }

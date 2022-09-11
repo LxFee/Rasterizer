@@ -211,7 +211,7 @@ void *window_get_gui_context(window_t *window) {
 
 void window_draw_buffer(window_t *window, framebuffer_t* buffer) {
     if(!window) return ;
-    int width = buffer->get_height(), height = buffer->get_height();
+    int width = buffer->get_width(), height = buffer->get_height();
     assert(width == window->width && height == window->height);
     memcpy(window->pixels, buffer->get_color_data(), width * height * 4);
     SDL_UnlockTexture(window->surface);

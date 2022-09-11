@@ -6,8 +6,9 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     platform_initialize();
-    window_t *window = window_create("main window!", 800, 800);
-    framebuffer_t framebuffer(800, 800);
+    int w = 800, h = 600;
+    window_t *window = window_create("main window!", w, h);
+    framebuffer_t framebuffer(w, h);
     vec4 background;
     widget_t demo_gui {
         "normal wall", 
@@ -15,7 +16,7 @@ int main(int argc, char* argv[]) {
             {
                 "background", 
                 {
-                    {"color", ITEM_TYPE_COLOR, background.data()}
+                    {"color", ITEM_TYPE_COLOR4, background.data()}
                 }
             }
         }
