@@ -14,6 +14,9 @@ public:
     int get_sizeof_uniform() const ;
     int get_sizeof_varyings() const ;
 
+    shader_t(const shader_t&) = delete;
+    shader_t &operator = (const shader_t&) = delete;
+    
 protected:
     char *uniform;
     int sizeof_uniform;

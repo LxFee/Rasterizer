@@ -220,7 +220,15 @@ inline const vec4 rgbpack2rgba(const uchar *color) {
                 1.0f);
 }
 
-inline float radian(float d) {
+inline float float_srgb2linear(float value) {
+    return (float)pow(value, 2.2);
+}
+
+float float_linear2srgb(float value) {
+    return (float)pow(value, 1 / 2.2);
+}
+
+inline inline float radian(float d) {
     return d / 180.0f * PI;
 }
 

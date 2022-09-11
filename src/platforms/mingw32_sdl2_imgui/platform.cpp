@@ -27,101 +27,102 @@ struct window {
     void *userdata;
 };
 
-
-static std::vector<window_t*>& windows() {
-    static std::vector<window_t*> window_entities;
-    return window_entities;
-}
-
-static void gui_new_frame() {
-    ImGui_ImplSDLRenderer_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
-}
-
-static void gui_create_context(window_t* window) {
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    window->ctx = ImGui::CreateContext();
-    ImGui::SetCurrentContext(window->ctx);
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForSDLRenderer(window->window, window->renderer);
-    ImGui_ImplSDLRenderer_Init(window->renderer);
-
-    gui_new_frame();
-}
-
-static void gui_render(window_t *window) {
-    ImGui::SetCurrentContext(window->ctx);
-    ImGui::Render();
-    ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-    gui_new_frame();
-}
-
-static void gui_destroy(window_t *window) {
-    ImGui::SetCurrentContext(window->ctx);
-    ImGui_ImplSDLRenderer_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext(window->ctx);
-}
-
-static void gui_process_event(SDL_Event* event) {
-    for(auto window : windows()) {
-        if(!window) continue;
-        ImGui::SetCurrentContext(window->ctx); 
-        ImGui_ImplSDL2_ProcessEvent(event);
+namespace {
+    std::vector<window_t*>& windows() {
+        static std::vector<window_t*> window_entities;
+        return window_entities;
     }
-}
 
-static window_t* query_window(int window_id) {
-    for(auto& window : windows()) {
-        if(!window) continue;
-        if(SDL_GetWindowID(window->window) == window_id) {
-            return window;
+    void gui_new_frame() {
+        ImGui_ImplSDLRenderer_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    void gui_create_context(window_t* window) {
+        // Setup Dear ImGui context
+        IMGUI_CHECKVERSION();
+        window->ctx = ImGui::CreateContext();
+        ImGui::SetCurrentContext(window->ctx);
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+        // Setup Platform/Renderer backends
+        ImGui_ImplSDL2_InitForSDLRenderer(window->window, window->renderer);
+        ImGui_ImplSDLRenderer_Init(window->renderer);
+
+        gui_new_frame();
+    }
+
+    void gui_render(window_t *window) {
+        ImGui::SetCurrentContext(window->ctx);
+        ImGui::Render();
+        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+        gui_new_frame();
+    }
+
+    void gui_destroy(window_t *window) {
+        ImGui::SetCurrentContext(window->ctx);
+        ImGui_ImplSDLRenderer_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext(window->ctx);
+    }
+
+    void gui_process_event(SDL_Event* event) {
+        for(auto window : windows()) {
+            if(!window) continue;
+            ImGui::SetCurrentContext(window->ctx); 
+            ImGui_ImplSDL2_ProcessEvent(event);
         }
-    }   
-    return NULL;
-}
+    }
 
-static void handle_key_event(window_t *window, int virtual_key, char pressed) {
-    callbacks_t callbacks = window->callbacks;
-    if(!callbacks.key_callback) return ;
-    keycode_t key;
-    switch (virtual_key) {
-        case SDLK_a:     key = KEY_A;     break;
-        case SDLK_d:     key = KEY_D;     break;
-        case SDLK_s:     key = KEY_S;     break;
-        case SDLK_w:     key = KEY_W;     break;
-        case SDLK_SPACE: key = KEY_SPACE; break;
-        default:       key = KEY_NUM;
+    window_t* query_window(int window_id) {
+        for(auto& window : windows()) {
+            if(!window) continue;
+            if(SDL_GetWindowID(window->window) == window_id) {
+                return window;
+            }
+        }   
+        return NULL;
     }
-    if(key < KEY_NUM) {
-        window->keys[key] = pressed;
-        callbacks.key_callback(window, key, pressed);
-    }
-}  
 
-static void handle_button_event(window_t *window, int xbutton, char pressed) {
-    callbacks_t callbacks = window->callbacks;
-    if(!callbacks.button_callback) return ;
-    button_t button;
-    switch (xbutton) {
-        case SDL_BUTTON_LEFT:   button = BUTTON_L;     break;
-        case SDL_BUTTON_RIGHT:  button = BUTTON_R;     break;
-        default:                button = BUTTON_NUM;
-    }
-    if(button < BUTTON_NUM) {
-        window->buttons[button] = pressed;
-        callbacks.button_callback(window, button, pressed);
-    }
-}
+    void handle_key_event(window_t *window, int virtual_key, char pressed) {
+        callbacks_t callbacks = window->callbacks;
+        if(!callbacks.key_callback) return ;
+        keycode_t key;
+        switch (virtual_key) {
+            case SDLK_a:     key = KEY_A;     break;
+            case SDLK_d:     key = KEY_D;     break;
+            case SDLK_s:     key = KEY_S;     break;
+            case SDLK_w:     key = KEY_W;     break;
+            case SDLK_SPACE: key = KEY_SPACE; break;
+            default:       key = KEY_NUM;
+        }
+        if(key < KEY_NUM) {
+            window->keys[key] = pressed;
+            callbacks.key_callback(window, key, pressed);
+        }
+    }  
 
-static void handle_wheel_event(window_t *window, float offset) {
-    callbacks_t callbacks = window->callbacks;
-    if(!callbacks.scroll_callback) return ;
-    callbacks.scroll_callback(window, offset);
+    void handle_button_event(window_t *window, int xbutton, char pressed) {
+        callbacks_t callbacks = window->callbacks;
+        if(!callbacks.button_callback) return ;
+        button_t button;
+        switch (xbutton) {
+            case SDL_BUTTON_LEFT:   button = BUTTON_L;     break;
+            case SDL_BUTTON_RIGHT:  button = BUTTON_R;     break;
+            default:                button = BUTTON_NUM;
+        }
+        if(button < BUTTON_NUM) {
+            window->buttons[button] = pressed;
+            callbacks.button_callback(window, button, pressed);
+        }
+    }
+
+    void handle_wheel_event(window_t *window, float offset) {
+        callbacks_t callbacks = window->callbacks;
+        if(!callbacks.scroll_callback) return ;
+        callbacks.scroll_callback(window, offset);
+    }
 }
 
 /* platform initialization */
@@ -153,6 +154,7 @@ window_t *window_create(const char *title, int width, int height) {
     if(title) SDL_SetWindowTitle(sdl_window, title);
     
     window = new window_t;
+    memset(window, 0, sizeof window_t);
     window->window = sdl_window;
     window->surface = surface;
     window->pixels = pixels;

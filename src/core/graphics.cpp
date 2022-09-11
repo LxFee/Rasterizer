@@ -37,6 +37,10 @@ int vbo_t::get_count() const {
     return count;
 }
 
+int vbo_t::get_totol_size() const {
+    return get_count() * get_sizeof_element();
+}
+
 framebuffer_t::framebuffer_t(int _width, int _height) 
     : width(_width), height(_height), color_buffer(NULL), depth_buffer(NULL) {
     color_buffer = new uchar[width * height * 4];

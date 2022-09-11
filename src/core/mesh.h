@@ -24,13 +24,16 @@ public:
     mat4 get_model_matrix() const;
     
     /** setter **/
-    void set_rotation(vec3 rotation); 
-    void set_translation(vec3 translation);
-    void set_size(vec3 size);
+    void set_rotation(vec3 _rotation); 
+    void set_position(vec3 _position);
+    void set_size(vec3 _size);
+
+    mesh_t(const mesh_t&) = delete;
+    mesh_t &operator = (const mesh_t&) = delete;
+
 private:
+    vec3 position, rotation, size;
     vbo_t* vbo;
-    void load_from_file(const std::string& filename);
-    void convert_to_vbo(const std::vector<vertex_t>& vertexes);
 };
 
 #endif // RASTERIZER_MESH_H_

@@ -22,6 +22,7 @@ public:
 
     int get_sizeof_element() const ;
     int get_count() const ;
+    int get_totol_size() const ;
 
 private:
     int sizeof_element, count;
