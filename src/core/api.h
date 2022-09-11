@@ -6,5 +6,7 @@
 #include "graphics.h"
 #include "shader.h"
 #include "mesh.h"
+#include "platform.h"
+#include "gui.h"
 
 #endif // RASTERIZER_API_H_

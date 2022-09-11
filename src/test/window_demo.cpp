@@ -1,7 +1,6 @@
-#include "platform.h"
 #include <iostream>
 #include <string>
-#include "gui.h"
+#include "api.h"
 
 using namespace std;
 

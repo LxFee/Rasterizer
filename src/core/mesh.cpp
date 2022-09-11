@@ -17,7 +17,7 @@ namespace {
 
         std::ifstream in;
         in.open(filename, std::ifstream::in);
-        if (in.fail()) return;
+        if (in.fail()) return NULL;
         
 
         std::vector<vec3> vertexes;

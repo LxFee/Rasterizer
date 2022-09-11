@@ -1,4 +1,3 @@
-#include <cmath>
 #include <cassert>
 #include "maths.h"
 
@@ -497,9 +496,11 @@ const mat4 scale(vec3 sc) {
                 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-const mat4 ortho(float l, float r, float b, float t, float n, float f) {
-    return  mat4(2.0f / (r - l), 0.0f, 0.0f, (l + r) / (l - r),
-                 0.0f, 2.0f / (t - b), 0.0f, (b + t) / (b - t),
+const mat4 ortho(float n, float f, float fov, float aspect) {
+    float t = tan(radian(fov) / 2.0f) * f;
+    float r = aspect * t;
+    return  mat4(1.0f / r, 0.0f, 0.0f, 0.0f,
+                 0.0f, 1.0f / t, 0.0f, 0.0f,
                  0.0f, 0.0f, 2.0f / (n - f), (n + f) / (n - f),
                  0.0f, 0.0f, 0.0f, 1.0f);
 }

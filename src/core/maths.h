@@ -2,6 +2,7 @@
 #define RASTERIZER_MATHS_H_
 
 #include "marco.h"
+#include <cmath>
 
 class vec2 {
 public:
@@ -224,11 +225,11 @@ inline float float_srgb2linear(float value) {
     return (float)pow(value, 2.2);
 }
 
-float float_linear2srgb(float value) {
+inline float float_linear2srgb(float value) {
     return (float)pow(value, 1 / 2.2);
 }
 
-inline inline float radian(float d) {
+inline float radian(float d) {
     return d / 180.0f * PI;
 }
 

@@ -2,6 +2,14 @@
 #include "maths.h"
 #include <cassert>
 
+namespace {
+    vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
+        vec4 i0 = i00 + (i10 - i00) * u;
+        vec4 i1 = i01 + (i11 - i01) * u;
+        return i0 + (i1 - i0) * v;
+    }
+}
+
 void texture_t::ldr_image_to_texture(image_t *image) {
     uchar* image_data = (uchar*)image->data();
     int channels = image->get_channels();
@@ -129,12 +137,18 @@ vec4 texture_t::sample(vec2 uv) {
         u = u - floor(u);
         v = v - floor(v);
     }
-
     if(SAMPLE_INTERP_MODE_BILINEAR) {
-        
+        int x = std::min(int(u * width), width - 1);
+        int y = std::min(int(v * height), height - 1);
+        return buffer[y * width + x];
     }
     else if(SAMPLE_INTERP_MODE_NEAREST) {
-
+        int x = u * (width - 1);
+        int y = v * (height - 1);
+        if(x == width - 1 || y == height - 1) return buffer[y * width + x];
+        float local_u = u * (width - 1) - x; 
+        float local_v = v * (height - 1) - y;
+        return bilinear(buffer[y * width + x], buffer[y * width + x + 1], buffer[y * width + x + width], buffer[y * width + x + width + 1], local_u, local_v);
     }
     return vec4(0.0f);
 }

@@ -67,9 +67,14 @@ namespace {
         ImGui::DestroyContext(window->ctx);
     }
 
-    void gui_process_event(SDL_Event* event) {
-        for(auto window : windows()) {
-            if(!window) continue;
+    void gui_process_event(SDL_Event* event, window_t *window) {
+        if(!window) {
+            for(auto curr_window : windows()) {
+                if(!curr_window) continue;
+                ImGui::SetCurrentContext(curr_window->ctx); 
+                ImGui_ImplSDL2_ProcessEvent(event);
+            }
+        } else {
             ImGui::SetCurrentContext(window->ctx); 
             ImGui_ImplSDL2_ProcessEvent(event);
         }
@@ -154,7 +159,7 @@ window_t *window_create(const char *title, int width, int height) {
     if(title) SDL_SetWindowTitle(sdl_window, title);
     
     window = new window_t;
-    memset(window, 0, sizeof window_t);
+    memset(window, 0, sizeof(struct window));
     window->window = sdl_window;
     window->surface = surface;
     window->pixels = pixels;
@@ -220,7 +225,6 @@ void window_draw_buffer(window_t *window, framebuffer_t* buffer) {
 void input_poll_events(void) {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
-        gui_process_event(&event);
         if(event.type == SDL_QUIT) {
             for(auto window : windows()) {
                 if(!window) continue;
@@ -228,10 +232,12 @@ void input_poll_events(void) {
             }
             break;
         }
+
+        window_t *window = NULL;
         /* 窗口事件 */
         if(event.type == SDL_WINDOWEVENT) {
-            window_t *window = query_window(event.window.windowID);
-            if(!window) continue;
+            window = query_window(event.window.windowID);
+            if(!window) goto DONE;
             switch(event.window.event) {
                 case SDL_WINDOWEVENT_CLOSE:
                     window->should_close = true;
@@ -241,9 +247,8 @@ void input_poll_events(void) {
 
         /* 鼠标点击事件 */
         if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
-            window_t *window = query_window(event.button.windowID);
-            if(!window) continue;
-            
+            window = query_window(event.button.windowID);
+            if(!window) goto DONE;
             switch(event.type) {
                 case SDL_MOUSEBUTTONDOWN:
                     handle_button_event(window, event.button.button, 1);
@@ -256,15 +261,21 @@ void input_poll_events(void) {
 
         /* 鼠标滚轮事件 */
         if(event.type == SDL_MOUSEWHEEL) {
-            window_t *window = query_window(event.wheel.windowID);
-            if(!window) continue;
+            window = query_window(event.wheel.windowID);
+            if(!window) goto DONE;
             handle_wheel_event(window, event.wheel.preciseY);
+        }
+
+        /* 鼠标移动事件 */
+        if(event.type == SDL_MOUSEMOTION) {
+            window = query_window(event.motion.windowID);
+            if(!window) goto DONE;
         }
 
         /* 键盘事件 */
         if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-            window_t *window = query_window(event.key.windowID);
-            if(!window) continue;
+            window = query_window(event.key.windowID);
+            if(!window) goto DONE;
             switch(event.type) {
                 case SDL_KEYDOWN:
                     handle_key_event(window, event.key.keysym.sym, 1);
@@ -274,6 +285,10 @@ void input_poll_events(void) {
                     break;
             }  
         }
+        
+
+        DONE:
+        gui_process_event(&event, window);
     }
 }
 
