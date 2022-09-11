@@ -27,7 +27,6 @@ const vec4 blin_shader_t::vertex_shader(const void *attribs, void *varyings) {
     blin_varyings->world_pos = vec3(world_pos.x(), world_pos.y(), world_pos.z());
     blin_varyings->world_normal = N;
     blin_varyings->texcoords = vertex->texcoord;
-
     return mvp.mul_vec4(position);
 }
 
@@ -43,9 +42,8 @@ const vec4 blin_shader_t::fragment_shader(const void *varyings, bool& discard) {
     if(blin_uniforms->diffuse_texture) {
         color = blin_uniforms->diffuse_texture->sample(texcoords);
     }
+
     return color;
-
-
     if(blin_uniforms->normal_texture) {
         vec4 t_normal = blin_uniforms->normal_texture->sample(texcoords);
         normal = blin_varyings->tbn_matrix.mul_vec3(vec3(t_normal.x(), t_normal.y(), t_normal.z()));

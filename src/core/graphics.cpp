@@ -137,7 +137,16 @@ namespace {
         }
 
         void interpolation_v2f(const v2f_t* a, const v2f_t* b, const v2f_t* c, float alpha, float beta, float gamma, v2f_t* target) {
-
+            float weight = 1.0 / (alpha + beta + gamma);
+            target->position = (a->position * alpha + b->position * beta + c->position * gamma) * weight;
+            float *data_target = (float *)target->data;
+            float *data_a = (float *)a->data;
+            float *data_b = (float *)b->data;
+            float *data_c = (float *)c->data;
+            int count = (a->sizeof_varying) >> 2;
+            for(int i = 0; i < count; i++) {
+                data_target[i] = (alpha * data_a[i] + beta * data_b[i] + gamma * data_c[i]) * weight;
+            }
         }
 
         void clip_aganst_panels(v2f_t* v2fs[3], std::vector<v2f_t*>& vertexes, std::vector<int>& indexes) {
@@ -319,8 +328,6 @@ void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shad
             int ind = i + j;
             vec4 position = shader->vertex_shader(data->at(ind), v2fs[j]->data);
             v2fs[j]->position = position;
-            // indexes.push_back(ind);
-            // vertexes.push_back(v2fs[j]);
         }
         clip_aganst_panels(v2fs, vertexes, indexes);
     }

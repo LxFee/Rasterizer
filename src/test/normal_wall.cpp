@@ -29,8 +29,8 @@ int main(int argc, char* argv[]) {
     texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg", USAGE_LDR_COLOR);
 
     pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
-    camera.set_near(1.0f);
-    camera.set_far(50.0f);
+    camera.set_near(0.1f);
+    camera.set_far(1000.0f);
     camera.set_zoom(70.0f);
     camera.set_transform(vec3(0.0f, 0.0f, 10.0f), vec3(0.0f));
 
@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
     blin_uniforms.diffuse_texture = &t_diffuse;
     blin_uniforms.normal_texture = &t_normal;
     blin_uniforms.model_matrix = wall.get_model_matrix();
-    blin_uniforms.proj_matrix = mat4(1.0f);//camera.get_projection_matrix();
-    blin_uniforms.view_matrix = mat4(1.0f);//camera.get_view_matrix();
+    blin_uniforms.proj_matrix = camera.get_projection_matrix();
+    blin_uniforms.view_matrix = camera.get_view_matrix();
     
     blin_shader_t blin_shader;
 

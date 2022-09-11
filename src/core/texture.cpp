@@ -14,7 +14,6 @@ namespace {
 void texture_t::ldr_image_to_texture(image_t *image) {
     uchar* image_data = (uchar*)image->data();
     int channels = image->get_channels();
-    printf("channel: %d", channels);
     if(channels == 3) {
         for(int i = 0; i < height; i++) {
             for(int j = 0; j < width; j++) {
