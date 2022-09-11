@@ -3,14 +3,17 @@
 
 #include <string>
 #include <vector>
+#include "platform.h"
 
-typedef enum {ITEM_TYPE_FLOAT, ITEM_TYPE_FLOAT2, ITEM_TYPE_FLOAT3, ITEM_TYPE_FPS_TEXT} item_type_t;
+typedef enum {ITEM_TYPE_FLOAT, ITEM_TYPE_FLOAT2, ITEM_TYPE_FLOAT3, ITEM_TYPE_COLOR} item_type_t;
 
 struct item_t {
-    item_t(const std::string& _name, item_type_t _type, void* _data);
+    item_t(const std::string& _name, item_type_t type, void* _data, float mi = 0.0f, float mx = 0.0f);
+    item_type_t get_type() const ;
     std::string name;
     item_type_t type;
     void* data;
+    float mi, mx;
 };
 
 struct group_t {
@@ -25,6 +28,6 @@ struct widget_t {
     std::vector<group_t> groups;
 };
 
-void draw_gui(widget_t* widget);
+void draw_gui(window_t* window, widget_t* widget);
 
 #endif // RASTERIZER_GUI_H_

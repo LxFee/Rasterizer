@@ -57,7 +57,7 @@ static void gui_render(window_t *window) {
     ImGui::SetCurrentContext(window->ctx);
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-    SDL_RenderPresent(window->renderer);
+    gui_new_frame();
 }
 
 static void gui_destroy(window_t *window) {
@@ -183,26 +183,36 @@ void window_destroy(window_t *window) {
 }
 
 bool window_should_close(window_t *window) {
+    if(!window) return true;
     return window->should_close;
 }
 
 void window_set_userdata(window_t *window, void *userdata) {
+    if(!window) return ;
     window->userdata = userdata;
 }
 
 void *window_get_userdata(window_t *window) {
+    if(!window) return NULL;
     return window->userdata;
 }
 
-// void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
-//     int width = buffer->get_height(), height = buffer->get_height();
-//     assert(width == window->width && height == window->height);
-//     memcpy(window->pixels, buffer->get_color_data(), width * height * 4);
-//     SDL_UnlockTexture(window->surface);
-//     SDL_LockTexture(window->surface, NULL, (void**)&(window->pixels), &(window->pitch));
-//     SDL_RenderCopy(window->renderer, window->surface, NULL, NULL);
-//     gui_render(window);
-// }
+void *window_get_gui_context(window_t *window) {
+    if(!window) return NULL;
+    return window->ctx;
+}
+
+void window_draw_buffer(window_t *window, framebuffer_t* buffer) {
+    if(!window) return ;
+    int width = buffer->get_height(), height = buffer->get_height();
+    assert(width == window->width && height == window->height);
+    memcpy(window->pixels, buffer->get_color_data(), width * height * 4);
+    SDL_UnlockTexture(window->surface);
+    SDL_LockTexture(window->surface, NULL, (void**)&(window->pixels), &(window->pitch));
+    SDL_RenderCopy(window->renderer, window->surface, NULL, NULL);
+    gui_render(window);
+    SDL_RenderPresent(window->renderer);
+}
 
 /* input related functions */
 void input_poll_events(void) {
@@ -267,16 +277,19 @@ void input_poll_events(void) {
 
 
 int input_key_pressed(window_t *window, keycode_t key) {
+    if(!window) return -1;
     assert(key >= 0 && key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
+    if(!window) return -1;
     assert(button >= 0 && button < BUTTON_NUM);
     return window->buttons[button];
 }
 
 void input_query_cursor(window_t *window, float *xpos, float *ypos) {
+    if(!window) return ;
     if(window->window == SDL_GetMouseFocus()) {
         int x, y;
         SDL_GetMouseState(&x, &y);
@@ -289,6 +302,7 @@ void input_query_cursor(window_t *window, float *xpos, float *ypos) {
 }
 
 void input_set_callbacks(window_t *window, callbacks_t callbacks) {
+    if(!window) return ;
     window->callbacks = callbacks;
 }
 

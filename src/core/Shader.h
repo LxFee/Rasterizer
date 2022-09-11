@@ -15,7 +15,7 @@ public:
     int get_sizeof_varyings() const ;
 
 protected:
-    void *uniform;
+    char *uniform;
     int sizeof_uniform;
     int sizeof_varyings;
     bool enable_blend;

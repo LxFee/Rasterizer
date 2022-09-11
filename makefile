@@ -9,8 +9,8 @@ CXXFLAGS = -std=c++17 -O3
 LDFLAGS = 
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 
-TEST_SOURCES = $(D_SRC)/test/main.cpp # $(wildcard $(D_SRC)/test/*.cpp)
-CORE_SOURCES = $(D_SRC)/platforms/win32_sdl2_imgui.cpp # $(wildcard $(D_SRC)/core/*.cpp)
+TEST_SOURCES = $(D_SRC)/test/window_demo.cpp # $(wildcard $(D_SRC)/test/*.cpp)
+CORE_SOURCES = $(D_SRC)/platforms/mingw32_sdl2_imgui/platform.cpp $(D_SRC)/platforms/mingw32_sdl2_imgui/gui.cpp $(D_SRC)/core/graphics.cpp $(D_SRC)/core/maths.cpp $(D_SRC)/core/shader.cpp# $(wildcard $(D_SRC)/core/*.cpp)
 SOURCES = $(TEST_SOURCES) $(CORE_SOURCES)
 
 TEST_OBJECTS = $(addprefix $(D_TMP)/,$(TEST_SOURCES:%.cpp=%.o))

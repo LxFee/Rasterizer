@@ -3,10 +3,11 @@
 
 #include "marco.h"
 
-struct vec2 {
+class vec2 {
 public:
     /** constructor **/
-    vec2(float k = 0.0f);
+    vec2();
+    vec2(float k);
     vec2(float x, float y);
     explicit vec2(const float* data);
     
@@ -26,11 +27,15 @@ public:
     float length() const ;
     const vec2 normalized() const ;
 
-    float x() const; 
-    float y() const;  
+    const float& x() const; 
+    const float& y() const;  
+    float& x(); 
+    float& y();  
 
-    float u() const; 
-    float v() const;
+    const float& u() const; 
+    const float& v() const;
+    float& u(); 
+    float& v();
 private:
     float e[2];
 };
@@ -38,7 +43,8 @@ private:
 class vec3 {
 public:
     /** constructor **/
-    vec3(float k = 0.0f);
+    vec3();
+    vec3(float k);
     vec3(float x, float y, float z);
     explicit vec3(const float* data);
     
@@ -80,7 +86,8 @@ private:
 class vec4 {
 public:
     /** constructor **/
-    vec4(float k = 0.0f);
+    vec4();
+    vec4(float k);
     vec4(float x, float y, float z, float w);
     explicit vec4(const float* data);
     
@@ -125,7 +132,8 @@ private:
 class mat3 {
 public:
     /** constructor **/
-    mat3(float k = 0.0f);
+    mat3();
+    mat3(float k);
     mat3(   float m00, float m01, float m02,
             float m10, float m11, float m12,
             float m20, float m21, float m22);
@@ -155,7 +163,8 @@ private:
 class mat4 {
 public:
     /** constructor **/
-    mat4(float k = 0.0f);
+    mat4();
+    mat4(float k);
     mat4(   float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
             float m20, float m21, float m22, float m23,
@@ -198,10 +207,10 @@ inline uint rgba2rgbapack(const vec4& col) {
 }
 
 inline const vec4 rgbapack2rgba(const uchar *color) {
-    return vec4(color[0] / 255.0f, 
-                color[1] / 255.0f, 
+    return vec4(color[1] / 255.0f, 
                 color[2] / 255.0f, 
-                color[3] / 255.0f);
+                color[3] / 255.0f, 
+                color[0] / 255.0f);
 }
 
 inline const vec4 rgbpack2rgba(const uchar *color) {
@@ -209,6 +218,14 @@ inline const vec4 rgbpack2rgba(const uchar *color) {
                 color[1] / 255.0f, 
                 color[2] / 255.0f, 
                 1.0f);
+}
+
+inline float radian(float d) {
+    return d / 180.0f * PI;
+}
+
+inline float degree(float r) {
+    return r / PI * 180.0f;
 }
 
 const mat4 translate(vec3 _translate);
@@ -225,8 +242,5 @@ const vec3 cross(const vec3 &lhs, const vec3 &rhs);
 
 const mat3 clip_mat4(const mat4& m);
 const mat4 extend_mat3(const mat3& m);
-
-float radian(float d);
-float degree(float r);
 
 #endif // RASTERIZER_MATHS_H_

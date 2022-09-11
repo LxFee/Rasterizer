@@ -25,7 +25,7 @@ public:
 
 private:
     int sizeof_element, count;
-    void* raw_data;
+    char* raw_data;
 };
 
 class framebuffer_t {

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <vector>
+#include <cmath> 
 #include "graphics.h"
 
 vbo_t::vbo_t(int _sizeof_element, int _count) {
@@ -115,7 +116,7 @@ namespace {
             
             vec4 position;
             int sizeof_varying;
-            void* data;
+            char* data;
         };
 
         void lerp_v2f(const v2f_t* a, const v2f_t* b, float t, v2f_t* target) {
