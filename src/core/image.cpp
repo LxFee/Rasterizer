@@ -6,12 +6,14 @@ namespace {
     #define STB_IMAGE_IMPLEMENTATION
     #include "stb/stb_image.h"
     
-    void stb_load_image(const std::string& filename, int &width, int &height, int &channels, uchar* &ldr_buffer) {
+    bool stb_load_image(const std::string& filename, int &width, int &height, int &channels, uchar**ldr_buffer) {
         uchar *data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
+        if(data == NULL) return false;
         int total_size = width * height * channels;
-        ldr_buffer = new uchar[total_size];
-        memcpy(ldr_buffer, data, total_size);
+        *ldr_buffer = new uchar[total_size];
+        memcpy(*ldr_buffer, data, total_size);
         stbi_image_free(data);
+        return true;
     }
 
     const std::string get_ext_name(const std::string& filename) {
@@ -28,7 +30,7 @@ namespace {
 }
 
 image_t::image_t(int _width, int _height, int _channels, format_t _format) 
-    : width(_width), height(_height), channels(_channels), format(_format), ldr_buffer(NULL), hdr_buffer(NULL) {
+    : width(_width), height(_height), channels(_channels), format(_format), ldr_buffer(NULL), hdr_buffer(NULL), succeed(true) {
     int total_size = width * height * channels;
     switch(format) {
         case FORMAT_LDR:
@@ -38,16 +40,16 @@ image_t::image_t(int _width, int _height, int _channels, format_t _format)
             hdr_buffer = new float[total_size];
             break;
         default:
-            assert(0);
+            succeed = false;
     }
 }
 
 image_t::image_t(const std::string& filename) 
-    : width(0), height(0), channels(0), format(), ldr_buffer(NULL), hdr_buffer(NULL) {
+    : width(0), height(0), channels(0), format(), ldr_buffer(NULL), hdr_buffer(NULL), succeed(true) {
     std::string ext = get_ext_name(filename);
     if(ext == "png" || ext == "jpg") {
         format = FORMAT_LDR;
-        stb_load_image(filename, width, height, channels, ldr_buffer);
+        succeed = stb_load_image(filename, width, height, channels, &ldr_buffer);
     }
 }
 
@@ -112,6 +114,10 @@ void image_t::flip_v() {
             }
         }
     }
+}
+
+bool image_t::is_succeed() const {
+    return succeed;
 }
 
 int image_t::get_width() const {

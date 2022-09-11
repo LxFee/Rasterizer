@@ -8,5 +8,6 @@
 #include "mesh.h"
 #include "platform.h"
 #include "gui.h"
+#include "texture.h"
 
 #endif // RASTERIZER_API_H_

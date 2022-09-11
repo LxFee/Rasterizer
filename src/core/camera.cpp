@@ -94,6 +94,10 @@ void pinned_camera_t::update_transform(motion_t motion) {
     position = target + offset;
 }
 
+vec3 pinned_camera_t::get_position() const {
+    return position;
+}
+
 const mat4 pinned_camera_t::get_view_matrix() const {
     return lookat(position, target, pinned_camera::UP);
 }

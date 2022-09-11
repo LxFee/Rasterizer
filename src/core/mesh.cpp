@@ -17,9 +17,11 @@ namespace {
 
         std::ifstream in;
         in.open(filename, std::ifstream::in);
-        if (in.fail()) return NULL;
+        if (in.fail()) {
+            std::cerr << "Error: can not open file" << std::endl;
+            return NULL;
+        }
         
-
         std::vector<vec3> vertexes;
         std::vector<vec3> normals;
         std::vector<vec2> uvs;
@@ -163,4 +165,7 @@ void mesh_t::set_size(vec3 _size) {
     size = _size;
 }
 
+const vbo_t* mesh_t::get_vbo() const {
+    return vbo;
+}
 

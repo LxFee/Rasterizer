@@ -1,6 +1,7 @@
 #include "texture.h"
 #include "maths.h"
 #include <cassert>
+#include <iostream>
 
 namespace {
     vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {
@@ -13,11 +14,22 @@ namespace {
 void texture_t::ldr_image_to_texture(image_t *image) {
     uchar* image_data = (uchar*)image->data();
     int channels = image->get_channels();
-    for(int i = 0; i < height; i++) {
-        for(int j = 0; j < width; j++) {
-            buffer[j + i * width] = rgbapack2rgba(image_data + (j + i * width) * channels);
+    printf("channel: %d", channels);
+    if(channels == 3) {
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
+                buffer[j + i * width] = rgbpack2rgba(image_data + (j + i * width) * 3);
+            }
         }
     }
+    else if(channels == 4) {
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
+                buffer[j + i * width] = rgbapack2rgba(image_data + (j + i * width) * 4);
+            }
+        }
+    }
+    
 }
 
 void texture_t::hdr_image_to_texture(image_t *image) {
@@ -90,7 +102,7 @@ void texture_t::load_from_file(const std::string& filename, usage_t usage) {
 }
 
 void texture_t::load_from_image(image_t* image, usage_t usage) {
-    assert(image && width == image->get_width() && height == image->get_height());
+    assert(image && image->is_succeed() && width == image->get_width() && height == image->get_height());
 
     if(image->get_format() == FORMAT_LDR) {
         ldr_image_to_texture(image);

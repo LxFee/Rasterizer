@@ -1,9 +1,11 @@
 #include <cassert>
 #include <vector>
 #include <cmath> 
+#include <iostream>
 #include "graphics.h"
 
-vbo_t::vbo_t(int _sizeof_element, int _count) {
+vbo_t::vbo_t(int _sizeof_element, int _count) 
+    : sizeof_element(_sizeof_element), count(_count), raw_data(NULL) {
     raw_data = new char[_sizeof_element * _count];
 }
 
@@ -148,14 +150,14 @@ namespace {
                 vec4(0, -1, 0, 1) // bottom
             };
 
+            int sizeof_varying = v2fs[0]->sizeof_varying; 
             std::vector<v2f_t*> vertex_list;
             std::vector<int> input;
             for(int i = 0; i < 3; i++) {
                 input.push_back(i);
                 vertex_list.push_back(v2fs[i]);
+                v2fs[i] = NULL;
             }
-            int sizeof_varying = v2fs[0]->sizeof_varying; 
-
             for(int i = 0; i < 6; i++) {
                 const vec4 &C = planes[i];
                 if(input.empty()) break;
@@ -163,7 +165,7 @@ namespace {
                 int p = 0, s = input.size() - 1;
 
                 while(p < input.size()) {
-                    int pp = input[p], sp = sp;
+                    int pp = input[p], sp = input[s];
                     float d1 = vertex_list[pp]->position.dot(C);
                     float d2 = vertex_list[sp]->position.dot(C);
                     int situation = ((d1 >= 0) | ((d2 >= 0) << 1));
@@ -199,26 +201,26 @@ namespace {
             }
 
             if(input.size() <= 2) {
-                for(v2f_t *v2f : vertex_list) {
-                    delete v2f;
+                for(int i = 0; i < vertex_list.size(); i++) {
+                    delete vertex_list[i];
                 }
                 return ;
             }
 
-            std::vector<bool> chosen(vertex_list.size(), false);
-            for(int i = 0; i < input.size(); i++) {
-                int p = input[i];
-                vertexes.push_back(vertex_list[p]);
-                chosen[p] = true;
-            }
+            
             int ind = vertexes.size();
             for(int i = 1; i + 1 < input.size(); i++) {
                 indexes.push_back(ind);
                 indexes.push_back(ind + i);
                 indexes.push_back(ind + i + 1);
             }
+            for(int i = 0; i < input.size(); i++) {
+                int p = input[i];
+                vertexes.push_back(vertex_list[p]);
+                vertex_list[p] = NULL;
+            }
             for(int i = 0; i < vertex_list.size(); i++) {
-                if(chosen[i]) continue;
+                if(!vertex_list[i]) continue;
                 delete vertex_list[i];
             }
         }
@@ -271,7 +273,7 @@ namespace {
             yl = std::max(0, yl);
             xr = std::min(xr, width - 1);
             yr = std::min(yr, height - 1);   
-
+            
             v2f_t v2f(a->sizeof_varying);
             for(int i = yl; i <= yr; i++) {
                 for(int j = xl; j <= xr; j++) {
@@ -291,7 +293,6 @@ namespace {
                     bool discord = false;
                     vec4 color = shader->fragment_shader(v2f.data, discord);
                     if(discord) continue;
-
                     framebuffer->set_depth(j, i, depth);
                     framebuffer->set_color(j, i, color);
                 }
@@ -318,6 +319,8 @@ void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shad
             int ind = i + j;
             vec4 position = shader->vertex_shader(data->at(ind), v2fs[j]->data);
             v2fs[j]->position = position;
+            // indexes.push_back(ind);
+            // vertexes.push_back(v2fs[j]);
         }
         clip_aganst_panels(v2fs, vertexes, indexes);
     }
@@ -327,5 +330,9 @@ void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shad
         v2f_t* b = vertexes[indexes[i + 1]];
         v2f_t* c = vertexes[indexes[i + 2]];
         rasterize(framebuffer, a, b, c, shader);
+    }
+    for(int i = 0; i < vertexes.size(); i++) {
+        assert(vertexes[i]);
+        delete vertexes[i];
     }
 }

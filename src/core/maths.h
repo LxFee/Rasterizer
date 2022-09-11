@@ -90,6 +90,7 @@ public:
     vec4();
     vec4(float k);
     vec4(float x, float y, float z, float w);
+    vec4(vec3 v, float w);
     explicit vec4(const float* data);
     
     /** operation **/

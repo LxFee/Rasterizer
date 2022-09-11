@@ -39,7 +39,7 @@ public:
     pinned_camera_t(float _aspect, projection_mode_t _mode);
     void set_transform(vec3 _position, vec3 _target);
     void update_transform(motion_t motion);
-
+    vec3 get_position() const;
     const mat4 get_view_matrix() const override;
 private:
     vec3 position;

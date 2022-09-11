@@ -16,6 +16,8 @@ public:
     image_t(const std::string& filename);
     ~image_t();
 
+    bool is_succeed() const ;
+
     void flip_h();
     void flip_v();
 
@@ -35,6 +37,7 @@ private:
     int width, height, channels;
     uchar *ldr_buffer;
     float *hdr_buffer;
+    bool succeed;
 };
 
 #endif // RASTERIZER_IMAGE_H_

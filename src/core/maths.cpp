@@ -24,6 +24,13 @@ vec4::vec4(float x, float y, float z, float w) {
     e[3] = w;
 }
 
+vec4::vec4(vec3 v, float w) {
+    e[0] = v.x();
+    e[1] = v.y();
+    e[2] = v.z();
+    e[3] = w;
+}
+
 float vec4::length_squared() const {
     return e[0] * e[0] + e[1] * e[1] + e[2] * e[2] + e[3] * e[3];
 }
