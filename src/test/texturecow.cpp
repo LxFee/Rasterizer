@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
     
     blin_shader_t blin_shader;
 
-    blin_shader.set_uniform(&blin_uniforms);
+    blin_shader.bind_uniform(&blin_uniforms);
     
     while(!window_should_close(window)) {
         
@@ -192,8 +192,6 @@ int main(int argc, char* argv[]) {
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
-
-        blin_shader.set_uniform(&blin_uniforms);
         
         draw_triangle(&framebuffer, cow.get_vbo(), &blin_shader);
         draw_gui(window, &demo_gui);

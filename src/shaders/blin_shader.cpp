@@ -3,16 +3,7 @@
 #include <iostream>
 
 blin_shader_t::blin_shader_t()
-    : shader_t(sizeof(blin_uniform_t), sizeof(blin_uniform_t)) {}
-
-static void printmat(mat4 m) {
-    for(int i = 0; i < 4; i++) {
-        for(int j = 0; j < 4; j++) {
-            printf("%f ", m.at(j, i));
-        }
-        printf("\n");
-    }
-}
+    : shader_t(sizeof(blin_varying_t)) {}
 
 const vec4 blin_shader_t::vertex_shader(const void *attribs, void *varyings) {
     vertex_t *vertex = (vertex_t*)attribs;
