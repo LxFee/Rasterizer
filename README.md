@@ -18,7 +18,7 @@
 
 使用了预编译的SDL2和imgui库。SDL2需要安装运行时环境。所有的库都是在window下使用mingw编译器编译，因此只支持window环境。
 
-`make`（或`mingw32-make`）可以编译所有src/demo下的所有示例。`make <文件名>`可以指定编译src/demo中的示例。
+`make`（或`mingw32-make`）可以编译所有src/demo下的所有示例。`make <文件名>`可以指定编译src/test中的示例。
 
 ## Feature
 
