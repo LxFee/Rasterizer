@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstdio>
 #include "maths.h"
 
 /********************** vec4 **********************/
@@ -546,9 +547,9 @@ const mat4 lookat(vec3 eye, vec3 at, vec3 up) {
     vec3 z = (eye - at).normalized();    
     vec3 x = cross(up, z).normalized();
     vec3 y = cross(z, x).normalized();
-    return mat4( x.x(), x.y(), x.z(), eye.dot(x),
-                 y.x(), y.y(), y.z(), eye.dot(y),
-                 z.x(), z.y(), z.z(), eye.dot(z),
+    return mat4( x.x(), x.y(), x.z(), -eye.dot(x),
+                 y.x(), y.y(), y.z(), -eye.dot(y),
+                 z.x(), z.y(), z.z(), -eye.dot(z),
                  0.0f, 0.0f, 0.0f, 1.0f);
 }
 

@@ -5,6 +5,14 @@
 blin_shader_t::blin_shader_t()
     : shader_t(sizeof(blin_uniform_t), sizeof(blin_uniform_t)) {}
 
+static void printmat(mat4 m) {
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 4; j++) {
+            printf("%f ", m.at(j, i));
+        }
+        printf("\n");
+    }
+}
 
 const vec4 blin_shader_t::vertex_shader(const void *attribs, void *varyings) {
     vertex_t *vertex = (vertex_t*)attribs;
@@ -27,6 +35,7 @@ const vec4 blin_shader_t::vertex_shader(const void *attribs, void *varyings) {
     blin_varyings->world_pos = vec3(world_pos.x(), world_pos.y(), world_pos.z());
     blin_varyings->world_normal = N;
     blin_varyings->texcoords = vertex->texcoord;
+
     return mvp.mul_vec4(position);
 }
 
@@ -43,20 +52,20 @@ const vec4 blin_shader_t::fragment_shader(const void *varyings, bool& discard) {
         color = blin_uniforms->diffuse_texture->sample(texcoords);
     }
 
-    return color;
+
     if(blin_uniforms->normal_texture) {
         vec4 t_normal = blin_uniforms->normal_texture->sample(texcoords);
-        normal = blin_varyings->tbn_matrix.mul_vec3(vec3(t_normal.x(), t_normal.y(), t_normal.z()));
+        t_normal = t_normal * 2.0f - 1.0f;
+        normal = blin_varyings->tbn_matrix.mul_vec3(vec3(t_normal.x(), t_normal.y(), t_normal.z()).normalized()).normalized();
     }
     
-    std::vector<vec3> light_pos = {vec3(3.0f, 2.0f, 4.0f)};
-    std::vector<vec3> light_intensity = {vec3(40.0f, 40.0f, 40.0f)};
+    std::vector<vec3> light_pos = {vec3(3.0f, 3.0f, 8.0f)};
+    std::vector<vec3> light_intensity = {vec3(100.0f, 100.0f, 100.0f)};
 
-    vec3 ka = vec3(0.005, 0.005, 0.005);
+    vec3 ka = vec3(0.001, 0.001, 0.001);
     vec3 kd = vec3(color.x(), color.y(), color.z());
     vec3 ks = vec3(0.30, 0.30, 0.30);
-    vec3 amb_light_intensity(10.0f, 10.0f, 10.0f);
-
+    vec3 amb_light_intensity(5.0f, 5.0f, 5.0f);
     vec3 world_pos = blin_varyings->world_pos;
     vec3 camera_pos = blin_uniforms->camera_pos;
 
@@ -75,7 +84,7 @@ const vec4 blin_shader_t::fragment_shader(const void *varyings, bool& discard) {
         vec3 Ls = ks * I * pow(std::max(0.0f, normal.dot(h)), p);
         vec3 La = ka * amb_light_intensity;
 
-        result_color = result_color + Ld + Ls;
+        result_color = result_color + Ls + Ld + La;
     }
 
     return vec4(result_color, 1.0f);

@@ -1,3 +1,7 @@
+## 参考
+
+https://github.com/zauonlok/renderer.git
+
 ## 资源管理
 
 为了灵活，使用指针，new创建对象，delete释放对象

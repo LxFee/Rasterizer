@@ -116,10 +116,11 @@ namespace {
                 int ind = verts.size() - 3;
                 vec2 deltaUV1 = verts[ind + 1].texcoord - verts[ind].texcoord;
                 vec2 deltaUV2 = verts[ind + 2].texcoord - verts[ind].texcoord;
-                vec3 tangent = vec3(deltaUV2.y() * edge1.x() - deltaUV1.y() * edge2.x(),
+                float k = 1.0f / std::max((deltaUV1.x() * deltaUV2.y() - deltaUV2.x() * deltaUV1.y()), EPSILON);
+                vec3 tangent = (vec3(deltaUV2.y() * edge1.x() - deltaUV1.y() * edge2.x(),
                                     deltaUV2.y() * edge1.y() - deltaUV1.y() * edge2.y(),
-                                    deltaUV2.y() * edge1.z() - deltaUV1.y() * edge2.z()).normalized();
-                vec3 bitangent = cross(f_normal, bitangent).normalized();
+                                    deltaUV2.y() * edge1.z() - deltaUV1.y() * edge2.z()) * k).normalized();
+                vec3 bitangent = cross(f_normal, tangent).normalized();
                 verts[ind].tangent = tangent;
                 verts[ind + 1].tangent = tangent;
                 verts[ind + 2].tangent = tangent;

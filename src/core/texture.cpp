@@ -102,7 +102,7 @@ void texture_t::load_from_file(const std::string& filename, usage_t usage) {
 
 void texture_t::load_from_image(image_t* image, usage_t usage) {
     assert(image && image->is_succeed() && width == image->get_width() && height == image->get_height());
-
+    image->flip_h();
     if(image->get_format() == FORMAT_LDR) {
         ldr_image_to_texture(image);
         if (usage == USAGE_HDR_COLOR) {
@@ -148,12 +148,12 @@ vec4 texture_t::sample(vec2 uv) {
         u = u - floor(u);
         v = v - floor(v);
     }
-    if(SAMPLE_INTERP_MODE_BILINEAR) {
+    if(interp_mode == SAMPLE_INTERP_MODE_NEAREST) {
         int x = std::min(int(u * width), width - 1);
         int y = std::min(int(v * height), height - 1);
         return buffer[y * width + x];
     }
-    else if(SAMPLE_INTERP_MODE_NEAREST) {
+    else if(interp_mode == SAMPLE_INTERP_MODE_BILINEAR) {
         int x = u * (width - 1);
         int y = v * (height - 1);
         if(x == width - 1 || y == height - 1) return buffer[y * width + x];
