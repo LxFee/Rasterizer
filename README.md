@@ -2,7 +2,7 @@
 
 这是一个学习项目，为了更好的理解渲染流水线。
 
-模仿opengl接口制作的CPU软光栅器。核心代码在src/core中。
+模仿opengl接口制作的CPU软光栅器。光栅化的核心代码在src/core/graphics.cpp中。
 
 通过继承Shader类，重写fragment_shader和vertex_shader来实现可编程shader。
 
@@ -28,15 +28,20 @@
 
 ## Demo
 
-![image-20220829232928062](https://minioapi.limil.top:9000/images/2022/08/29/image-20220829232928062_repeat_1661786970749__614203.png)
+![image-20220829232928062](doc/pic/brickwall.png)
 
-![image-20220829232937179](https://minioapi.limil.top:9000/images/2022/08/29/image-20220829232937179_repeat_1661786978423__048483.png)
+![image-20220829232937179](doc/pic/cow.png)
 
 ## Todo
 
 - [ ] 添加直线模式
 - [ ] 添加线框模式
-- [ ] 支持framebuffer，添加demo：shadow map
+- [x] 支持framebuffer
+- [ ] 添加demo：shadow map
 - [ ] 实现mipmapping
 - [ ] 添加几何着色器、曲面细分着色器
-- [ ] 实现鼠标交互，场景漫游
+- [x] 实现鼠标交互，场景漫游
+
+## 参考
+
+在参考了[大佬的项目](https://github.com/zauonlok/renderer.git)后，仿照其项目结构大幅重构了项目，将光栅化和后端分离开来。

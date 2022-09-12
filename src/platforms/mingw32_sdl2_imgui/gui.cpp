@@ -19,9 +19,14 @@ void draw_gui(window_t* window, widget_t* widget) {
     if(!widget) return ;
     ImGuiContext *ctx = (ImGuiContext *)window_get_gui_context(window);
     if(!ctx) return ;
+    int id = 0;
     ImGui::SetCurrentContext(ctx);
     ImGui::Begin(widget->title.c_str());
     for(auto& group : widget->groups) {
+        /* using PushID() to add unique identifier in the ID stack, and changing style.*/
+        /* issuse: https://github.com/ocornut/imgui/issues/2523 */
+        /* assert fail: g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive */
+        ImGui::PushID(id++);
         if(ImGui::CollapsingHeader(group.name.c_str())) {
             for(auto& item : group.items) {
                 switch(item.type) {
@@ -34,12 +39,16 @@ void draw_gui(window_t* window, widget_t* widget) {
                     case ITEM_TYPE_FLOAT3:
                         ImGui::SliderFloat3(item.name.c_str(), (float*)item.data, item.mi, item.mx);
                         break;
+                    case ITEM_TYPE_COLOR3:
+                        ImGui::ColorEdit3(item.name.c_str(), (float*)item.data);
+                        break;
                     case ITEM_TYPE_COLOR4:
                         ImGui::ColorEdit4(item.name.c_str(), (float*)item.data);
                         break;
                 } 
             }
         }
+        ImGui::PopID();
     }
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();

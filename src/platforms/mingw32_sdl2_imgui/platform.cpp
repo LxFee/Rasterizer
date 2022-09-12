@@ -125,7 +125,6 @@ namespace {
 
     void handle_key_event(window_t *window, int virtual_key, char pressed) {
         callbacks_t callbacks = window->callbacks;
-        if(!callbacks.key_callback) return ;
         keycode_t key;
         switch (virtual_key) {
             case SDLK_a:     key = KEY_A;     break;
@@ -137,13 +136,13 @@ namespace {
         }
         if(key < KEY_NUM) {
             window->keys[key] = pressed;
+            if(!callbacks.key_callback) return ;
             callbacks.key_callback(window, key, pressed);
         }
     }  
 
     void handle_button_event(window_t *window, int xbutton, char pressed) {
         callbacks_t callbacks = window->callbacks;
-        if(!callbacks.button_callback) return ;
         button_t button;
         switch (xbutton) {
             case SDL_BUTTON_LEFT:   button = BUTTON_L;     break;
@@ -152,6 +151,7 @@ namespace {
         }
         if(button < BUTTON_NUM) {
             window->buttons[button] = pressed;
+            if(!callbacks.button_callback) return ;
             callbacks.button_callback(window, button, pressed);
         }
     }

@@ -84,10 +84,6 @@ static void scroll_callback(window_t *window, float offset) {
     record->dolly_delta += offset;
 }
 
-static void clear_record(record_t *record) {
-    memset(record, 0, sizeof(record_t));
-}
-
 static void update_camera(window_t *window, pinned_camera_t *camera,
                           record_t *record) {
     vec2 cursor_pos = get_cursor_pos(window);
@@ -112,10 +108,19 @@ static void update_camera(window_t *window, pinned_camera_t *camera,
     }
 }
 
-
+void clear_record(record_t* record) {
+    record->orbit_delta = vec2(0, 0);
+    record->pan_delta = vec2(0, 0);
+    record->dolly_delta = 0;
+    record->single_click = 0;
+    record->double_click = 0;
+}
 
 int main(int argc, char* argv[]) {
+    /* platform setup */
     platform_initialize();
+
+    /* window & input setup */
     window_t *window = window_create("main window!", w, h);
     record_t record;
     memset(&record, 0, sizeof(record_t));
@@ -125,13 +130,65 @@ int main(int argc, char* argv[]) {
     callbacks.scroll_callback = scroll_callback;
     callbacks.key_callback = NULL;
     input_set_callbacks(window, callbacks);
+
+    /* mesh setup */
+    mesh_t cow("assets/model/cow/cow.obj");
+    cow.set_size(vec3(5.0f));
     
-    framebuffer_t framebuffer(w, h);
+    /* texture setup */
+    texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_LDR_COLOR);
+    /* material setup */
+    blin_material_t material;
+    material.ambient = vec3(0.005f);
+    material.diffuse = vec3(1.0f);
+    material.specular = vec3(0.7937f);
+    material.shininess = 200.0f;
+
+    /* camera setup */
+    pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
+    camera.set_near(0.1f);
+    camera.set_far(1000.0f);
+    camera.set_zoom(90.0f);
+    camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
+
+    /* lights */
+    float intensity = 20.0f;
+    vec3 light_color1(1.0f), light_color2(1.0f);
+    blin_point_light_t point_lights[2];
+    point_lights[0].attenuation = blin_point_light_t::distance2attenuation(20.0f);
+    point_lights[0].intensity = light_color1 * intensity;
+    point_lights[0].position = vec3(8.0f, 10.0f, -6.0f);
+
+    point_lights[1].attenuation = blin_point_light_t::distance2attenuation(20.0f);
+    point_lights[1].intensity = light_color2 * intensity;
+    point_lights[1].position = vec3(-8.0f, 10.0f, -6.0f);
+
+    /* shader setup */
+    blin_uniform_t blin_uniforms;
+    blin_shader_t blin_shader;
+    blin_shader.bind_uniform(&blin_uniforms);
+    
+    /* uniform */
+    memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
+    blin_uniforms.amb_light_intensity = vec3(10.0f);
+    blin_uniforms.blin_material = &material;
+    blin_uniforms.camera_pos = camera.get_position();
+    blin_uniforms.diffuse_texture = &t_diffuse;
+    blin_uniforms.specular_texture = NULL;
+    blin_uniforms.normal_texture = NULL;
+    blin_uniforms.num_of_point_lights = 2;
+    blin_uniforms.point_lights = point_lights;
+    blin_uniforms.model_matrix = cow.get_model_matrix();
+    blin_uniforms.camera_pos = camera.get_position();
+    blin_uniforms.proj_matrix = camera.get_projection_matrix();
+    blin_uniforms.view_matrix = camera.get_view_matrix();
+
+
+    /* gui setup */
     vec4 background;
     vec3 cow_rotation;
-    float near = 1.0f, far = 50.0f;
     widget_t demo_gui {
-        "texturecow", 
+        "texture cow", 
         {
             {
                 "background", 
@@ -146,63 +203,42 @@ int main(int argc, char* argv[]) {
                 }
             },
             {
-                "camera", 
+                "light1", 
                 {
-                    {"near", ITEM_TYPE_FLOAT, &near, 0.5f, 10.0f},
-                    {"far", ITEM_TYPE_FLOAT, &far, 10.0f, 100.0f}
+                    {"position", ITEM_TYPE_FLOAT3, point_lights[0].position.data(), -50.0f, 50.0f},
+                    {"color", ITEM_TYPE_COLOR3, light_color1.data()}
+                }
+            },
+            {
+                "light2", 
+                {
+                    {"position", ITEM_TYPE_FLOAT3, point_lights[1].position.data(), -50.0f, 50.0f},
+                    {"color", ITEM_TYPE_COLOR3, light_color2.data()}
                 }
             },
         }
     };
 
-    mesh_t cow("assets/model/cow/cow.obj");
-    cow.set_size(vec3(8.0f));
-    texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_LDR_COLOR);
-    // texture_t t_normal("assets/model/texturecow/texturecow_normal.jpg", USAGE_LDR_COLOR);
-    // t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
-
-    pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
-    
-    camera.set_zoom(90.0f);
-    camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
-
-    blin_uniform_t blin_uniforms;
-    
-    blin_uniforms.diffuse_texture = &t_diffuse;
-    // blin_uniforms.normal_texture = &t_normal;
-    blin_uniforms.normal_texture = NULL;
-    
-    blin_shader_t blin_shader;
-
-    blin_shader.bind_uniform(&blin_uniforms);
-    
+    /* render */
+    framebuffer_t framebuffer(w, h);
     while(!window_should_close(window)) {
-        
         framebuffer.clear_color(background);
         framebuffer.clear_depth(1.0f);
-        
-        camera.set_near(near);
-        camera.set_far(far);
 
         update_camera(window, &camera, &record);
         cow.set_rotation(cow_rotation);
-
-        blin_uniforms.model_matrix = cow.get_model_matrix();
         blin_uniforms.model_matrix = cow.get_model_matrix();
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
-        
+        blin_uniforms.point_lights[0].intensity = light_color1 * intensity;
+        blin_uniforms.point_lights[1].intensity = light_color2 * intensity;
+
         draw_triangle(&framebuffer, cow.get_vbo(), &blin_shader);
+
         draw_gui(window, &demo_gui);
         window_draw_buffer(window, &framebuffer);
-
-
-        record.orbit_delta = vec2(0, 0);
-        record.pan_delta = vec2(0, 0);
-        record.dolly_delta = 0;
-        record.single_click = 0;
-        record.double_click = 0;
+        clear_record(&record);
         input_poll_events();
     }       
 

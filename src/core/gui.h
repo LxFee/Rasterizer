@@ -5,7 +5,7 @@
 #include <vector>
 #include "platform.h"
 
-typedef enum {ITEM_TYPE_FLOAT, ITEM_TYPE_FLOAT2, ITEM_TYPE_FLOAT3, ITEM_TYPE_COLOR4} item_type_t;
+typedef enum {ITEM_TYPE_FLOAT, ITEM_TYPE_FLOAT2, ITEM_TYPE_FLOAT3, ITEM_TYPE_COLOR3, ITEM_TYPE_COLOR4} item_type_t;
 
 struct item_t {
     item_t(const std::string& _name, item_type_t type, void* _data, float mi = 0.0f, float mx = 0.0f);

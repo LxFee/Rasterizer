@@ -84,10 +84,6 @@ static void scroll_callback(window_t *window, float offset) {
     record->dolly_delta += offset;
 }
 
-static void clear_record(record_t *record) {
-    memset(record, 0, sizeof(record_t));
-}
-
 static void update_camera(window_t *window, pinned_camera_t *camera,
                           record_t *record) {
     vec2 cursor_pos = get_cursor_pos(window);
@@ -112,10 +108,19 @@ static void update_camera(window_t *window, pinned_camera_t *camera,
     }
 }
 
-
+void clear_record(record_t* record) {
+    record->orbit_delta = vec2(0, 0);
+    record->pan_delta = vec2(0, 0);
+    record->dolly_delta = 0;
+    record->single_click = 0;
+    record->double_click = 0;
+}
 
 int main(int argc, char* argv[]) {
+    /* platform setup */
     platform_initialize();
+
+    /* window & input setup */
     window_t *window = window_create("main window!", w, h);
     record_t record;
     memset(&record, 0, sizeof(record_t));
@@ -125,10 +130,61 @@ int main(int argc, char* argv[]) {
     callbacks.scroll_callback = scroll_callback;
     callbacks.key_callback = NULL;
     input_set_callbacks(window, callbacks);
+
+    /* mesh setup */
+    mesh_t wall("assets/model/brickwall/brickwall.obj");
+    wall.set_size(vec3(8.0f));
     
-    framebuffer_t framebuffer(w, h);
+    /* texture setup */
+    texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg", USAGE_LDR_COLOR);
+    texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg", USAGE_LDR_COLOR);
+    t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
+
+    /* material setup */
+    blin_material_t material;
+    material.ambient = vec3(0.01f);
+    material.diffuse = vec3(0.5f);
+    material.specular = vec3(0.3f);
+    material.shininess = 150.0f;
+
+    /* camera setup */
+    pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
+    camera.set_near(0.1f);
+    camera.set_far(1000.0f);
+    camera.set_zoom(90.0f);
+    camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
+
+    /* lights */
+    blin_point_light_t point_lights[1];
+    point_lights[0].attenuation = blin_point_light_t::distance2attenuation(20.0f);
+    point_lights[0].intensity = vec3(20.0f);
+    point_lights[0].position = vec3(3.0f, 4.0f, 8.0f);
+
+    /* shader setup */
+    blin_uniform_t blin_uniforms;
+    blin_shader_t blin_shader;
+    blin_shader.bind_uniform(&blin_uniforms);
+    
+    /* uniform */
+    memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
+    blin_uniforms.amb_light_intensity = vec3(1.0f);
+    blin_uniforms.blin_material = &material;
+    blin_uniforms.camera_pos = camera.get_position();
+    blin_uniforms.diffuse_texture = &t_diffuse;
+    blin_uniforms.specular_texture = NULL;
+    blin_uniforms.normal_texture = &t_normal;
+    blin_uniforms.num_of_point_lights = 1;
+    blin_uniforms.point_lights = point_lights;
+    blin_uniforms.model_matrix = wall.get_model_matrix();
+    blin_uniforms.camera_pos = camera.get_position();
+    blin_uniforms.proj_matrix = camera.get_projection_matrix();
+    blin_uniforms.view_matrix = camera.get_view_matrix();
+
+
+    /* gui setup */
     vec4 background;
     vec3 wall_rotation;
+    vec3 light_color(1.0f);
     widget_t demo_gui {
         "normal wall", 
         {
@@ -144,54 +200,35 @@ int main(int argc, char* argv[]) {
                     {"rotation", ITEM_TYPE_FLOAT3, wall_rotation.data(), -180.0f, 180.0f}
                 }
             },
+            {
+                "light", 
+                {
+                    {"position", ITEM_TYPE_FLOAT3, point_lights[0].position.data(), -50.0f, 50.0f},
+                    {"color", ITEM_TYPE_COLOR3, light_color.data(), 0.0f, 200.0f}
+                }
+            },
         }
     };
 
-    mesh_t wall("assets/model/brickwall/brickwall.obj");
-    wall.set_size(vec3(8.0f));
-    texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg", USAGE_LDR_COLOR);
-    texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg", USAGE_LDR_COLOR);
-    t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
-
-    pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
-    camera.set_near(0.1f);
-    camera.set_far(1000.0f);
-    camera.set_zoom(90.0f);
-    camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
-
-    blin_uniform_t blin_uniforms;
-    
-    blin_uniforms.diffuse_texture = &t_diffuse;
-    blin_uniforms.normal_texture = &t_normal;
-    
-    blin_shader_t blin_shader;
-
-    blin_shader.bind_uniform(&blin_uniforms);
-    
+    /* render */
+    framebuffer_t framebuffer(w, h);
     while(!window_should_close(window)) {
-        
         framebuffer.clear_color(background);
         framebuffer.clear_depth(1.0f);
-        
+
         update_camera(window, &camera, &record);
         wall.set_rotation(wall_rotation);
-
-        blin_uniforms.model_matrix = wall.get_model_matrix();
         blin_uniforms.model_matrix = wall.get_model_matrix();
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
-        
+        blin_uniforms.point_lights[0].intensity = light_color * 20.0f;
+
         draw_triangle(&framebuffer, wall.get_vbo(), &blin_shader);
+
         draw_gui(window, &demo_gui);
         window_draw_buffer(window, &framebuffer);
-
-
-        record.orbit_delta = vec2(0, 0);
-        record.pan_delta = vec2(0, 0);
-        record.dolly_delta = 0;
-        record.single_click = 0;
-        record.double_click = 0;
+        clear_record(&record);
         input_poll_events();
     }       
 
