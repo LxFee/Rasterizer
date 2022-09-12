@@ -232,7 +232,7 @@ namespace {
         }
 
         float calc_line_distance(const vec2& v1, const vec2& v2, const vec2& point) {
-            return point.x() * (v1.y() - v2.y()) + point.y() * (v2.x() - v1.x()) + (v1.x() * v2.y() - v2.x() * v1.y());
+            return (double)point.x() * (v1.y() - v2.y()) + (double)point.y() * (v2.x() - v1.x()) + ((double)v1.x() * v2.y() - (double)v2.x() * v1.y());
         }
 
         void rasterize(framebuffer_t *framebuffer, const v2f_t* v2fs[3], shader_t* shader) {
@@ -244,6 +244,7 @@ namespace {
             vec2 screen_point[3];
             mat4 viewport_mat = viewport(width, height);
             
+
             for(int i = 0; i < 3; i++) {
                 tr_rw[i] = 1.0f / v2fs[i]->position.w();
                 tr_z[i] = v2fs[i]->position.z() * tr_rw[i];
@@ -283,7 +284,7 @@ namespace {
                     
                     float depth = alpha * tr_z[0] + beta * tr_z[1] + gamma * tr_z[2];
                     depth = (depth + 1.0f) * 0.5f;
-
+                    
                     if(framebuffer->get_depth(j, i) < depth) continue;
                     
                     interpolation_v2f(v2fs[0], v2fs[1], v2fs[2], alpha * tr_rw[0], beta * tr_rw[1], gamma * tr_rw[2], &v2f);

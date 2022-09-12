@@ -67,19 +67,6 @@ namespace {
         ImGui::DestroyContext(window->ctx);
     }
 
-    void gui_process_event(SDL_Event* event, window_t *window) {
-        if(!window) {
-            for(auto curr_window : windows()) {
-                if(!curr_window) continue;
-                ImGui::SetCurrentContext(curr_window->ctx); 
-                ImGui_ImplSDL2_ProcessEvent(event);
-            }
-        } else {
-            ImGui::SetCurrentContext(window->ctx); 
-            ImGui_ImplSDL2_ProcessEvent(event);
-        }
-    }
-
     window_t* query_window(int window_id) {
         for(auto& window : windows()) {
             if(!window) continue;
@@ -88,6 +75,52 @@ namespace {
             }
         }   
         return NULL;
+    }
+    
+    window_t *query_window_from_event(SDL_Event* event) {
+        window_t *window = NULL;
+        switch(event->type) {
+            case SDL_WINDOWEVENT:
+                window = query_window(event->window.windowID);
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+                window = query_window(event->button.windowID);
+                break;
+            case SDL_MOUSEWHEEL:
+                window = query_window(event->wheel.windowID);
+                break;
+            case SDL_MOUSEMOTION:
+                window = query_window(event->motion.windowID);
+                break;
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                window = query_window(event->key.windowID);
+                break;
+        }
+        return window;
+    }
+
+    bool gui_process_event(SDL_Event* event) {
+        window_t *window = query_window_from_event(event);
+        
+        bool in_gui = false;
+        if(!window) {
+            for(auto curr_window : windows()) {
+                if(!curr_window) continue;
+                ImGui::SetCurrentContext(curr_window->ctx); 
+                ImGui_ImplSDL2_ProcessEvent(event);
+            }
+        } else {
+            const ImGuiIO& io = ImGui::GetIO();
+            /** 当指针在gui内，就不要将事件交给callback，防止操作冲突 **/
+            /** https://www.cnblogs.com/cyds/p/16183345.html **/
+            in_gui |= io.WantCaptureMouse;
+            
+            ImGui::SetCurrentContext(window->ctx); 
+            ImGui_ImplSDL2_ProcessEvent(event);
+        }
+        return in_gui;
     }
 
     void handle_key_event(window_t *window, int virtual_key, char pressed) {
@@ -232,63 +265,37 @@ void input_poll_events(void) {
             }
             break;
         }
+        
+        if(gui_process_event(&event)) continue;
 
-        window_t *window = NULL;
+        window_t *window = query_window_from_event(&event);
+        if(!window) continue;
+
         /* 窗口事件 */
         if(event.type == SDL_WINDOWEVENT) {
-            window = query_window(event.window.windowID);
-            if(!window) goto DONE;
             switch(event.window.event) {
                 case SDL_WINDOWEVENT_CLOSE:
                     window->should_close = true;
                     break;
             }
         }
-
-        /* 鼠标点击事件 */
-        if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
-            window = query_window(event.button.windowID);
-            if(!window) goto DONE;
-            switch(event.type) {
-                case SDL_MOUSEBUTTONDOWN:
-                    handle_button_event(window, event.button.button, 1);
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    handle_button_event(window, event.button.button, 0);
-                    break;
-            }
+        switch(event.type) {
+            case SDL_MOUSEBUTTONDOWN:
+                handle_button_event(window, event.button.button, 1);
+                break;
+            case SDL_MOUSEBUTTONUP:
+                handle_button_event(window, event.button.button, 0);
+                break;
+            case SDL_MOUSEWHEEL:
+                handle_wheel_event(window, event.wheel.preciseY);
+                break;
+            case SDL_KEYDOWN:
+                handle_key_event(window, event.key.keysym.sym, 1);
+                break;
+            case SDL_KEYUP:
+                handle_key_event(window, event.key.keysym.sym, 0);
+                break;
         }
-
-        /* 鼠标滚轮事件 */
-        if(event.type == SDL_MOUSEWHEEL) {
-            window = query_window(event.wheel.windowID);
-            if(!window) goto DONE;
-            handle_wheel_event(window, event.wheel.preciseY);
-        }
-
-        /* 鼠标移动事件 */
-        if(event.type == SDL_MOUSEMOTION) {
-            window = query_window(event.motion.windowID);
-            if(!window) goto DONE;
-        }
-
-        /* 键盘事件 */
-        if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
-            window = query_window(event.key.windowID);
-            if(!window) goto DONE;
-            switch(event.type) {
-                case SDL_KEYDOWN:
-                    handle_key_event(window, event.key.keysym.sym, 1);
-                    break;
-                case SDL_KEYUP:
-                    handle_key_event(window, event.key.keysym.sym, 0);
-                    break;
-            }  
-        }
-        
-
-        DONE:
-        gui_process_event(&event, window);
     }
 }
 

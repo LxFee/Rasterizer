@@ -52,7 +52,6 @@ const vec4 blin_shader_t::fragment_shader(const void *varyings, bool& discard) {
         color = blin_uniforms->diffuse_texture->sample(texcoords);
     }
 
-
     if(blin_uniforms->normal_texture) {
         vec4 t_normal = blin_uniforms->normal_texture->sample(texcoords);
         t_normal = t_normal * 2.0f - 1.0f;
