@@ -112,12 +112,11 @@ namespace {
                 ImGui_ImplSDL2_ProcessEvent(event);
             }
         } else {
+            ImGui::SetCurrentContext(window->ctx); 
             const ImGuiIO& io = ImGui::GetIO();
             /** 当指针在gui内，就不要将事件交给callback，防止操作冲突 **/
             /** https://www.cnblogs.com/cyds/p/16183345.html **/
             in_gui |= io.WantCaptureMouse;
-            
-            ImGui::SetCurrentContext(window->ctx); 
             ImGui_ImplSDL2_ProcessEvent(event);
         }
         return in_gui;
