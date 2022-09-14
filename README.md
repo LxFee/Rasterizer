@@ -2,7 +2,7 @@
 
 这是一个学习项目，为了更好的理解渲染流水线。
 
-模仿opengl接口制作的CPU软光栅器。光栅化的核心代码在src/core/graphics.cpp中。
+光栅化的核心代码在src/core/graphics.cpp中。
 
 通过继承Shader类，重写fragment_shader和vertex_shader来实现可编程shader。
 
