@@ -10,9 +10,11 @@ LDFLAGS =
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 
 TEST_SOURCES = $(wildcard $(D_SRC)/test/*.cpp)
-CORE_SOURCES = $(wildcard $(D_SRC)/core/*.cpp)
+
+CORE_SOURCES = $(wildcard $(D_SRC)/core/impl/*.cpp)
 # platform backend
 CORE_SOURCES += $(wildcard $(D_SRC)/platforms/mingw32_sdl2_imgui/*.cpp)
+
 SHADER_SOURCES = $(wildcard $(D_SRC)/shaders/*.cpp)
 
 SOURCES = $(TEST_SOURCES) $(CORE_SOURCES) $(SHADER_SOURCES)

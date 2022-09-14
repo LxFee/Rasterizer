@@ -10,7 +10,6 @@ struct blin_material_t {
     float shininess;
 };
 
-
 struct blin_point_light_t {
     vec3 position;
     vec3 intensity;
@@ -40,15 +39,15 @@ struct blin_uniform_t {
 
     /* lights */
     int num_of_point_lights;
-    blin_point_light_t *point_lights;
+    blin_point_light_t* point_lights;
     vec3 amb_light_intensity;
 };
 
 class blin_shader_t : public shader_t {
-public:
+   public:
     blin_shader_t();
-    const vec4 vertex_shader(const void *attribs, void *varyings) override ;
-    const vec4 fragment_shader(const void *varyings, bool& discard) override ;
+    const vec4 vertex_shader(const void* attribs, void* varyings) override;
+    const vec4 fragment_shader(const void* varyings, bool& discard) override;
 };
 
-#endif // BLINSHADER_H_
+#endif  // BLINSHADER_H_

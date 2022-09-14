@@ -1,8 +1,9 @@
+#include <cstring>
 #include <iostream>
 #include <string>
+
 #include "api.h"
 #include "blin_shader.h"
-#include <cstring>
 
 using namespace std;
 
@@ -32,7 +33,6 @@ typedef struct {
     vec2 click_pos;
 } record_t;
 
-
 static vec2 get_pos_delta(vec2 old_pos, vec2 new_pos) {
     vec2 delta = new_pos - old_pos;
     return delta / (float)h;
@@ -45,11 +45,11 @@ static vec2 get_cursor_pos(window_t *window) {
 }
 
 static void button_callback(window_t *window, button_t button, int pressed) {
-    record_t *record = (record_t*)window_get_userdata(window);
+    record_t *record = (record_t *)window_get_userdata(window);
     vec2 cursor_pos = get_cursor_pos(window);
-    if (button == BUTTON_L) {
+    if(button == BUTTON_L) {
         float curr_time = platform_get_time();
-        if (pressed) {
+        if(pressed) {
             record->is_orbiting = 1;
             record->orbit_pos = cursor_pos;
             record->press_time = curr_time;
@@ -59,7 +59,7 @@ static void button_callback(window_t *window, button_t button, int pressed) {
             vec2 pos_delta = get_pos_delta(record->orbit_pos, cursor_pos);
             record->is_orbiting = 0;
             record->orbit_delta = record->orbit_delta + pos_delta;
-            if (prev_time && curr_time - prev_time < CLICK_DELAY) {
+            if(prev_time && curr_time - prev_time < CLICK_DELAY) {
                 record->double_click = 1;
                 record->release_time = 0;
             } else {
@@ -67,8 +67,8 @@ static void button_callback(window_t *window, button_t button, int pressed) {
                 record->release_pos = cursor_pos;
             }
         }
-    } else if (button == BUTTON_R) {
-        if (pressed) {
+    } else if(button == BUTTON_R) {
+        if(pressed) {
             record->is_panning = 1;
             record->pan_pos = cursor_pos;
         } else {
@@ -80,24 +80,24 @@ static void button_callback(window_t *window, button_t button, int pressed) {
 }
 
 static void scroll_callback(window_t *window, float offset) {
-    record_t *record = (record_t*)window_get_userdata(window);
+    record_t *record = (record_t *)window_get_userdata(window);
     record->dolly_delta += offset;
 }
 
 static void update_camera(window_t *window, pinned_camera_t *camera,
                           record_t *record) {
     vec2 cursor_pos = get_cursor_pos(window);
-    if (record->is_orbiting) {
+    if(record->is_orbiting) {
         vec2 pos_delta = get_pos_delta(record->orbit_pos, cursor_pos);
         record->orbit_delta = record->orbit_delta + pos_delta;
         record->orbit_pos = cursor_pos;
     }
-    if (record->is_panning) {
+    if(record->is_panning) {
         vec2 pos_delta = get_pos_delta(record->pan_pos, cursor_pos);
         record->pan_delta = record->pan_delta + pos_delta;
         record->pan_pos = cursor_pos;
     }
-    if (input_key_pressed(window, KEY_SPACE)) {
+    if(input_key_pressed(window, KEY_SPACE)) {
         camera->set_transform(CAMERA_POSITION, CAMERA_TARGET);
     } else {
         motion_t motion;
@@ -108,7 +108,7 @@ static void update_camera(window_t *window, pinned_camera_t *camera,
     }
 }
 
-void clear_record(record_t* record) {
+void clear_record(record_t *record) {
     record->orbit_delta = vec2(0, 0);
     record->pan_delta = vec2(0, 0);
     record->dolly_delta = 0;
@@ -116,7 +116,7 @@ void clear_record(record_t* record) {
     record->double_click = 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     /* platform setup */
     platform_initialize();
 
@@ -134,10 +134,12 @@ int main(int argc, char* argv[]) {
     /* mesh setup */
     mesh_t wall("assets/model/brickwall/brickwall.obj");
     wall.set_size(vec3(8.0f));
-    
+
     /* texture setup */
-    texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg", USAGE_LDR_COLOR);
-    texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg", USAGE_LDR_COLOR);
+    texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg",
+                        USAGE_LDR_COLOR);
+    texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg",
+                       USAGE_LDR_COLOR);
     t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
 
     /* material setup */
@@ -156,7 +158,8 @@ int main(int argc, char* argv[]) {
 
     /* lights */
     blin_point_light_t point_lights[1];
-    point_lights[0].attenuation = blin_point_light_t::distance2attenuation(20.0f);
+    point_lights[0].attenuation =
+        blin_point_light_t::distance2attenuation(20.0f);
     point_lights[0].intensity = vec3(20.0f);
     point_lights[0].position = vec3(3.0f, 4.0f, 8.0f);
 
@@ -164,7 +167,7 @@ int main(int argc, char* argv[]) {
     blin_uniform_t blin_uniforms;
     blin_shader_t blin_shader;
     blin_shader.bind_uniform(&blin_uniforms);
-    
+
     /* uniform */
     memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
     blin_uniforms.amb_light_intensity = vec3(1.0f);
@@ -180,35 +183,22 @@ int main(int argc, char* argv[]) {
     blin_uniforms.proj_matrix = camera.get_projection_matrix();
     blin_uniforms.view_matrix = camera.get_view_matrix();
 
-
     /* gui setup */
     vec4 background;
     vec3 wall_rotation;
     vec3 light_color(1.0f);
-    widget_t demo_gui {
-        "normal wall", 
+    widget_t demo_gui{
+        "normal wall",
         {
-            {
-                "background", 
-                {
-                    {"color", ITEM_TYPE_COLOR4, background.data()}
-                }
-            },
-            {
-                "wall", 
-                {
-                    {"rotation", ITEM_TYPE_FLOAT3, wall_rotation.data(), -180.0f, 180.0f}
-                }
-            },
-            {
-                "light", 
-                {
-                    {"position", ITEM_TYPE_FLOAT3, point_lights[0].position.data(), -50.0f, 50.0f},
-                    {"color", ITEM_TYPE_COLOR3, light_color.data(), 0.0f, 200.0f}
-                }
-            },
-        }
-    };
+            {"background", {{"color", ITEM_TYPE_COLOR4, background.data()}}},
+            {"wall",
+             {{"rotation", ITEM_TYPE_FLOAT3, wall_rotation.data(), -180.0f,
+               180.0f}}},
+            {"light",
+             {{"position", ITEM_TYPE_FLOAT3, point_lights[0].position.data(),
+               -50.0f, 50.0f},
+              {"color", ITEM_TYPE_COLOR3, light_color.data(), 0.0f, 200.0f}}},
+        }};
 
     /* render */
     framebuffer_t framebuffer(w, h);
@@ -230,8 +220,7 @@ int main(int argc, char* argv[]) {
         window_draw_buffer(window, &framebuffer);
         clear_record(&record);
         input_poll_events();
-    }       
+    }
 
     platform_terminate();
-
 }

@@ -8,4 +8,4 @@
 using uint = unsigned int;
 using uchar = unsigned char;
 
-#endif // RASTERIZER_MACRO_H_
+#endif  // RASTERIZER_MACRO_H_
