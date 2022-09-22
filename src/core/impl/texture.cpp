@@ -49,10 +49,12 @@ void texture_t::hdr_image_to_texture(image_t* image) {
 void texture_t::srgb_to_linear() {
     for(int i = 0; i < width; i++) {
         for(int j = 0; j < height; j++) {
-            for(int k = 0; k < 4; k++) {
+            for(int k = 0; k < 3; k++) {
                 buffer[j + i * width].data()[k] =
                     float_srgb2linear(buffer[j + i * width].data()[k]);
             }
+            buffer[j + i * width].data()[3] =
+                buffer[j + i * width].data()[3];  // alpha不受影响
         }
     }
 }
@@ -60,10 +62,12 @@ void texture_t::srgb_to_linear() {
 void texture_t::linear_to_srgb() {
     for(int i = 0; i < width; i++) {
         for(int j = 0; j < height; j++) {
-            for(int k = 0; k < 4; k++) {
+            for(int k = 0; k < 3; k++) {
                 buffer[j + i * width].data()[k] =
                     float_linear2srgb(buffer[j + i * width].data()[k]);
             }
+            buffer[j + i * width].data()[3] =
+                buffer[j + i * width].data()[3];  // alpha不受影响
         }
     }
 }
