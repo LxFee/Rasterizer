@@ -51,7 +51,7 @@ void texture_t::srgb_to_linear() {
         for(int j = 0; j < height; j++) {
             for(int k = 0; k < 4; k++) {
                 buffer[j + i * width].data()[k] =
-                    float_linear2srgb(buffer[j + i * width].data()[k]);
+                    float_srgb2linear(buffer[j + i * width].data()[k]);
             }
         }
     }
@@ -62,7 +62,7 @@ void texture_t::linear_to_srgb() {
         for(int j = 0; j < height; j++) {
             for(int k = 0; k < 4; k++) {
                 buffer[j + i * width].data()[k] =
-                    float_srgb2linear(buffer[j + i * width].data()[k]);
+                    float_linear2srgb(buffer[j + i * width].data()[k]);
             }
         }
     }

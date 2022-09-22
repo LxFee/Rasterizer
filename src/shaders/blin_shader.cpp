@@ -118,8 +118,7 @@ const vec4 blin_shader_t::fragment_shader(const void *varyings, bool &discard) {
 
         pixel_color = pixel_color + Ls + Ld + La;
     }
-
-    return vec4(float_srgb2linear(pixel_color.x()),
-                float_srgb2linear(pixel_color.y()),
-                float_srgb2linear(pixel_color.z()), 1.0f);
+    return vec4(float_linear2srgb(pixel_color.x()),
+                float_linear2srgb(pixel_color.y()),
+                float_linear2srgb(pixel_color.z()), 1.0f);
 }

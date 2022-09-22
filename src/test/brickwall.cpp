@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 
     /* material setup */
     blin_material_t material;
-    material.ambient = vec3(0.01f);
+    material.ambient = vec3(0.05f);
     material.diffuse = vec3(0.5f);
     material.specular = vec3(0.3f);
     material.shininess = 150.0f;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 
     /* uniform */
     memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
-    blin_uniforms.amb_light_intensity = vec3(1.0f);
+    blin_uniforms.amb_light_intensity = vec3(0.0f);
     blin_uniforms.blin_material = &material;
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.diffuse_texture = &t_diffuse;

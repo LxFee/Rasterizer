@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_LINEAR_COLOR);
     /* material setup */
     blin_material_t material;
-    material.ambient = vec3(0.005f);
+    material.ambient = vec3(0.05f);
     material.diffuse = vec3(1.0f);
     material.specular = vec3(0.7937f);
     material.shininess = 200.0f;
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 
     /* uniform */
     memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
-    blin_uniforms.amb_light_intensity = vec3(10.0f);
+    blin_uniforms.amb_light_intensity = vec3(0.0f);
     blin_uniforms.blin_material = &material;
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.diffuse_texture = &t_diffuse;
