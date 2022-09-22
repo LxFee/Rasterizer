@@ -137,9 +137,9 @@ int main(int argc, char *argv[]) {
 
     /* texture setup */
     texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg",
-                        USAGE_LDR_COLOR);
+                        USAGE_LINEAR_COLOR);
     texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg",
-                       USAGE_LDR_COLOR);
+                       USAGE_RAW_DATA);
     t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
 
     /* material setup */

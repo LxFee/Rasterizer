@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
     cow.set_size(vec3(5.0f));
 
     /* texture setup */
-    texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_LDR_COLOR);
+    texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_LINEAR_COLOR);
     /* material setup */
     blin_material_t material;
     material.ambient = vec3(0.005f);

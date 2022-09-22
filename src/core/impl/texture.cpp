@@ -109,12 +109,12 @@ void texture_t::load_from_image(image_t* image, usage_t usage) {
     image->flip_h();
     if(image->get_format() == FORMAT_LDR) {
         ldr_image_to_texture(image);
-        if(usage == USAGE_HDR_COLOR) {
+        if(usage == USAGE_LINEAR_COLOR) {
             srgb_to_linear();
         }
     } else {
         hdr_image_to_texture(image);
-        if(usage == USAGE_LDR_COLOR) {
+        if(usage == USAGE_SRGB_COLOR) {
             linear_to_srgb();
         }
     }

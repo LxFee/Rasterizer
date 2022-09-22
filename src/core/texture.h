@@ -7,12 +7,7 @@
 #include "image.h"
 #include "maths.h"
 
-typedef enum {
-    USAGE_LDR_COLOR,
-    USAGE_LDR_DATA,
-    USAGE_HDR_COLOR,
-    USAGE_HDR_DATA
-} usage_t;
+typedef enum { USAGE_SRGB_COLOR, USAGE_RAW_DATA, USAGE_LINEAR_COLOR } usage_t;
 
 typedef enum {
     SAMPLE_INTERP_MODE_NEAREST,
