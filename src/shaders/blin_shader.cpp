@@ -114,7 +114,8 @@ const vec4 blin_shader_t::fragment_shader(const void *varyings, bool &discard) {
         vec3 Ld = material.diffuse * I * std::max(0.0f, normal.dot(light_dir));
         vec3 Ls = material.specular * I *
                   pow(std::max(0.0f, normal.dot(h)), material.shininess);
-        vec3 La = material.ambient * blin_uniforms->amb_light_intensity;
+        vec3 La = material.diffuse * material.ambient *
+                  blin_uniforms->amb_light_intensity;
 
         pixel_color = pixel_color + Ls + Ld + La;
     }

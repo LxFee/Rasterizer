@@ -48,7 +48,7 @@ vec3 calculate_pan(vec3 from_camera, float fov, motion_t motion) {
     vec3 up = cross(forward, left);
 
     float distance = from_camera.length();
-    float factor = distance * (float)tan(fov / 2.0f) * 2.0f;
+    float factor = distance * (float)tan(radian(fov / 2.0f)) * 2.0f;
     vec3 delta_x = left * (motion.pan.x() * factor);
     vec3 delta_y = up * (motion.pan.y() * factor);
     return delta_x + delta_y;

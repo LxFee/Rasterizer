@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 
     /* uniform */
     memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
-    blin_uniforms.amb_light_intensity = vec3(0.0f);
+    blin_uniforms.amb_light_intensity = vec3(0.1f);
     blin_uniforms.blin_material = &material;
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.diffuse_texture = &t_diffuse;
