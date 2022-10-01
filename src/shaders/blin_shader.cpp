@@ -45,7 +45,9 @@ const vec4 blin_shader_t::vertex_shader(const void *attribs, void *varyings) {
 
     vec3 T = model.mul_vec3(vertex->tangent).normalized();
     vec3 N = model.transpose().inverse().mul_vec3(vertex->normal).normalized();
-    vec3 B = model.mul_vec3(vertex->bitangent).normalized();
+    // vec3 B = model.mul_vec3(vertex->bitangent).normalized();
+    T = (T - N * T.dot(N)).normalized();
+    vec3 B = cross(N, T);
     mat3 TBN(T, B, N);
 
     vec4 position(vertex->position, 1.0f);
