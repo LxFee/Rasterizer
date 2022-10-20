@@ -414,7 +414,7 @@ const float& mat4::at(int x, int y) const {
 }
 
 /********************** Tool Functions **********************/
-
+// clang-format off
 const vec3 cross(const vec3& lhs, const vec3& rhs) {
     return vec3(lhs.y() * rhs.z() - rhs.y() * lhs.z(),
                 lhs.z() * rhs.x() - rhs.z() * lhs.x(),
@@ -422,30 +422,36 @@ const vec3 cross(const vec3& lhs, const vec3& rhs) {
 }
 
 const mat4 translate(vec3 tr) {
-    return mat4(1.0f, 0.0f, 0.0f, tr.x(), 0.0f, 1.0f, 0.0f, tr.y(), 0.0f, 0.0f,
-                1.0f, tr.z(), 0.0f, 0.0f, 0.0f, 1.0f);
+    return mat4(1.0f, 0.0f, 0.0f, tr.x(), 
+                0.0f, 1.0f, 0.0f, tr.y(), 
+                0.0f, 0.0f, 1.0f, tr.z(), 
+                0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 const mat4 scale(vec3 sc) {
-    return mat4(sc.x(), 0.0f, 0.0f, 0.0f, 0.0f, sc.y(), 0.0f, 0.0f, 0.0f, 0.0f,
-                sc.z(), 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    return mat4(sc.x(), 0.0f, 0.0f, 0.0f, 
+                0.0f, sc.y(), 0.0f, 0.0f, 
+                0.0f, 0.0f, sc.z(), 0.0f, 
+                0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 const mat4 ortho(float n, float f, float fov, float aspect) {
     float t = tan(radian(fov) / 2.0f) * f;
     float r = aspect * t;
-    return mat4(1.0f / r, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f / t, 0.0f, 0.0f, 0.0f,
-                0.0f, 2.0f / (n - f), (n + f) / (n - f), 0.0f, 0.0f, 0.0f,
-                1.0f);
+    return mat4(1.0f / r, 0.0f, 0.0f, 0.0f, 
+                0.0f, 1.0f / t, 0.0f, 0.0f, 0.0f,
+                0.0f, 2.0f / (n - f), (n + f) / (n - f), 
+                0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 // fov: degree
 const mat4 perspective(float n, float f, float fov, float aspect) {
     float t = tan(radian(fov) / 2.0f) * n;
     float r = aspect * t;
-    return mat4(n / r, 0.0f, 0.0f, 0.0f, 0.0f, n / t, 0.0f, 0.0f, 0.0f, 0.0f,
-                (n + f) / (n - f), 2.0f * n * f / (n - f), 0.0f, 0.0f, -1.0f,
-                0.0f);
+    return mat4(n / r, 0.0f, 0.0f, 0.0f, 
+                0.0f, n / t, 0.0f, 0.0f, 
+                0.0f, 0.0f, (n + f) / (n - f), 2.0f * n * f / (n - f), 
+                0.0f, 0.0f, -1.0f, 0.0f);
 }
 
 const mat4 rotate(vec3 axis, float angle) {
@@ -463,8 +469,8 @@ const mat4 rotate(vec3 axis, float angle) {
 }
 
 const mat4 euler_YXZ_rotate(vec3 rotation) {
-    return rotate(vec3(0.0f, 1.0f, 0.0f), rotation.x()) *
-           rotate(vec3(1.0f, 0.0f, 0.0f), rotation.y()) *
+    return rotate(vec3(0.0f, 1.0f, 0.0f), rotation.y()) *
+           rotate(vec3(1.0f, 0.0f, 0.0f), rotation.x()) *
            rotate(vec3(0.0f, 0.0f, 1.0f), rotation.z());
 }
 
@@ -472,25 +478,31 @@ const mat4 lookat(vec3 eye, vec3 at, vec3 up) {
     vec3 z = (eye - at).normalized();
     vec3 x = cross(up, z).normalized();
     vec3 y = cross(z, x).normalized();
-    return mat4(x.x(), x.y(), x.z(), -eye.dot(x), y.x(), y.y(), y.z(),
-                -eye.dot(y), z.x(), z.y(), z.z(), -eye.dot(z), 0.0f, 0.0f, 0.0f,
-                1.0f);
+    return mat4(x.x(), x.y(), x.z(), -eye.dot(x), 
+                y.x(), y.y(), y.z(), -eye.dot(y), 
+                z.x(), z.y(), z.z(), -eye.dot(z), 
+                0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 const mat4 viewport(int width, int height) {
-    return mat4(width / 2.0f, 0.0f, 0.0f, width / 2.0f, 0.0f, height / 2.0f,
-                0.0f, height / 2.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                1.0f);
+    return mat4(width / 2.0f, 0.0f, 0.0f, width / 2.0f, 
+                0.0f, height / 2.0f, 0.0f, height / 2.0f, 
+                0.0f, 0.0f, 1.0f, 0.0f, 
+                0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 const mat3 clip_mat4(const mat4& m) {
     const float* data = m.data();
-    return mat3(data[0], data[1], data[2], data[4], data[5], data[6], data[8],
-                data[9], data[10]);
+    return mat3(data[0], data[1], data[2], 
+                data[4], data[5], data[6], 
+                data[8], data[9], data[10]);
 }
 
 const mat4 extend_mat3(const mat3& m) {
-    return mat4(m.at(0, 0), m.at(1, 0), m.at(2, 0), 0, m.at(0, 1), m.at(1, 1),
-                m.at(2, 1), 0, m.at(0, 2), m.at(1, 2), m.at(2, 2), 0, 0, 0, 0,
-                1);
+    return mat4(m.at(0, 0), m.at(1, 0), m.at(2, 0), 0, 
+                m.at(0, 1), m.at(1, 1), m.at(2, 1), 0, 
+                m.at(0, 2), m.at(1, 2), m.at(2, 2), 0, 
+                0, 0, 0, 1);
 }
+
+// clang-format on

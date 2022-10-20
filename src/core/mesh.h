@@ -12,7 +12,6 @@ struct vertex_t {
     vec3 normal;
     vec2 texcoord;
     vec3 tangent;
-    vec3 bitangent;
 };
 
 class mesh_t {

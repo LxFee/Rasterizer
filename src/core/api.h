@@ -3,7 +3,7 @@
 
 #include "camera.h"
 #include "graphics.h"
-#include "gui.h"
+#include "imgui/imgui.h"
 #include "maths.h"
 #include "mesh.h"
 #include "platform.h"

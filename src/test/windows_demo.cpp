@@ -48,6 +48,19 @@ void scroll_callback(window_t *window, float offset) {
     cout << (const char *)window_get_userdata(window) << endl;
 }
 
+void gui(window_t* window) {
+    if(!window) return;
+    ImGuiContext* ctx = (ImGuiContext*)window_get_gui_context(window);
+    if(!ctx) return;
+    int id = 0;
+    ImGui::SetCurrentContext(ctx);
+    const char* title = (const char*)window_get_userdata(window);
+    ImGui::Begin(title);
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+}
+
 int main(int argc, char *argv[]) {
     platform_initialize();
 
@@ -63,15 +76,18 @@ int main(int argc, char *argv[]) {
     callbacks.key_callback = key_callback;
     callbacks.scroll_callback = scroll_callback;
 
+    char window1_str[] = "window1";
+    char window2_str[] = "window2";
+
+    window_set_userdata(window1, window1_str);
+    window_set_userdata(window2, window2_str);
+
     input_set_callbacks(window1, callbacks);
     input_set_callbacks(window2, callbacks);
 
     float prev = platform_get_time();
 
     float num = 10.0f;
-    widget_t wid{
-        "window1",
-        {{"group1", {{"num", ITEM_TYPE_FLOAT, &num, -10.0f, 100.0f}}}}};
 
     framebuffer_t framebuffer(800, 800);
     framebuffer.clear_color(vec4(0.15f, 0.5f, 0.5f, 1.0f));
@@ -111,8 +127,8 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        draw_gui(window2, &wid);
-        draw_gui(window1, &wid);
+        gui(window1);
+        gui(window2);
         window_draw_buffer(window1, &framebuffer);
         window_draw_buffer(window2, &framebuffer);
     }

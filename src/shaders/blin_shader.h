@@ -3,25 +3,16 @@
 
 #include "api.h"
 
-struct blin_material_t {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    float shininess;
-};
-
 struct blin_point_light_t {
     vec3 position;
-    vec3 intensity;
-    vec3 attenuation;
-    static vec3 distance2attenuation(float distance);
+    vec3 color;
 };
 
 struct blin_varying_t {
     vec3 world_pos;
     vec3 world_normal;
+    vec3 tangent;
     vec2 texcoords;
-    mat3 tbn_matrix;
 };
 
 struct blin_uniform_t {
@@ -33,14 +24,11 @@ struct blin_uniform_t {
 
     /* matierial */
     texture_t* normal_texture;
-    texture_t* specular_texture;
     texture_t* diffuse_texture;
-    blin_material_t* blin_material;
 
     /* lights */
     int num_of_point_lights;
     blin_point_light_t* point_lights;
-    vec3 amb_light_intensity;
 };
 
 class blin_shader_t : public shader_t {

@@ -133,9 +133,6 @@ vbo_t* load_from_file(const std::string& filename) {
             verts[ind].tangent = tangent;
             verts[ind + 1].tangent = tangent;
             verts[ind + 2].tangent = tangent;
-            verts[ind].bitangent = bitangent;
-            verts[ind + 1].bitangent = bitangent;
-            verts[ind + 2].bitangent = bitangent;
         }
     }
     in.close();

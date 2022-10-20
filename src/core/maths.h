@@ -233,6 +233,12 @@ inline float float_linear2srgb(float value) {
     return (float)pow(value, 1 / 2.2);
 }
 
+inline vec3 vec3_linear2srgb(vec3 value) {
+    return vec3(float_linear2srgb(value.x()),
+                float_linear2srgb(value.y()),
+                float_linear2srgb(value.z()));
+}
+
 inline float radian(float d) { return d / 180.0f * PI; }
 
 inline float degree(float r) { return r / PI * 180.0f; }

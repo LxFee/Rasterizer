@@ -116,6 +116,18 @@ void clear_record(record_t *record) {
     record->double_click = 0;
 }
 
+void gui(window_t* window) {
+    if(!window) return;
+    ImGuiContext* ctx = (ImGuiContext*)window_get_gui_context(window);
+    if(!ctx) return;
+    int id = 0;
+    ImGui::SetCurrentContext(ctx);
+    ImGui::Begin("Info");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+}
+
 int main(int argc, char *argv[]) {
     /* platform setup */
     platform_initialize();
@@ -136,13 +148,7 @@ int main(int argc, char *argv[]) {
     cow.set_size(vec3(5.0f));
 
     /* texture setup */
-    texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_LINEAR_COLOR);
-    /* material setup */
-    blin_material_t material;
-    material.ambient = vec3(0.05f);
-    material.diffuse = vec3(1.0f);
-    material.specular = vec3(0.7937f);
-    material.shininess = 200.0f;
+    texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_SRGB_COLOR);
 
     /* camera setup */
     pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
@@ -152,18 +158,13 @@ int main(int argc, char *argv[]) {
     camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
 
     /* lights */
-    float intensity = 20.0f;
     vec3 light_color1(1.0f), light_color2(1.0f);
     blin_point_light_t point_lights[2];
-    point_lights[0].attenuation =
-        blin_point_light_t::distance2attenuation(20.0f);
-    point_lights[0].intensity = light_color1 * intensity;
-    point_lights[0].position = vec3(8.0f, 10.0f, -6.0f);
+    point_lights[0].color = light_color1;
+    point_lights[0].position = vec3(3.0f, 4.0f, -3.0f);
 
-    point_lights[1].attenuation =
-        blin_point_light_t::distance2attenuation(20.0f);
-    point_lights[1].intensity = light_color2 * intensity;
-    point_lights[1].position = vec3(-8.0f, 10.0f, -6.0f);
+    point_lights[1].color = light_color2;
+    point_lights[1].position = vec3(-3.0f, 4.0f, -3.0f);
 
     /* shader setup */
     blin_uniform_t blin_uniforms;
@@ -172,11 +173,8 @@ int main(int argc, char *argv[]) {
 
     /* uniform */
     memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
-    blin_uniforms.amb_light_intensity = vec3(0.1f);
-    blin_uniforms.blin_material = &material;
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.diffuse_texture = &t_diffuse;
-    blin_uniforms.specular_texture = NULL;
     blin_uniforms.normal_texture = NULL;
     blin_uniforms.num_of_point_lights = 2;
     blin_uniforms.point_lights = point_lights;
@@ -188,22 +186,6 @@ int main(int argc, char *argv[]) {
     /* gui setup */
     vec4 background;
     vec3 cow_rotation;
-    widget_t demo_gui{
-        "texture cow",
-        {
-            {"background", {{"color", ITEM_TYPE_COLOR4, background.data()}}},
-            {"cow",
-             {{"rotation", ITEM_TYPE_FLOAT3, cow_rotation.data(), -180.0f,
-               180.0f}}},
-            {"light1",
-             {{"position", ITEM_TYPE_FLOAT3, point_lights[0].position.data(),
-               -50.0f, 50.0f},
-              {"color", ITEM_TYPE_COLOR3, light_color1.data()}}},
-            {"light2",
-             {{"position", ITEM_TYPE_FLOAT3, point_lights[1].position.data(),
-               -50.0f, 50.0f},
-              {"color", ITEM_TYPE_COLOR3, light_color2.data()}}},
-        }};
 
     /* render */
     framebuffer_t framebuffer(w, h);
@@ -217,12 +199,9 @@ int main(int argc, char *argv[]) {
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
-        blin_uniforms.point_lights[0].intensity = light_color1 * intensity;
-        blin_uniforms.point_lights[1].intensity = light_color2 * intensity;
 
         draw_triangle(&framebuffer, cow.get_vbo(), &blin_shader);
-
-        draw_gui(window, &demo_gui);
+        gui(window);
         window_draw_buffer(window, &framebuffer);
         clear_record(&record);
         input_poll_events();

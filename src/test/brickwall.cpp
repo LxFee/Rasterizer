@@ -7,10 +7,10 @@
 
 using namespace std;
 
-const int w = 800, h = 600;
+const int window_width = 640, window_height = 640;
 static const float CLICK_DELAY = 0.25f;
-static const vec3 CAMERA_POSITION(0, 0, 15);
-static const vec3 CAMERA_TARGET(0, 0, 0);
+vec3 CAMERA_POSITION(0, 0, 5);
+vec3 CAMERA_TARGET(0, 0, 0);
 
 typedef struct {
     /* orbit */
@@ -35,7 +35,7 @@ typedef struct {
 
 static vec2 get_pos_delta(vec2 old_pos, vec2 new_pos) {
     vec2 delta = new_pos - old_pos;
-    return delta / (float)h;
+    return delta / (float)window_height;
 }
 
 static vec2 get_cursor_pos(window_t *window) {
@@ -116,12 +116,32 @@ void clear_record(record_t *record) {
     record->double_click = 0;
 }
 
+/* gui setup */
+vec4 background(0.0f);
+vec3 wall_rotation;
+vec3 light_pos(1.0f);
+
+void gui(window_t* window) {
+    if(!window) return;
+    ImGuiContext* ctx = (ImGuiContext*)window_get_gui_context(window);
+    if(!ctx) return;
+    int id = 0;
+    ImGui::SetCurrentContext(ctx);
+    ImGui::Begin("Info");
+    ImGui::SliderFloat3("Light positon", light_pos.data(), -5, 5);
+    ImGui::SliderFloat3("Wall rotation", wall_rotation.data(), -180, 180);
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+}
+
+
+
 int main(int argc, char *argv[]) {
     /* platform setup */
     platform_initialize();
 
     /* window & input setup */
-    window_t *window = window_create("main window!", w, h);
+    window_t *window = window_create("main window!", window_width, window_height);
     record_t record;
     memset(&record, 0, sizeof(record_t));
     window_set_userdata(window, &record);
@@ -133,35 +153,22 @@ int main(int argc, char *argv[]) {
 
     /* mesh setup */
     mesh_t wall("assets/model/brickwall/brickwall.obj");
-    wall.set_size(vec3(8.0f));
-
+    // wall_rotation = vec3(-90.0, 0.0, 0.0);
     /* texture setup */
     texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg",
-                        USAGE_LINEAR_COLOR);
+                        USAGE_SRGB_COLOR);
     texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg",
                        USAGE_RAW_DATA);
     t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
 
-    /* material setup */
-    blin_material_t material;
-    material.ambient = vec3(0.05f);
-    material.diffuse = vec3(0.5f);
-    material.specular = vec3(0.3f);
-    material.shininess = 150.0f;
-
     /* camera setup */
-    pinned_camera_t camera(800.0f / 600.0f, PROJECTION_MODE_PERSPECTIVE);
-    camera.set_near(0.1f);
-    camera.set_far(1000.0f);
-    camera.set_zoom(90.0f);
+    pinned_camera_t camera(1.0 * window_width / window_height, PROJECTION_MODE_PERSPECTIVE);
     camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
 
     /* lights */
     blin_point_light_t point_lights[1];
-    point_lights[0].attenuation =
-        blin_point_light_t::distance2attenuation(20.0f);
-    point_lights[0].intensity = vec3(20.0f);
-    point_lights[0].position = vec3(3.0f, 4.0f, 8.0f);
+    point_lights[0].color = vec3(1.0f);
+    point_lights[0].position = light_pos;
 
     /* shader setup */
     blin_uniform_t blin_uniforms;
@@ -170,11 +177,8 @@ int main(int argc, char *argv[]) {
 
     /* uniform */
     memset(&blin_uniforms, 0, sizeof(blin_uniform_t));
-    blin_uniforms.amb_light_intensity = vec3(0.0f);
-    blin_uniforms.blin_material = &material;
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.diffuse_texture = &t_diffuse;
-    blin_uniforms.specular_texture = NULL;
     blin_uniforms.normal_texture = &t_normal;
     blin_uniforms.num_of_point_lights = 1;
     blin_uniforms.point_lights = point_lights;
@@ -183,40 +187,26 @@ int main(int argc, char *argv[]) {
     blin_uniforms.proj_matrix = camera.get_projection_matrix();
     blin_uniforms.view_matrix = camera.get_view_matrix();
 
-    /* gui setup */
-    vec4 background;
-    vec3 wall_rotation;
-    vec3 light_color(1.0f);
-    widget_t demo_gui{
-        "normal wall",
-        {
-            {"background", {{"color", ITEM_TYPE_COLOR4, background.data()}}},
-            {"wall",
-             {{"rotation", ITEM_TYPE_FLOAT3, wall_rotation.data(), -180.0f,
-               180.0f}}},
-            {"light",
-             {{"position", ITEM_TYPE_FLOAT3, point_lights[0].position.data(),
-               -50.0f, 50.0f},
-              {"color", ITEM_TYPE_COLOR3, light_color.data(), 0.0f, 200.0f}}},
-        }};
-
     /* render */
-    framebuffer_t framebuffer(w, h);
+    framebuffer_t framebuffer(window_width, window_height);
     while(!window_should_close(window)) {
         framebuffer.clear_color(background);
         framebuffer.clear_depth(1.0f);
+        // camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
 
         update_camera(window, &camera, &record);
         wall.set_rotation(wall_rotation);
-        blin_uniforms.model_matrix = wall.get_model_matrix();
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
-        blin_uniforms.point_lights[0].intensity = light_color * 20.0f;
-
-        draw_triangle(&framebuffer, wall.get_vbo(), &blin_shader);
-
-        draw_gui(window, &demo_gui);
+        point_lights[0].position = light_pos;
+        for(int i = 0; i < 1; i++) {
+            if(i == 0) wall.set_position(vec3(0, 0, 0));
+            else wall.set_position(vec3(0, 0, 1 + (i - 1) * 2));
+            blin_uniforms.model_matrix = wall.get_model_matrix();
+            draw_triangle(&framebuffer, wall.get_vbo(), &blin_shader);
+        }
+        gui(window);
         window_draw_buffer(window, &framebuffer);
         clear_record(&record);
         input_poll_events();

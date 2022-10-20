@@ -7,7 +7,7 @@
 
 /** camera_t **/
 camera_t::camera_t(float _aspect, projection_mode_t _mode)
-    : n(1.0f), f(50.0f), zoom(60.0f), aspect(_aspect), mode(_mode) {}
+    : n(0.1f), f(200.0f), zoom(60.0f), aspect(_aspect), mode(_mode) {}
 
 camera_t::~camera_t() {}
 
@@ -79,8 +79,8 @@ vec3 calculate_offset(vec3 from_target, motion_t motion) {
 
 pinned_camera_t::pinned_camera_t(float _aspect, projection_mode_t _mode)
     : camera_t(_aspect, _mode),
-      position(0.0f, 0.0f, 0.0f),
-      target(0.0f, 0.0f, -1.0f) {}
+      position(0.0f, 0.0f, 5.0f),
+      target(0.0f, 0.0f, 0.0f) {}
 
 void pinned_camera_t::set_transform(vec3 _position, vec3 _target) {
     position = _position;
