@@ -218,6 +218,11 @@ inline uint rgba2rgbapack(const vec4& col) {
     return a + (r << 8) + (g << 16) + (b << 24);
 }
 
+inline int sgn(int x) {
+    if(x == 0) return 0;
+    return x < 0 ? -1 : 1;
+}
+
 inline const vec4 rgbapack2rgba(const uchar* color) {
     return vec4(color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f,
                 color[3] / 255.0f);

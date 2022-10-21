@@ -200,6 +200,11 @@ struct vec2i {
     vec2i(float x, float y) : x(x + 0.5f), y(y + 0.5f) {}
     
     vec2i(int x, int y) : x(x), y(y) {}
+
+    const vec2i operator-(const vec2i& rhs) const {
+        return vec2i(x - rhs.x, y - rhs.y);
+    }
+
     int x, y;
 };
 
@@ -218,10 +223,12 @@ bbox_t calc_bbox(vec2i a, vec2i b, vec2i c) {
 }
 
 int edge_function(const vec2i& a, const vec2i& b, const vec2i& c) {
-    vec2i v1(b.x - a.x, b.y - a.y), v2(c.x - a.x, c.y - a.y);
+    vec2i v1 = b - a, v2 = c - a;
     return v1.x * v2.y - v2.x * v1.y;
 }
 
+
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
 void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shader) {
     int width = framebuffer->get_width();
     int height = framebuffer->get_height();
@@ -245,12 +252,16 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shade
     a = vec2i(pa.x(), pa.y());
     b = vec2i(pb.x(), pb.y());
     c = vec2i(pc.x(), pc.y());
+    vec2i edge0 = c - b; 
+    vec2i edge1 = a - c; 
+    vec2i edge2 = b - a; 
+
 
     int area = edge_function(a, b, c);
     if(area == 0) return ;
 
     // 背面剔除
-    if(area < 0) return ;
+    // if(area < 0) return ;
 
     bbox_t bbox = calc_bbox(a, b, c);
     bbox.xl = std::max(bbox.xl, 0);
@@ -264,11 +275,19 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shade
         for(int j = bbox.xl; j <= bbox.xr; j++) {
             // shade
             vec2i p(j, i);
-
+            
+            
+            bool overlaps = true; 
+            // If the point is on the edge, test if it is a top or left edge, 
+            // otherwise test if  the edge function is ok
             int da = edge_function(b, c, p);
             int db = edge_function(c, a, p);
             int dc = edge_function(a, b, p);
-            if(da < 0 || db < 0 || dc < 0) continue;
+            overlaps &= (da == 0 ? ((edge0.y == 0 && edge0.x > 0) ||  edge0.y > 0) : (sgn(da) * sgn(area) > 0)); 
+            overlaps &= (db == 0 ? ((edge1.y == 0 && edge1.x > 0) ||  edge1.y > 0) : (sgn(db) * sgn(area) > 0)); 
+            overlaps &= (dc == 0 ? ((edge2.y == 0 && edge2.x > 0) ||  edge2.y > 0) : (sgn(dc) * sgn(area) > 0)); 
+
+            if(!overlaps) continue;
 
             float alpha = 1.0f * da / area;
             float beta  = 1.0f * db / area;

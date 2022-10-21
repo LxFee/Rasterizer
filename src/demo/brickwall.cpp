@@ -134,7 +134,6 @@ void gui(window_t* window) {
     ImGui::SliderFloat3("Wall rotation", wall_rotation.data(), -180, 180);
     auto eye = camera.get_position();
     auto at = camera.get_target();
-    ImGui::Text("EYE: %.10f %.10f %.10f", eye.x(), eye.y(), eye.z());
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 }
@@ -157,12 +156,10 @@ int main(int argc, char *argv[]) {
 
     /* mesh setup */
     mesh_t wall("assets/model/brickwall/brickwall.obj");
-    // wall_rotation = vec3(-90.0, 0.0, 0.0);
+
     /* texture setup */
-    texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg",
-                        USAGE_SRGB_COLOR);
-    texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg",
-                       USAGE_RAW_DATA);
+    texture_t t_diffuse("assets/model/brickwall/brickwall_diffuse.jpg", USAGE_SRGB_COLOR);
+    texture_t t_normal("assets/model/brickwall/brickwall_normal.jpg", USAGE_RAW_DATA);
     t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
 
     /* camera setup */
