@@ -5,8 +5,6 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "utils/MsgQue.h"
-#include "utils/GStorage.h"
 
 
 vbo_t::vbo_t(int _sizeof_element, int _count)
@@ -108,23 +106,9 @@ struct v2f_t {
 };
 
 struct bbox_t {
-    float xl, xr;
-    float yl, yr;
+    int xl, xr;
+    int yl, yr;
 };
-
-bbox_t calc_bbox(vec2 p[3]) {
-    auto min3f = [](float a, float b, float c) {
-        return std::min(a, std::min(b, c));
-    };
-    auto max3f = [](float a, float b, float c) {
-        return std::max(a, std::max(b, c));
-    };
-    float xl = floor(min3f(p[0].x(), p[1].x(), p[2].x()));
-    float yl = floor(min3f(p[0].y(), p[1].y(), p[2].y()));
-    float xr = ceil(max3f(p[0].x(), p[1].x(), p[2].x()));
-    float yr = ceil(max3f(p[0].y(), p[1].y(), p[2].y()));
-    return bbox_t{xl, xr, yl, yr};
-}
 
 void lerp_v2f(const v2f_t* a, const v2f_t* b, float t, v2f_t* target) {
     target->position = a->position + (b->position - a->position) * t;
@@ -137,20 +121,17 @@ void lerp_v2f(const v2f_t* a, const v2f_t* b, float t, v2f_t* target) {
     }
 }
 
-void interpolation_v2f(const v2f_t* a, const v2f_t* b, const v2f_t* c,
-                       float alpha, float beta, float gamma, v2f_t* target) {
-    float weight = 1.0 / (alpha + beta + gamma);
-    target->position =
-        (a->position * alpha + b->position * beta + c->position * gamma) *
-        weight;
-    float* data_target = (float*)target->data;
-    float* data_a = (float*)a->data;
-    float* data_b = (float*)b->data;
-    float* data_c = (float*)c->data;
+void interpolation_v2f(const v2f_t* a, const v2f_t* b, const v2f_t* c, vec3 uvw, v2f_t* target) {
+    float weight = 1.0 / (uvw.x() + uvw.y() + uvw.z());
+    target->position = (a->position * uvw.x() + b->position * uvw.y() + c->position * uvw.z()) * weight;
+
+    float* v  = (float*)target->data;
+    float* va = (float*)a->data;
+    float* vb = (float*)b->data;
+    float* vc = (float*)c->data;
     int count = (a->sizeof_varying) >> 2;
     for(int i = 0; i < count; i++) {
-        data_target[i] =
-            (alpha * data_a[i] + beta * data_b[i] + gamma * data_c[i]) * weight;
+        v[i] = (uvw.x() * va[i] + uvw.y() * vb[i] + uvw.z() * vc[i]) * weight;
     }
 }
 
@@ -210,102 +191,115 @@ void clip_aganst_panels(v2f_t* v2fs[], int indexes[], int& num) {
     }
 }
 
-bool back_face(vec2 p[3]) {
-    vec2 a = p[1] - p[0], b = p[2] - p[0];
-    float det = a.x() * b.y() - b.x() * a.y();
-    return det < 0.0f;
+struct vec2i {
+    vec2i() = default;    
+
+    // 四舍五入
+    // vec2i(const vec2& v) : x(v.x()), y(v.y()) {}
+    vec2i(const vec2& v) : x(v.x() + 0.5f), y(v.y() + 0.5f) {}
+    vec2i(float x, float y) : x(x + 0.5f), y(y + 0.5f) {}
+    
+    vec2i(int x, int y) : x(x), y(y) {}
+    int x, y;
+};
+
+bbox_t calc_bbox(vec2i a, vec2i b, vec2i c) {
+    auto min3i = [](int a, int b, int c) {
+        return std::min(a, std::min(b, c));
+    };
+    auto max3i = [](int a, int b, int c) {
+        return std::max(a, std::max(b, c));
+    };
+    int xl = min3i(a.x, b.x, c.x);
+    int yl = min3i(a.y, b.y, c.y);
+    int xr = max3i(a.x, b.x, c.x);
+    int yr = max3i(a.y, b.y, c.y);
+    return bbox_t{xl, xr, yl, yr};
 }
 
-float calc_line_distance(const vec2& a, const vec2& b, const vec2& c) {    
-    return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
+int edge_function(const vec2i& a, const vec2i& b, const vec2i& c) {
+    vec2i v1(b.x - a.x, b.y - a.y), v2(c.x - a.x, c.y - a.y);
+    return v1.x * v2.y - v2.x * v1.y;
 }
 
 void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shader) {
     int width = framebuffer->get_width();
     int height = framebuffer->get_height();
     int sizeof_varyings = shader->get_sizeof_varyings();
-    float tr_rw[3], tr_z[3];
-
-    vec2 screen_point[3];
+    
     mat4 viewport_mat = viewport(width, height);
 
-    for(int i = 0; i < 3; i++) {
-        tr_rw[i] = 1.0f / v2fs[i]->position.w();
-        tr_z[i] = v2fs[i]->position.z() * tr_rw[i];
-        vec4 p = viewport_mat.mul_vec4(v2fs[i]->position * tr_rw[i]);
-        screen_point[i] = vec2(p.x(), p.y());
-    }
+    float one_div_aw, one_div_bw, one_div_cw;
+    vec4 pa, pb, pc;
+    vec2i a, b, c;
+
+
+    one_div_aw = 1.0f / v2fs[0]->position.w();
+    one_div_bw = 1.0f / v2fs[1]->position.w();
+    one_div_cw = 1.0f / v2fs[2]->position.w();
+
+    pa = viewport_mat.mul_vec4(v2fs[0]->position * one_div_aw);
+    pb = viewport_mat.mul_vec4(v2fs[1]->position * one_div_bw);
+    pc = viewport_mat.mul_vec4(v2fs[2]->position * one_div_cw);
+
+    a = vec2i(pa.x(), pa.y());
+    b = vec2i(pb.x(), pb.y());
+    c = vec2i(pc.x(), pc.y());
+
+    int area = edge_function(a, b, c);
+    if(area == 0) return ;
 
     // 背面剔除
-    if(back_face(screen_point)) return;
+    if(area < 0) return ;
 
-    float pre_calc[3];
-    pre_calc[0] = calc_line_distance(screen_point[1], screen_point[2], screen_point[0]);
-    pre_calc[1] = calc_line_distance(screen_point[2], screen_point[0], screen_point[1]);
-    pre_calc[2] = calc_line_distance(screen_point[0], screen_point[1], screen_point[2]);
-
-    for(int i = 0; i < 3; i++) {
-        if(fabs(pre_calc[i]) < EPSILON) return;
-    }
-
-    bbox_t bbox = calc_bbox(screen_point);
-    bbox.xl = std::max(bbox.xl, 0.0f);
-    bbox.yl = std::max(bbox.yl, 0.0f);
-    bbox.xr = std::min(bbox.xr, width - 1.0f);
-    bbox.yr = std::min(bbox.yr, height - 1.0f);
+    bbox_t bbox = calc_bbox(a, b, c);
+    bbox.xl = std::max(bbox.xl, 0);
+    bbox.yl = std::max(bbox.yl, 0);
+    bbox.xr = std::min(bbox.xr, width - 1);
+    bbox.yr = std::min(bbox.yr, height - 1);
 
     v2f_t v2f(sizeof_varyings);
 
-    MsgQue::getInstance().push("1: (%f %f)", screen_point[0].x(), screen_point[0].y());
-    MsgQue::getInstance().push("2: (%f %f)", screen_point[1].x(), screen_point[1].y());
-    MsgQue::getInstance().push("3: (%f %f)", screen_point[2].x(), screen_point[2].y());
-
-    MsgQue::getInstance().loop_begin();
     for(int i = bbox.yl; i <= bbox.yr; i++) {
         for(int j = bbox.xl; j <= bbox.xr; j++) {
-            
             // shade
-            vec2 p(j + 0.5f, i + 0.5f);
-            float alpha = calc_line_distance(screen_point[1], screen_point[2], p) / pre_calc[0];
-            float beta  = calc_line_distance(screen_point[2], screen_point[0], p) / pre_calc[1];
-            float gamma = calc_line_distance(screen_point[0], screen_point[1], p) / pre_calc[2];
+            vec2i p(j, i);
 
-            float aa = calc_line_distance(screen_point[1], screen_point[2], p);
-            float bb = calc_line_distance(screen_point[2], screen_point[0], p);
-            float cc = calc_line_distance(screen_point[0], screen_point[1], p);
+            int da = edge_function(b, c, p);
+            int db = edge_function(c, a, p);
+            int dc = edge_function(a, b, p);
+            if(da < 0 || db < 0 || dc < 0) continue;
 
-            if(alpha < 0.0f || beta < 0.0f || gamma < 0.0f) {
-                if(i == bbox.xr - (j - bbox.xl)) {
-                    MsgQue::getInstance().once_begin();
-                        MsgQue::getInstance().push("p: (%f %f)", p.x(), p.y());
-                    MsgQue::getInstance().once_end();
-                    framebuffer->set_color(j, i, vec4(0.0, 1.0, 0.0, 1.0));
-                }
-                continue;
-            }
+            float alpha = 1.0f * da / area;
+            float beta  = 1.0f * db / area;
+            float gamma = 1.0f * dc / area;
 
-            float depth = alpha * tr_z[0] + beta * tr_z[1] + gamma * tr_z[2];
-            depth = (depth + 1.0f) * 0.5f;
+            float z = alpha * pa.z() + beta * pb.z() + gamma * pc.z();
+            float depth = (z + 1.0f) * 0.5f;
 
+            // 深度测试 - early Z
             if(framebuffer->get_depth(j, i) < depth) continue;
 
-            interpolation_v2f(v2fs[0], v2fs[1], v2fs[2], alpha * tr_rw[0],
-                              beta * tr_rw[1], gamma * tr_rw[2], &v2f);
+            // 重心坐标插值+透视矫正
+            vec3 uvw(alpha * one_div_aw, beta * one_div_bw, gamma * one_div_cw);
+            interpolation_v2f(v2fs[0], v2fs[1], v2fs[2], uvw, &v2f);
+
+            // fragment shader
             bool discord = false;
             vec4 color = shader->fragment_shader(v2f.data, discord);
             if(discord) continue;
+
+            // update buffer
             framebuffer->set_depth(j, i, depth);
-            framebuffer->set_color(j, i, vec4(1.0, 0.0, 0.0, 1.0));
+            framebuffer->set_color(j, i, color);
         }
     }
-    MsgQue::getInstance().loop_end();
-
 }
+
 }  // namespace render
 }  // namespace
 
-void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data,
-                   shader_t* shader) {
+void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shader) {
     assert(framebuffer && data && shader);
     using namespace render;
 

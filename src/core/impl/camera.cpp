@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include "core/maths.h"
-#include "utils/MsgQue.h"
 
 /** camera_t **/
 camera_t::camera_t(float _aspect, projection_mode_t _mode)
