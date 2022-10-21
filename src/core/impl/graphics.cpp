@@ -79,6 +79,9 @@ void framebuffer_t::set_depth(int x, int y, float depth) {
 }
 
 void framebuffer_t::set_color(int x, int y, vec4 color) {
+    if(!(x >= 0 && x < width && y >= 0 && y < height)) {
+        printf("%d %d\n", x, y);
+    }
     assert(x >= 0 && x < width && y >= 0 && y < height);
     int p = (height - y - 1) * width + x;
     ((uint*)color_buffer)[p] = rgba2rgbapack(color);
@@ -229,41 +232,35 @@ int edge_function(const vec2i& a, const vec2i& b, const vec2i& c) {
 
 
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
-void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shader) {
+void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shader, PRIMITIVE_TYPE type, int ignore_edge = 0) {
     int width = framebuffer->get_width();
     int height = framebuffer->get_height();
     int sizeof_varyings = shader->get_sizeof_varyings();
     
     mat4 viewport_mat = viewport(width, height);
 
-    float one_div_aw, one_div_bw, one_div_cw;
-    vec4 pa, pb, pc;
-    vec2i a, b, c;
+    float one_div_w[3];
+    vec4 p[3];
+    vec2i v[3];
+
+    for(int i = 0; i < 3; i++) {
+        one_div_w[i] = 1.0f / v2fs[i]->position.w();
+        p[i] = viewport_mat.mul_vec4(v2fs[i]->position * one_div_w[i]);
+        v[i] = vec2i(p[i].x(), p[i].y());
+    }
+    
+    vec2i edge0 = v[2] - v[1]; 
+    vec2i edge1 = v[0] - v[2]; 
+    vec2i edge2 = v[1] - v[0]; 
 
 
-    one_div_aw = 1.0f / v2fs[0]->position.w();
-    one_div_bw = 1.0f / v2fs[1]->position.w();
-    one_div_cw = 1.0f / v2fs[2]->position.w();
-
-    pa = viewport_mat.mul_vec4(v2fs[0]->position * one_div_aw);
-    pb = viewport_mat.mul_vec4(v2fs[1]->position * one_div_bw);
-    pc = viewport_mat.mul_vec4(v2fs[2]->position * one_div_cw);
-
-    a = vec2i(pa.x(), pa.y());
-    b = vec2i(pb.x(), pb.y());
-    c = vec2i(pc.x(), pc.y());
-    vec2i edge0 = c - b; 
-    vec2i edge1 = a - c; 
-    vec2i edge2 = b - a; 
-
-
-    int area = edge_function(a, b, c);
+    int area = edge_function(v[0], v[1], v[2]);
     if(area == 0) return ;
 
     // 背面剔除
-    // if(area < 0) return ;
+    if(area < 0) return ;
 
-    bbox_t bbox = calc_bbox(a, b, c);
+    bbox_t bbox = calc_bbox(v[0], v[1], v[2]);
     bbox.xl = std::max(bbox.xl, 0);
     bbox.yl = std::max(bbox.yl, 0);
     bbox.xr = std::min(bbox.xr, width - 1);
@@ -271,54 +268,114 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shade
 
     v2f_t v2f(sizeof_varyings);
 
-    for(int i = bbox.yl; i <= bbox.yr; i++) {
-        for(int j = bbox.xl; j <= bbox.xr; j++) {
-            // shade
-            vec2i p(j, i);
-            
-            
-            bool overlaps = true; 
-            // If the point is on the edge, test if it is a top or left edge, 
-            // otherwise test if  the edge function is ok
-            int da = edge_function(b, c, p);
-            int db = edge_function(c, a, p);
-            int dc = edge_function(a, b, p);
-            overlaps &= (da == 0 ? ((edge0.y == 0 && edge0.x > 0) ||  edge0.y > 0) : (sgn(da) * sgn(area) > 0)); 
-            overlaps &= (db == 0 ? ((edge1.y == 0 && edge1.x > 0) ||  edge1.y > 0) : (sgn(db) * sgn(area) > 0)); 
-            overlaps &= (dc == 0 ? ((edge2.y == 0 && edge2.x > 0) ||  edge2.y > 0) : (sgn(dc) * sgn(area) > 0)); 
+    auto shade = [&](int x, int y) {
+        vec2i cur_p(x, y);
+        // If the point is on the edge, test if it is a top or left edge, 
+        // otherwise test if  the edge function is ok
+        int da = edge_function(v[1], v[2], cur_p);
+        int db = edge_function(v[2], v[0], cur_p);
+        int dc = edge_function(v[0], v[1], cur_p);
 
-            if(!overlaps) continue;
+        float alpha = 1.0f * da / area;
+        float beta  = 1.0f * db / area;
+        float gamma = 1.0f * dc / area;
 
-            float alpha = 1.0f * da / area;
-            float beta  = 1.0f * db / area;
-            float gamma = 1.0f * dc / area;
+        float z = alpha * p[0].z() + beta * p[1].z() + gamma * p[2].z();
+        float depth = (z + 1.0f) * 0.5f;
 
-            float z = alpha * pa.z() + beta * pb.z() + gamma * pc.z();
-            float depth = (z + 1.0f) * 0.5f;
+        // 深度测试 - early Z
+        if(framebuffer->get_depth(x, y) < depth) return ;
 
-            // 深度测试 - early Z
-            if(framebuffer->get_depth(j, i) < depth) continue;
+        // 重心坐标插值+透视矫正
+        vec3 uvw(alpha * one_div_w[0], beta * one_div_w[1], gamma * one_div_w[2]);
+        interpolation_v2f(v2fs[0], v2fs[1], v2fs[2], uvw, &v2f);
 
-            // 重心坐标插值+透视矫正
-            vec3 uvw(alpha * one_div_aw, beta * one_div_bw, gamma * one_div_cw);
-            interpolation_v2f(v2fs[0], v2fs[1], v2fs[2], uvw, &v2f);
+        // fragment shader
+        bool discord = false;
+        vec4 color = shader->fragment_shader(v2f.data, discord);
+        if(discord) return ;
 
-            // fragment shader
-            bool discord = false;
-            vec4 color = shader->fragment_shader(v2f.data, discord);
-            if(discord) continue;
+        // update buffer
+        framebuffer->set_depth(x, y, depth);
+        framebuffer->set_color(x, y, color);
+    };
 
-            // update buffer
-            framebuffer->set_depth(j, i, depth);
-            framebuffer->set_color(j, i, color);
+    auto rasterize_filled_triangle = [&]() {
+        for(int i = bbox.yl; i <= bbox.yr; i++) {
+            for(int j = bbox.xl; j <= bbox.xr; j++) {
+                // shade
+                bool overlaps = true;
+                int da = edge_function(v[1], v[2], vec2i(j, i));
+                int db = edge_function(v[2], v[0], vec2i(j, i));
+                int dc = edge_function(v[0], v[1], vec2i(j, i));
+                overlaps &= (da == 0 ? ((edge0.y == 0 && edge0.x > 0) ||  edge0.y > 0) : (sgn(da) * sgn(area) > 0)); 
+                overlaps &= (db == 0 ? ((edge1.y == 0 && edge1.x > 0) ||  edge1.y > 0) : (sgn(db) * sgn(area) > 0)); 
+                overlaps &= (dc == 0 ? ((edge2.y == 0 && edge2.x > 0) ||  edge2.y > 0) : (sgn(dc) * sgn(area) > 0)); 
+                if(overlaps) shade(j, i);
+            }
         }
+    };
+
+    auto rasterize_wire_frame_triangle = [&](int p1, int p2) {
+        int x0 = v[p1].x, y0 = v[p1].y;
+        int x1 = v[p2].x, y1 = v[p2].y;
+        int dx = abs(x0 - x1), dy = abs(y0 - y1);
+        if(dx < dy) {
+            std::swap(x0, y0);
+            std::swap(x1, y1);
+        }
+        if(x0 > x1) {
+            std::swap(x0, x1);
+            std::swap(y0, y1);
+        }
+        if(dx < dy) {
+            x1 = std::min(x1, height - 1);
+        } else {
+            x1 = std::min(x1, width - 1);
+        }
+
+        int A = y1 - y0;
+        int B = x0 - x1;
+        int C = -(A * x0 + B * y0);
+
+        int sgny = y0 < y1 ? 1 : -1;
+
+        int d = 2 * A * (x0 + 1) + B * (2 * y0 + sgny) + 2 * C;
+
+        int y = y0;
+        for(auto x = x0 ; x <= x1 ; ++x) {
+            if(x >= 0 && y >= 0) {
+                if(dx < dy) {
+                    if(y < width)
+                        shade(y, x);
+                } else {
+                    if(y < height)
+                        shade(x, y);
+                }
+            }
+            if(sgny * sgn(B) * sgn(d) < 0) {
+                d += 2 * (A + sgny * B);
+                y += sgny;
+            } else d += 2 * A; 
+        }
+    };
+    if(type == TRIANGLE) {
+        rasterize_filled_triangle();
+    }
+    else if(type == TRIANGLE_WIRE_FRAME) {
+        if(!(ignore_edge & 1)) rasterize_wire_frame_triangle(0, 1);
+        if(!(ignore_edge & 2)) rasterize_wire_frame_triangle(1, 2);
+        if(!(ignore_edge & 4)) rasterize_wire_frame_triangle(2, 0);
+    }
+    else {
+        assert(0 && "Unknown primitive type!");
     }
 }
 
 }  // namespace render
 }  // namespace
 
-void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shader) {
+void draw_primitives(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shader, PRIMITIVE_TYPE type) {
     assert(framebuffer && data && shader);
     using namespace render;
 
@@ -344,7 +401,15 @@ void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shad
             for(int j = 0; j < 3; j++) {
                 tr_v2fs[j] = v2fs[indexes[i + j]];
             }
-            rasterize(framebuffer, tr_v2fs, shader);
+            if(num == 3) {
+                rasterize(framebuffer, tr_v2fs, shader, type, 0);
+            } else if(i == 0) {
+                rasterize(framebuffer, tr_v2fs, shader, type, 4);
+            } else if(i == num - 3) {
+                rasterize(framebuffer, tr_v2fs, shader, type, 1);
+            } else {
+                rasterize(framebuffer, tr_v2fs, shader, type, 1 | 4);
+            }
         }
     }
 

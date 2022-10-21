@@ -5,6 +5,10 @@
 #include "maths.h"
 #include "shader.h"
 
+enum PRIMITIVE_TYPE {
+    TRIANGLE, TRIANGLE_WIRE_FRAME
+};
+
 class vbo_t {
    public:
     vbo_t(int _sizeof_element, int _count);
@@ -57,7 +61,6 @@ class framebuffer_t {
     float* depth_buffer;
 };
 
-void draw_triangle(framebuffer_t* framebuffer, const vbo_t* data,
-                   shader_t* shader);
+void draw_primitives(framebuffer_t* framebuffer, const vbo_t* data, shader_t* shader, PRIMITIVE_TYPE type = TRIANGLE);
 
 #endif  // RASTERIZER_GRAPHIC_H_

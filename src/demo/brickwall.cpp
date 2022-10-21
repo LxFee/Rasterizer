@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
             if(i == 0) wall.set_position(vec3(0, 0, 0));
             else wall.set_position(vec3(0, 0, 1 + (i - 1) * 2));
             blin_uniforms.model_matrix = wall.get_model_matrix();
-            draw_triangle(&framebuffer, wall.get_vbo(), &blin_shader);
+            draw_primitives(&framebuffer, wall.get_vbo(), &blin_shader);
         }
         gui(window);
         window_draw_buffer(window, &framebuffer);

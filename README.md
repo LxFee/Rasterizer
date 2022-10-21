@@ -35,7 +35,7 @@
 ## Todo
 
 - [ ] 添加直线模式
-- [ ] 添加线框模式
+- [x] 添加线框模式
 - [x] 支持framebuffer
 - [ ] 添加demo：shadow map
 - [ ] 实现mipmapping

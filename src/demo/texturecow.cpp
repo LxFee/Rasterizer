@@ -11,6 +11,7 @@ const int w = 800, h = 600;
 static const float CLICK_DELAY = 0.25f;
 static const vec3 CAMERA_POSITION(0, 0, 15);
 static const vec3 CAMERA_TARGET(0, 0, 0);
+bool wire_frame;
 
 typedef struct {
     /* orbit */
@@ -123,6 +124,7 @@ void gui(window_t* window) {
     int id = 0;
     ImGui::SetCurrentContext(ctx);
     ImGui::Begin("Info");
+    ImGui::Checkbox("Wire Frame", &wire_frame);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
@@ -199,8 +201,11 @@ int main(int argc, char *argv[]) {
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
-
-        draw_triangle(&framebuffer, cow.get_vbo(), &blin_shader);
+        if(wire_frame) {
+            draw_primitives(&framebuffer, cow.get_vbo(), &blin_shader, TRIANGLE_WIRE_FRAME);
+        } else {
+            draw_primitives(&framebuffer, cow.get_vbo(), &blin_shader);
+        }
         gui(window);
         window_draw_buffer(window, &framebuffer);
         clear_record(&record);
