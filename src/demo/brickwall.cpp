@@ -2,14 +2,17 @@
 #include <iostream>
 #include <string>
 
-#include "api.h"
-#include "blin_shader.h"
+#include "core/api.h"
+#include "shaders/blin_shader.h"
+#include "utils/MsgQue.h"
+#include "utils/GStorage.h"
+
 
 using namespace std;
 
 const int window_width = 640, window_height = 640;
 static const float CLICK_DELAY = 0.25f;
-vec3 CAMERA_POSITION(0, 0, 5);
+vec3 CAMERA_POSITION(0, 0, 1.3176002502);
 vec3 CAMERA_TARGET(0, 0, 0);
 
 typedef struct {
@@ -120,6 +123,7 @@ void clear_record(record_t *record) {
 vec4 background(0.0f);
 vec3 wall_rotation;
 vec3 light_pos(1.0f);
+pinned_camera_t camera(1.0 * window_width / window_height, PROJECTION_MODE_PERSPECTIVE);
 
 void gui(window_t* window) {
     if(!window) return;
@@ -130,6 +134,11 @@ void gui(window_t* window) {
     ImGui::Begin("Info");
     ImGui::SliderFloat3("Light positon", light_pos.data(), -5, 5);
     ImGui::SliderFloat3("Wall rotation", wall_rotation.data(), -180, 180);
+    bool &flag = *GStorage<bool>::getInstance().getPtr("show");
+    ImGui::Checkbox("show", &flag);
+    auto eye = camera.get_position();
+    auto at = camera.get_target();
+    ImGui::Text("EYE: %.10f %.10f %.10f", eye.x(), eye.y(), eye.z());
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 }
@@ -139,7 +148,7 @@ void gui(window_t* window) {
 int main(int argc, char *argv[]) {
     /* platform setup */
     platform_initialize();
-
+    GStorage<bool>::getInstance().registerItem("show", false);
     /* window & input setup */
     window_t *window = window_create("main window!", window_width, window_height);
     record_t record;
@@ -162,7 +171,6 @@ int main(int argc, char *argv[]) {
     t_normal.set_interp_mode(SAMPLE_INTERP_MODE_NEAREST);
 
     /* camera setup */
-    pinned_camera_t camera(1.0 * window_width / window_height, PROJECTION_MODE_PERSPECTIVE);
     camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
 
     /* lights */
@@ -192,7 +200,11 @@ int main(int argc, char *argv[]) {
     while(!window_should_close(window)) {
         framebuffer.clear_color(background);
         framebuffer.clear_depth(1.0f);
-        // camera.set_transform(CAMERA_POSITION, CAMERA_TARGET);
+        while(!MsgQue::getInstance().empty()) {
+            printf("%s\n", MsgQue::getInstance().front().c_str());
+            MsgQue::getInstance().pop();
+        }
+        printf("\n");
 
         update_camera(window, &camera, &record);
         wall.set_rotation(wall_rotation);

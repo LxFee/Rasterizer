@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "core/mesh.h"
 
 #include <fstream>
 #include <iostream>

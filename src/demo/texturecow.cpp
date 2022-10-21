@@ -2,8 +2,8 @@
 #include <iostream>
 #include <string>
 
-#include "api.h"
-#include "blin_shader.h"
+#include "core/api.h"
+#include "shaders/blin_shader.h"
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-#include "image.h"
+#include "core/image.h"
 
 #include <cassert>
 #include <cstring>

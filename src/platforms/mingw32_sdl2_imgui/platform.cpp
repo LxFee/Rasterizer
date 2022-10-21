@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "core/platform.h"
 
 #include <cassert>
 #include <iostream>
@@ -6,7 +6,7 @@
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_opengl.h"
-#include "image.h"
+#include "core/image.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"

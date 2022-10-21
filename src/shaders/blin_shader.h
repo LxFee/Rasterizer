@@ -1,7 +1,7 @@
 #ifndef BLINSHADER_H_
 #define BLINSHADER_H_
 
-#include "api.h"
+#include "core/api.h"
 
 struct blin_point_light_t {
     vec3 position;

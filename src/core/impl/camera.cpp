@@ -1,9 +1,10 @@
-#include "camera.h"
+#include "core/camera.h"
 
 #include <cassert>
 #include <cmath>
 
-#include "maths.h"
+#include "core/maths.h"
+#include "utils/MsgQue.h"
 
 /** camera_t **/
 camera_t::camera_t(float _aspect, projection_mode_t _mode)
@@ -44,8 +45,8 @@ const vec3 UP(0.0f, 1.0f, 0.0f);
 
 vec3 calculate_pan(vec3 from_camera, float fov, motion_t motion) {
     vec3 forward = from_camera.normalized();
-    vec3 left = cross(UP, forward);
-    vec3 up = cross(forward, left);
+    vec3 left = cross(UP, forward).normalized();
+    vec3 up = cross(forward, left).normalized();
 
     float distance = from_camera.length();
     float factor = distance * (float)tan(radian(fov / 2.0f)) * 2.0f;
@@ -98,6 +99,7 @@ void pinned_camera_t::update_transform(motion_t motion) {
 }
 
 vec3 pinned_camera_t::get_position() const { return position; }
+vec3 pinned_camera_t::get_target() const { return target; }
 
 const mat4 pinned_camera_t::get_view_matrix() const {
     return lookat(position, target, pinned_camera::UP);

@@ -1,9 +1,9 @@
-#include "texture.h"
+#include "core/texture.h"
 
 #include <cassert>
 #include <iostream>
 
-#include "maths.h"
+#include "core/maths.h"
 
 namespace {
 vec4 bilinear(vec4 i00, vec4 i10, vec4 i01, vec4 i11, float u, float v) {

@@ -1,4 +1,4 @@
-#include "maths.h"
+#include "core/maths.h"
 
 #include <cassert>
 #include <cstdio>

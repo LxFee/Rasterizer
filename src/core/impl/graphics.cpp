@@ -1,10 +1,13 @@
-#include "graphics.h"
+#include "core/graphics.h"
 
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <memory>
 #include <vector>
+#include "utils/MsgQue.h"
+#include "utils/GStorage.h"
+
 
 vbo_t::vbo_t(int _sizeof_element, int _count)
     : sizeof_element(_sizeof_element), count(_count), raw_data(NULL) {
@@ -213,14 +216,11 @@ bool back_face(vec2 p[3]) {
     return det < 0.0f;
 }
 
-float calc_line_distance(const vec2& v1, const vec2& v2, const vec2& point) {
-    return (double)point.x() * (v1.y() - v2.y()) +
-           (double)point.y() * (v2.x() - v1.x()) +
-           ((double)v1.x() * v2.y() - (double)v2.x() * v1.y());
+float calc_line_distance(const vec2& a, const vec2& b, const vec2& c) {    
+    return (c.y() - a.y()) * (b.x() - a.x()) - (c.x() - a.x()) * (b.y() - a.y());
 }
 
-void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3],
-               shader_t* shader) {
+void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shader) {
     int width = framebuffer->get_width();
     int height = framebuffer->get_height();
     int sizeof_varyings = shader->get_sizeof_varyings();
@@ -240,12 +240,10 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3],
     if(back_face(screen_point)) return;
 
     float pre_calc[3];
-    pre_calc[0] =
-        calc_line_distance(screen_point[1], screen_point[2], screen_point[0]);
-    pre_calc[1] =
-        calc_line_distance(screen_point[2], screen_point[0], screen_point[1]);
-    pre_calc[2] =
-        calc_line_distance(screen_point[0], screen_point[1], screen_point[2]);
+    pre_calc[0] = calc_line_distance(screen_point[1], screen_point[2], screen_point[0]);
+    pre_calc[1] = calc_line_distance(screen_point[2], screen_point[0], screen_point[1]);
+    pre_calc[2] = calc_line_distance(screen_point[0], screen_point[1], screen_point[2]);
+
     for(int i = 0; i < 3; i++) {
         if(fabs(pre_calc[i]) < EPSILON) return;
     }
@@ -258,21 +256,33 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3],
 
     v2f_t v2f(sizeof_varyings);
 
+    MsgQue::getInstance().push("1: (%f %f)", screen_point[0].x(), screen_point[0].y());
+    MsgQue::getInstance().push("2: (%f %f)", screen_point[1].x(), screen_point[1].y());
+    MsgQue::getInstance().push("3: (%f %f)", screen_point[2].x(), screen_point[2].y());
+
+    MsgQue::getInstance().loop_begin();
     for(int i = bbox.yl; i <= bbox.yr; i++) {
         for(int j = bbox.xl; j <= bbox.xr; j++) {
+            
             // shade
             vec2 p(j + 0.5f, i + 0.5f);
-            float alpha =
-                calc_line_distance(screen_point[1], screen_point[2], p) /
-                pre_calc[0];
-            float beta =
-                calc_line_distance(screen_point[2], screen_point[0], p) /
-                pre_calc[1];
-            float gamma =
-                calc_line_distance(screen_point[0], screen_point[1], p) /
-                pre_calc[2];
+            float alpha = calc_line_distance(screen_point[1], screen_point[2], p) / pre_calc[0];
+            float beta  = calc_line_distance(screen_point[2], screen_point[0], p) / pre_calc[1];
+            float gamma = calc_line_distance(screen_point[0], screen_point[1], p) / pre_calc[2];
 
-            if(alpha < 0.0f || beta < 0.0f || gamma < 0.0f) continue;
+            float aa = calc_line_distance(screen_point[1], screen_point[2], p);
+            float bb = calc_line_distance(screen_point[2], screen_point[0], p);
+            float cc = calc_line_distance(screen_point[0], screen_point[1], p);
+
+            if(alpha < 0.0f || beta < 0.0f || gamma < 0.0f) {
+                if(i == bbox.xr - (j - bbox.xl)) {
+                    MsgQue::getInstance().once_begin();
+                        MsgQue::getInstance().push("p: (%f %f)", p.x(), p.y());
+                    MsgQue::getInstance().once_end();
+                    framebuffer->set_color(j, i, vec4(0.0, 1.0, 0.0, 1.0));
+                }
+                continue;
+            }
 
             float depth = alpha * tr_z[0] + beta * tr_z[1] + gamma * tr_z[2];
             depth = (depth + 1.0f) * 0.5f;
@@ -285,9 +295,11 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3],
             vec4 color = shader->fragment_shader(v2f.data, discord);
             if(discord) continue;
             framebuffer->set_depth(j, i, depth);
-            framebuffer->set_color(j, i, color);
+            framebuffer->set_color(j, i, vec4(1.0, 0.0, 0.0, 1.0));
         }
     }
+    MsgQue::getInstance().loop_end();
+
 }
 }  // namespace render
 }  // namespace
