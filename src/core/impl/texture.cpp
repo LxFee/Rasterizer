@@ -19,15 +19,13 @@ void texture_t::ldr_image_to_texture(image_t* image) {
     if(channels == 3) {
         for(int i = 0; i < height; i++) {
             for(int j = 0; j < width; j++) {
-                buffer[j + i * width] =
-                    rgbpack2rgba(image_data + (j + i * width) * 3);
+                buffer[j + i * width] = rgbpack2rgba(image_data + (j + i * width) * 3);
             }
         }
     } else if(channels == 4) {
         for(int i = 0; i < height; i++) {
             for(int j = 0; j < width; j++) {
-                buffer[j + i * width] =
-                    rgbapack2rgba(image_data + (j + i * width) * 4);
+                buffer[j + i * width] = rgbapack2rgba(image_data + (j + i * width) * 4);
             }
         }
     }

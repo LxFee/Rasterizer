@@ -10,6 +10,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
+#include "utils/EventManager.h"
 
 struct window {
     /* sdl data */
@@ -18,14 +19,12 @@ struct window {
     SDL_Texture *surface;
     void *pixels;
     int width, height, pitch;
+    int window_id;
     /* imgui data */
     ImGuiContext *ctx;
     /* common data */
     int should_close;
-    char keys[KEY_NUM];
-    char buttons[BUTTON_NUM];
-    callbacks_t callbacks;
-    void *userdata;
+    int keys[300];
 };
 
 namespace {
@@ -123,59 +122,51 @@ bool gui_process_event(SDL_Event *event) {
     return in_gui;
 }
 
-void handle_key_event(window_t *window, int virtual_key, char pressed) {
-    callbacks_t callbacks = window->callbacks;
-    keycode_t key;
-    switch(virtual_key) {
-        case SDLK_a:
-            key = KEY_A;
-            break;
-        case SDLK_d:
-            key = KEY_D;
-            break;
-        case SDLK_s:
-            key = KEY_S;
-            break;
-        case SDLK_w:
-            key = KEY_W;
-            break;
-        case SDLK_SPACE:
-            key = KEY_SPACE;
-            break;
-        default:
-            key = KEY_NUM;
-    }
-    if(key < KEY_NUM) {
-        window->keys[key] = pressed;
-        if(!callbacks.key_callback) return;
-        callbacks.key_callback(window, key, pressed);
-    }
+void handle_key_event(window_t *window, int virtual_key, int status) {
+    window->keys[virtual_key] = status;
+    EventManager::responseEvent(window->window_id | virtual_key | status, window);
+    EventManager::responseEvent(window->window_id | virtual_key | Events::KEYBOARD_TRIGGER, window, status);
+    EventManager::responseEvent(window->window_id | Events::KEYBOARD_ANYKEY | status, window, virtual_key);
+    EventManager::responseEvent(window->window_id | Events::KEYBOARD_ANYKEY | Events::KEYBOARD_TRIGGER, window, virtual_key, status);
+    
+    // global
+    EventManager::responseEvent(virtual_key | status, window);
+    EventManager::responseEvent(virtual_key | Events::KEYBOARD_TRIGGER, window, status);
+    EventManager::responseEvent(Events::KEYBOARD_ANYKEY | status, window, virtual_key);
+    EventManager::responseEvent(Events::KEYBOARD_ANYKEY | Events::KEYBOARD_TRIGGER, window, virtual_key, status);
 }
 
-void handle_button_event(window_t *window, int xbutton, char pressed) {
-    callbacks_t callbacks = window->callbacks;
-    button_t button;
+void handle_button_event(window_t *window, int xbutton, int status) {
+    int button;
     switch(xbutton) {
         case SDL_BUTTON_LEFT:
-            button = BUTTON_L;
+            button = Events::MOUSE_BUTTON_LEFT;
             break;
         case SDL_BUTTON_RIGHT:
-            button = BUTTON_R;
+            button = Events::MOUSE_BUTTON_RIGHT;
             break;
         default:
-            button = BUTTON_NUM;
+            button = -1;
     }
-    if(button < BUTTON_NUM) {
-        window->buttons[button] = pressed;
-        if(!callbacks.button_callback) return;
-        callbacks.button_callback(window, button, pressed);
+    if(button != -1) {
+        EventManager::responseEvent(window->window_id | button | status, window);
+        EventManager::responseEvent(window->window_id | Events::MOUSE_BUTTON_ANY | status, window, button);
+        EventManager::responseEvent(window->window_id | button | Events::MOUSE_BUTTON_TRIGGER, window, status);
+        EventManager::responseEvent(window->window_id | Events::MOUSE_BUTTON_ANY | Events::MOUSE_BUTTON_TRIGGER, window, button, status);
+
+        // global
+        EventManager::responseEvent(button | status, window);
+        EventManager::responseEvent(Events::MOUSE_BUTTON_ANY | status, window, button);
+        EventManager::responseEvent(button | Events::MOUSE_BUTTON_TRIGGER, window, status);
+        EventManager::responseEvent(Events::MOUSE_BUTTON_ANY | Events::MOUSE_BUTTON_TRIGGER, window, button, status);
     }
 }
 
 void handle_wheel_event(window_t *window, float offset) {
-    callbacks_t callbacks = window->callbacks;
-    if(!callbacks.scroll_callback) return;
-    callbacks.scroll_callback(window, offset);
+    EventManager::responseEvent(window->window_id | Events::MOUSE_SCROLL, window, offset);
+
+    // global
+    EventManager::responseEvent(Events::MOUSE_SCROLL, window, offset);
 }
 }  // namespace
 
@@ -194,6 +185,7 @@ void platform_terminate(void) {
 }
 
 window_t *window_create(const char *title, int width, int height) {
+    static int window_id = 0;
     window_t *window;
 
     assert(width > 0 && height > 0);
@@ -224,11 +216,22 @@ window_t *window_create(const char *title, int width, int height) {
     window->pitch = pitch;
     window->width = width;
     window->height = height;
+    window->window_id = Events::WINDOW_ID * (++window_id);
     windows().push_back(window);
 
     gui_create_context(window);
 
     return window;
+}
+
+void window_query_size(window_t* window, int* width, int* height) {
+    if(!window) return ;
+    if(width) {
+        *width = window->width;
+    }
+    if(height) {
+        *height = window->height;
+    }
 }
 
 void window_destroy(window_t *window) {
@@ -245,24 +248,24 @@ void window_destroy(window_t *window) {
     }
 }
 
+void window_close(window_t* window) {
+    if(!window) return ;
+    window->should_close = true;
+}
+
 bool window_should_close(window_t *window) {
     if(!window) return true;
     return window->should_close;
 }
 
-void window_set_userdata(window_t *window, void *userdata) {
-    if(!window) return;
-    window->userdata = userdata;
-}
-
-void *window_get_userdata(window_t *window) {
-    if(!window) return NULL;
-    return window->userdata;
-}
-
 void *window_get_gui_context(window_t *window) {
     if(!window) return NULL;
     return window->ctx;
+}
+
+int window_get_id(window_t *window) {
+    if(!window) return -1;
+    return window->window_id;
 }
 
 void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
@@ -305,52 +308,49 @@ void input_poll_events(void) {
         }
         switch(event.type) {
             case SDL_MOUSEBUTTONDOWN:
-                handle_button_event(window, event.button.button, 1);
+                handle_button_event(window, event.button.button, Events::MOUSE_BUTTON_PRESS);
                 break;
             case SDL_MOUSEBUTTONUP:
-                handle_button_event(window, event.button.button, 0);
+                handle_button_event(window, event.button.button, Events::MOUSE_BUTTON_RELEASE);
                 break;
             case SDL_MOUSEWHEEL:
                 handle_wheel_event(window, event.wheel.preciseY);
                 break;
             case SDL_KEYDOWN:
-                handle_key_event(window, event.key.keysym.sym, 1);
+                handle_key_event(window, event.key.keysym.sym, Events::KEYBOARD_PRESS);
                 break;
             case SDL_KEYUP:
-                handle_key_event(window, event.key.keysym.sym, 0);
+                handle_key_event(window, event.key.keysym.sym, Events::KEYBOARD_RELEASE);
                 break;
         }
     }
 }
 
-int input_key_pressed(window_t *window, keycode_t key) {
+int input_key_pressed(window_t *window, int key) {
     if(!window) return -1;
-    assert(key >= 0 && key < KEY_NUM);
+    assert(key >= 0 && key < 300);
     return window->keys[key];
 }
 
-int input_button_pressed(window_t *window, button_t button) {
-    if(!window) return -1;
-    assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button];
-}
-
-void input_query_cursor(window_t *window, float *xpos, float *ypos) {
-    if(!window) return;
-    if(window->window == SDL_GetMouseFocus()) {
+bool input_query_cursor(window_t *window, float *xpos, float *ypos) {
+    if(!window) {
         int x, y;
         SDL_GetMouseState(&x, &y);
         *xpos = (float)x;
         *ypos = (float)y;
+        return true;
+    }
+    else if(window->window == SDL_GetMouseFocus()) {
+        int x, y;
+        SDL_GetMouseState(&x, &y);
+        *xpos = (float)x;
+        *ypos = (float)y;
+        return true;
     } else {
         *xpos = -1;
         *ypos = -1;
+        return false;
     }
-}
-
-void input_set_callbacks(window_t *window, callbacks_t callbacks) {
-    if(!window) return;
-    window->callbacks = callbacks;
 }
 
 /* misc platform functions */

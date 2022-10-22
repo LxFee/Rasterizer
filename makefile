@@ -16,6 +16,7 @@ CORE_SOURCES = $(wildcard $(D_SRC)/core/impl/*.cpp)
 CORE_SOURCES += $(wildcard $(D_SRC)/platforms/mingw32_sdl2_imgui/*.cpp)
 
 SHADER_SOURCES = $(wildcard $(D_SRC)/shaders/*.cpp)
+SHADER_SOURCES += $(wildcard $(D_SRC)/utils/impl/*.cpp)
 
 SOURCES = $(DEMO_SOURCES) $(CORE_SOURCES) $(SHADER_SOURCES)
 

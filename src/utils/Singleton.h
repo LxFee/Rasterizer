@@ -4,14 +4,14 @@
 template <typename T>
 class Singleton {
 public:
+protected:
+    Singleton() = default;
+    virtual ~Singleton() = default;
+
     static T& getInstance() {
         static T instance;
         return instance;
     }
-
-protected:
-    Singleton() = default;
-    virtual ~Singleton() = default;
 };
 
 #endif  // UTILS_SINGLETION_H_

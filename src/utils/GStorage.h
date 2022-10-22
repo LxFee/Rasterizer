@@ -8,59 +8,54 @@
 
 #include <map>
 #include <string>
+#include "Singleton.h"
 
-template <typename T>
-class GStorage : public Singleton<GStorage<T>> {
-    friend class Singleton<GStorage<T>>;
-
+template <typename K, typename V>
+class GStorage : public Singleton<GStorage<K, V>> {
+    friend class Singleton<GStorage<K, V>>;
 public:
-    bool registerItem(const std::string& uniqueID, const T& item);
+    template <class... Args>
+    static bool registerItem(const K& uniqueID, const Args&... args) {
+        auto& instance = getInstance();
+        auto& directory = instance.directory;
 
-    bool registerItem(const std::string& uniqueID);
-
-    bool unregisterItem(const std::string& uniqueID);
-
-    T* getPtr(const std::string& uniqueID);
-
-private:
-    std::map<std::string, T> directory;
-};
-
-template <typename T>
-bool GStorage<T>::registerItem(const std::string& uniqueID, const T& item) {
-    auto target = directory.find(uniqueID);
-    if(target != directory.end()) {
-        target->second = item;
-        return false;
+        auto target = directory.find(uniqueID);
+        if(target != directory.end()) {
+            target->second = V(args...);
+            return false;
+        }
+        directory.emplace(uniqueID, V(args...));
+        return true;
     }
 
-    directory[uniqueID] = item;
-    return true;
-}
+    static bool unregisterItem(const K& uniqueID) {
+        auto& instance = getInstance();
+        auto& directory = instance.directory;
 
-template <typename T>
-bool GStorage<T>::registerItem(const std::string& uniqueID) {
-    auto target = directory.find(uniqueID);
-    if(target != directory.end()) return false;
+        auto target = directory.find(uniqueID);
+        if(target != directory.end()) return false;
+        directory[uniqueID];
+        return true;
+    }
 
-    directory[uniqueID];
-    return true;
-}
+    static V* getPtr(const K& uniqueID) {
+        auto& instance = getInstance();
+        auto& directory = instance.directory;
 
-template <typename T>
-bool GStorage<T>::unregisterItem(const std::string& uniqueID) {
-    auto target = directory.find(uniqueID);
-    if(target == directory.end()) return false;
+        auto target = directory.find(uniqueID);
+        if(target == directory.end()) return NULL;
+        return &(target->second);
+    }
 
-    directory.erase(target);
-    return true;
-}
+private:
+    static GStorage<K, V>& getInstance() {
+        return Singleton<GStorage<K, V>>::getInstance();
+    }
 
-template <typename T>
-T* GStorage<T>::getPtr(const std::string& uniqueID) {
-    auto target = directory.find(uniqueID);
-    if(target == directory.end()) return NULL;
-    return &(target->second);
-}
+    std::map<K, V> directory;
+};
+
+template <typename V>
+using GStrStorage = GStorage<std::string, V>;
 
 #endif  // UTILS_GStrage_H_

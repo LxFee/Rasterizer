@@ -224,8 +224,7 @@ inline int sgn(int x) {
 }
 
 inline const vec4 rgbapack2rgba(const uchar* color) {
-    return vec4(color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f,
-                color[3] / 255.0f);
+    return vec4(color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f, color[3] / 255.0f);
 }
 
 inline const vec4 rgbpack2rgba(const uchar* color) {

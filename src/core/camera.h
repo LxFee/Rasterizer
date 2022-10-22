@@ -35,24 +35,5 @@ class camera_t {
     float zoom, aspect;
     projection_mode_t mode;
 };
-typedef struct {
-    vec2 orbit;
-    vec2 pan;
-    float dolly;
-} motion_t;
-
-class pinned_camera_t : public camera_t {
-   public:
-    pinned_camera_t(float _aspect, projection_mode_t _mode);
-    void set_transform(vec3 _position, vec3 _target);
-    void update_transform(motion_t motion);
-    vec3 get_position() const;
-    vec3 get_target() const;
-    const mat4 get_view_matrix() const override;
-
-   private:
-    vec3 position;
-    vec3 target;
-};
 
 #endif  // RASTERIZER_CAMERA_H_
