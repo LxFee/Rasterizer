@@ -63,8 +63,7 @@ image_t::image_t(const std::string &filename)
     std::string ext = get_ext_name(filename);
     if(ext == "png" || ext == "jpg") {
         format = FORMAT_LDR;
-        succeed =
-            stb_load_image(filename, width, height, channels, &ldr_buffer);
+        succeed = stb_load_image(filename, width, height, channels, &ldr_buffer);
     }
 }
 

@@ -192,14 +192,9 @@ window_t *window_create(const char *title, int width, int height) {
 
     SDL_WindowFlags window_flags =
         (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window *sdl_window =
-        SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED,
-                         SDL_WINDOWPOS_UNDEFINED, width, height, window_flags);
-    SDL_Renderer *renderer = SDL_CreateRenderer(
-        sdl_window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-    SDL_Texture *surface =
-        SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRA8888,
-                          SDL_TEXTUREACCESS_STREAMING, width, height);
+    SDL_Window *sdl_window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, window_flags);
+    SDL_Renderer *renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    SDL_Texture *surface = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
     int *pixels, pitch;
     SDL_LockTexture(surface, NULL, (void **)&pixels, &pitch);
 

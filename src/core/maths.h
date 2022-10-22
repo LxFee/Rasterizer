@@ -202,20 +202,12 @@ inline float clamp(float x, float mi, float mx) {
     return x;
 }
 
-inline unsigned int packRGBA8888(const vec4 col) {
-    int r = static_cast<int>(255 * clamp(col.r(), 0.0, 1.0));
-    int g = static_cast<int>(255 * clamp(col.g(), 0.0, 1.0));
-    int b = static_cast<int>(255 * clamp(col.b(), 0.0, 1.0));
-    int a = static_cast<int>(255 * clamp(col.a(), 0.0, 1.0));
-    return a + (r << 8) + (g << 16) + (b << 24);
-}
-
 inline uint rgba2rgbapack(const vec4& col) {
     uint r = static_cast<uint>(255 * clamp(col.r(), 0.0, 1.0));
     uint g = static_cast<uint>(255 * clamp(col.g(), 0.0, 1.0));
     uint b = static_cast<uint>(255 * clamp(col.b(), 0.0, 1.0));
     uint a = static_cast<uint>(255 * clamp(col.a(), 0.0, 1.0));
-    return a + (r << 8) + (g << 16) + (b << 24);
+    return (r << 24) | (g << 16) | (b << 8) | a;
 }
 
 inline int sgn(int x) {
@@ -231,7 +223,9 @@ inline const vec4 rgbpack2rgba(const uchar* color) {
     return vec4(color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f, 1.0f);
 }
 
-inline float float_srgb2linear(float value) { return (float)pow(value, 2.2); }
+inline float float_srgb2linear(float value) { 
+    return (float)pow(value, 2.2); 
+}
 
 inline float float_linear2srgb(float value) {
     return (float)pow(value, 1 / 2.2);
