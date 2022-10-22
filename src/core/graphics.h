@@ -32,6 +32,7 @@ class vbo_t {
     char* raw_data;
 };
 
+// 颜色格式：从低位到高位分别为RGBA
 class framebuffer_t {
    public:
     framebuffer_t(int _width, int _height);

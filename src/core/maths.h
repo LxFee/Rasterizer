@@ -207,7 +207,7 @@ inline uint rgba2rgbapack(const vec4& col) {
     uint g = static_cast<uint>(255 * clamp(col.g(), 0.0, 1.0));
     uint b = static_cast<uint>(255 * clamp(col.b(), 0.0, 1.0));
     uint a = static_cast<uint>(255 * clamp(col.a(), 0.0, 1.0));
-    return (r << 24) | (g << 16) | (b << 8) | a;
+    return r | (g << 8) | (b << 16) | (a << 24);
 }
 
 inline int sgn(int x) {

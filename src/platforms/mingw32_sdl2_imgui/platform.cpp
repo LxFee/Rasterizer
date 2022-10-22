@@ -172,8 +172,7 @@ void handle_wheel_event(window_t *window, float offset) {
 
 /* platform initialization */
 void platform_initialize(void) {
-    assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER |
-                    SDL_INIT_GAMECONTROLLER) == 0);
+    assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) == 0);
 }
 
 void platform_terminate(void) {
@@ -194,7 +193,7 @@ window_t *window_create(const char *title, int width, int height) {
         (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_Window *sdl_window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, window_flags);
     SDL_Renderer *renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-    SDL_Texture *surface = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    SDL_Texture *surface = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, width, height);
     int *pixels, pitch;
     SDL_LockTexture(surface, NULL, (void **)&pixels, &pitch);
 
