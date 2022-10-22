@@ -58,8 +58,24 @@ void pinned_camera_t::set_transform(vec3 _position, vec3 _target) {
     target = _target;
 }
 
-void pinned_camera_t::update_transform() {
+void pinned_camera_t::update_transform(window_t* window) {
     pinned_camera_record_t& record = get_record();
+    float cursorX, cursorY;
+    input_query_cursor(NULL, &cursorX, &cursorY);
+    vec2 cursorPos(cursorX, cursorY);
+    int width, height;
+    window_query_size(window, &width, &height);
+    
+    if(record.isOrbiting) {
+        vec2 posDelta = (cursorPos - record.orbitPos) / vec2(width, height);
+        record.orbitDelta = record.orbitDelta + posDelta;
+        record.orbitPos = cursorPos;
+    }
+    if(record.isPanning) {
+        vec2 posDelta = (cursorPos - record.panPos) / vec2(width, height);
+        record.panDelta = record.panDelta + posDelta;
+        record.panPos = cursorPos;
+    }
 
     motion_t motion;
     motion.orbit = record.orbitDelta;
