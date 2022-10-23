@@ -258,7 +258,8 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shade
     if(area == 0) return ;
 
     // 背面剔除
-    if(area < 0) return ;
+    int backface = sgn(area);
+    if(backface < 0) return ;
 
     bbox_t bbox = calc_bbox(v[0], v[1], v[2]);
     bbox.xl = std::max(bbox.xl, 0);
@@ -305,12 +306,13 @@ void rasterize(framebuffer_t* framebuffer, const v2f_t* v2fs[3], shader_t* shade
             for(int j = bbox.xl; j <= bbox.xr; j++) {
                 // shade
                 bool overlaps = true;
-                int da = edge_function(v[1], v[2], vec2i(j, i));
-                int db = edge_function(v[2], v[0], vec2i(j, i));
-                int dc = edge_function(v[0], v[1], vec2i(j, i));
-                overlaps &= (da == 0 ? ((edge0.y == 0 && edge0.x > 0) ||  edge0.y > 0) : (sgn(da) * sgn(area) > 0)); 
-                overlaps &= (db == 0 ? ((edge1.y == 0 && edge1.x > 0) ||  edge1.y > 0) : (sgn(db) * sgn(area) > 0)); 
-                overlaps &= (dc == 0 ? ((edge2.y == 0 && edge2.x > 0) ||  edge2.y > 0) : (sgn(dc) * sgn(area) > 0)); 
+                vec2i P(j, i);
+                int da = edge_function(v[1], v[2], P);
+                int db = edge_function(v[2], v[0], P);
+                int dc = edge_function(v[0], v[1], P);
+                overlaps &= (da == 0 ? ((edge0.y == 0 && backface * edge0.x < 0) || backface * edge0.y < 0) : (backface * sgn(da) > 0)); 
+                overlaps &= (db == 0 ? ((edge1.y == 0 && backface * edge1.x < 0) || backface * edge1.y < 0) : (backface * sgn(db) > 0)); 
+                overlaps &= (dc == 0 ? ((edge2.y == 0 && backface * edge2.x < 0) || backface * edge2.y < 0) : (backface * sgn(dc) > 0)); 
                 if(overlaps) shade(j, i);
             }
         }
