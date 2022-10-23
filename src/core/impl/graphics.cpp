@@ -138,7 +138,7 @@ void interpolation_v2f(const v2f_t* a, const v2f_t* b, const v2f_t* c, vec3 uvw,
     }
 }
 
-void clip_aganst_panels(v2f_t* v2fs[], int indexes[], int& num) {
+int clip_aganst_panels(v2f_t* v2fs[], int indexes[]) {
     const static vec4 planes[6]{
         vec4(0, 0, 1, 1),   // near
         vec4(0, 0, -1, 1),  // far
@@ -185,13 +185,14 @@ void clip_aganst_panels(v2f_t* v2fs[], int indexes[], int& num) {
         input.swap(output);
         output.clear();
     }
-    num = 0;
+    int num = 0;
     for(int i = 1; i + 1 < input.size(); i++) {
         indexes[num] = input[0];
         indexes[num + 1] = input[i];
         indexes[num + 2] = input[i + 1];
         num += 3;
     }
+    return num;
 }
 
 struct vec2i {
@@ -396,8 +397,7 @@ void draw_primitives(framebuffer_t* framebuffer, const vbo_t* data, shader_t* sh
             vec4 position = shader->vertex_shader(data->at(ind), v2fs[j]->data);
             v2fs[j]->position = position;
         }
-        int num;
-        clip_aganst_panels(v2fs, indexes, num);
+        int num = clip_aganst_panels(v2fs, indexes);
         const v2f_t* tr_v2fs[3];
         for(int i = 0; i < num; i += 3) {
             for(int j = 0; j < 3; j++) {
