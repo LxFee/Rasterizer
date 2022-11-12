@@ -31,7 +31,8 @@ TARGETS = $(basename $(notdir $(DEMO_SOURCES)))
 all : $(TARGETS)
 
 $(TARGETS) : $(OBJECTS)
-	$(CC) $(CORE_OBJECTS) $(SHADER_OBJECTS) $(filter %$@.o, $^) $(addprefix -L,$(D_LIB)) $(LIB:%=-l%) $(LDFLAGS) -o $@
+	mkd ./bin
+	$(CC) $(CORE_OBJECTS) $(SHADER_OBJECTS) $(filter %$@.o, $^) $(addprefix -L,$(D_LIB)) $(LIB:%=-l%) $(LDFLAGS) -o bin/$@
 
 $(OBJECTS) : $(D_TMP)/%.o : %.cpp
 	@mkd $(dir $@)

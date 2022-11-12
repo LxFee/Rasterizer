@@ -2,5 +2,6 @@
 *.d
 *.exe
 tmp/*
+bin/*
 imgui.ini
 .vscode
