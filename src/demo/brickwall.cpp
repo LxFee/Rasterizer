@@ -21,7 +21,6 @@ vec4 background(0.0f);
 vec3 wall_rotation;
 vec3 light_pos(1.0f);
 
-
 int main(int argc, char *argv[]) {
     /* platform setup */
     platform_initialize();
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]) {
     blin_uniforms.normal_texture = &t_normal;
     blin_uniforms.num_of_point_lights = 1;
     blin_uniforms.point_lights = point_lights;
-    blin_uniforms.model_matrix = wall.get_model_matrix();
+    blin_uniforms.model_matrix = euler_YXZ_rotate(wall_rotation);
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.proj_matrix = camera.get_projection_matrix();
     blin_uniforms.view_matrix = camera.get_view_matrix();
@@ -71,17 +70,12 @@ int main(int argc, char *argv[]) {
 
         camera.update_transform(window);
 
-        wall.set_rotation(wall_rotation);
         blin_uniforms.camera_pos = camera.get_position();
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
+        blin_uniforms.model_matrix = euler_YXZ_rotate(wall_rotation);
         point_lights[0].position = light_pos;
-        for(int i = 0; i < 1; i++) {
-            if(i == 0) wall.set_position(vec3(0, 0, 0));
-            else wall.set_position(vec3(0, 0, 1 + (i - 1) * 2));
-            blin_uniforms.model_matrix = wall.get_model_matrix();
-            draw_primitives(&framebuffer, wall.get_vbo(), &blin_shader);
-        }
+        draw_primitives(&framebuffer, wall.get_vbo(), &blin_shader);
         gui(window);
         window_draw_buffer(window, &framebuffer);
         input_poll_events();

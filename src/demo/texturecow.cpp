@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     /* mesh setup */
     mesh_t cow("assets/model/cow/cow.obj");
-    cow.set_size(vec3(5.0f));
+    mat4 cow_model;
 
     /* texture setup */
     texture_t t_diffuse("assets/model/cow/cow_diffuse.png", USAGE_SRGB_COLOR);
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     blin_uniforms.normal_texture = NULL;
     blin_uniforms.num_of_point_lights = 2;
     blin_uniforms.point_lights = point_lights;
-    blin_uniforms.model_matrix = cow.get_model_matrix();
+    blin_uniforms.model_matrix = cow_model;
     blin_uniforms.camera_pos = camera.get_position();
     blin_uniforms.proj_matrix = camera.get_projection_matrix();
     blin_uniforms.view_matrix = camera.get_view_matrix();
@@ -73,10 +73,10 @@ int main(int argc, char *argv[]) {
         framebuffer.clear_depth(1.0f);
 
         camera.update_transform(window);
-        cow.set_rotation(cow_rotation);
+        cow_model = euler_YXZ_rotate(cow_rotation) * scale(vec3(5.0f));
         
         // mvp
-        blin_uniforms.model_matrix = cow.get_model_matrix();
+        blin_uniforms.model_matrix = cow_model;
         blin_uniforms.proj_matrix = camera.get_projection_matrix();
         blin_uniforms.view_matrix = camera.get_view_matrix();
         

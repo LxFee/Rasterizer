@@ -141,32 +141,13 @@ vbo_t* load_from_file(const std::string& filename) {
 };  // namespace
 
 mesh_t::mesh_t(const std::string& filename)
-    : position(0.0f),
-      rotation(0.0f),
-      size(1.0f),
-      vbo(load_from_file(filename)) {}
+    : vbo(load_from_file(filename)) {}
 
 mesh_t::mesh_t(const std::vector<vertex_t>& vertexes)
-    : position(0.0f),
-      rotation(0.0f),
-      size(1.0f),
-      vbo(convert_to_vbo(vertexes)) {}
+    : vbo(convert_to_vbo(vertexes)) {}
 
 mesh_t::~mesh_t() {
     if(vbo) delete vbo;
 }
-
-mat4 mesh_t::get_model_matrix() const {
-    mat4 R = euler_YXZ_rotate(rotation);
-    mat4 T = translate(position);
-    mat4 S = scale(size);
-    return T * S * R;
-}
-
-void mesh_t::set_rotation(vec3 _rotation) { rotation = _rotation; }
-
-void mesh_t::set_position(vec3 _position) { position = _position; }
-
-void mesh_t::set_size(vec3 _size) { size = _size; }
 
 const vbo_t* mesh_t::get_vbo() const { return vbo; }
