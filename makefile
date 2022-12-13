@@ -5,7 +5,7 @@ D_SRC = src
 D_TMP = tmp
 D_INC = ext/include $(D_SRC)
 D_LIB = ext/lib
-CXXFLAGS = -std=c++17 -O3 -g
+CXXFLAGS = -std=c++17 -O3
 LDFLAGS = 
 LIB = mingw32 SDL2main imgui SDL2 opengl32
 
@@ -31,15 +31,16 @@ TARGETS = $(basename $(notdir $(DEMO_SOURCES)))
 all : $(TARGETS)
 
 $(TARGETS) : $(OBJECTS)
-	mkd ./bin
+	@mkdir -p ./bin
 	$(CC) $(CORE_OBJECTS) $(SHADER_OBJECTS) $(filter %$@.o, $^) $(addprefix -L,$(D_LIB)) $(LIB:%=-l%) $(LDFLAGS) -o bin/$@
 
 $(OBJECTS) : $(D_TMP)/%.o : %.cpp
-	@mkd $(dir $@)
+	@mkdir -p $(dir $@)
 	$(CC) $(addprefix -I,$(D_INC)) $(CXXFLAGS) -MMD -c $< -o $@
 
 -include $(OBJECTS:%.o=%.d)
 
 # 其它指令
 clean :
-	@clean
+	@rm -rf bin
+	@rm -rf tmp
